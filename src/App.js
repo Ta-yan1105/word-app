@@ -1,20 +1,20 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import './App.css';
 
 const API_KEY = 'AIzaSyDgKNqCHpejyKy67b3SKuUFI5_ONiZqmvw'; 
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
 function App() {
-  // ⭐️ スワイプ・引っ張りアクションの計算用変数
+  // ⭐️ スワイプ・引っ張りアクションの計算用（エラー修正済）
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
   const touchEndX = useRef(null);
   const touchEndY = useRef(null);
 
-  // 引っ張った距離（Y軸）と、収納アニメーション中かどうかの判定
   const [pullDownY, setPullDownY] = useState(0);
   const [isStoring, setIsStoring] = useState(false);
 
+  // --- 階層管理 ---
   const [boxes, setBoxes] = useState([
     { id: 1, name: '中学英語マスター箱' },
     { id: 2, name: '資格・オリジナル箱' }
@@ -22,7 +22,7 @@ function App() {
 
   const [decks, setDecks] = useState([
     { 
-      id: 1, boxId: 1, name: '基本の動詞', 
+      id: 1, boxId: 1, name: '基本の動詞（中学レベル）', 
       lastStudied: Date.now() - (1000 * 60 * 60 * 48), 
       lastRecordTime: 125,
       cards: [
@@ -32,7 +32,7 @@ function App() {
       ] 
     },
     { 
-      id: 2, boxId: 1, name: '重要名詞', 
+      id: 2, boxId: 1, name: '重要名詞（中学レベル）', 
       lastStudied: null, lastRecordTime: null,
       cards: [
         { word: 'environment', meaning: '【名詞】環境', example: 'Protect the **environment**.', translation: '環境を守ろう。' },
@@ -49,7 +49,7 @@ function App() {
       ] 
     },
     { 
-      id: 4, boxId: 2, name: '初めての束', 
+      id: 4, boxId: 2, name: '初めてのオリジナル単語帳', 
       lastStudied: null, lastRecordTime: null,
       cards: [] 
     }
@@ -72,14 +72,8 @@ function App() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
-  useEffect(() => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    }
-  }, []);
-
-  const playAudio = (text) => {
+  // ⭐️ デプロイ警告回避：音声を鳴らす関数をuseCallbackでメモ化
+  const playAudio = useCallback((text) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel(); 
       const utterance = new SpeechSynthesisUtterance(text);
@@ -97,7 +91,7 @@ function App() {
       }
       window.speechSynthesis.speak(utterance);
     }
-  };
+  }, [playSpeed]);
 
   const activeDeck = decks.find(d => d.id === currentDeckId);
   const cards = activeDeck ? activeDeck.cards : [];
@@ -107,7 +101,7 @@ function App() {
     if (view === 'study' && !isFlipped && cards.length > 0) {
       playAudio(cards[currentIndex]?.word || '');
     }
-  }, [currentIndex, isFlipped, cards.length, view]);
+  }, [currentIndex, isFlipped, cards, view, playAudio]);
 
   useEffect(() => {
     let interval = null;
@@ -147,6 +141,17 @@ function App() {
     }
   };
 
+  // ⭐️ デプロイ警告回避：カード操作関数をメモ化
+  const nextCard = useCallback(() => {
+    setIsFlipped(false);
+    setTimeout(() => setCurrentIndex((prev) => (prev + 1) % cards.length), 150);
+  }, [cards.length]);
+
+  const prevCard = useCallback(() => {
+    setIsFlipped(false);
+    setTimeout(() => setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length), 150);
+  }, [cards.length]);
+
   useEffect(() => {
     let autoTimer = null;
     if (isAutoPlaying && cards.length > 0 && !isCompleted) {
@@ -160,7 +165,7 @@ function App() {
       }, delay);
     }
     return () => clearTimeout(autoTimer);
-  }, [isAutoPlaying, isFlipped, currentIndex, playSpeed, cards.length, isCompleted]);
+  }, [isAutoPlaying, isFlipped, currentIndex, playSpeed, cards.length, isCompleted, nextCard]);
 
   const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
 
@@ -254,11 +259,12 @@ function App() {
     setView('study');
   };
 
-  const closeDeck = () => {
-    setDecks(decks.map(deck => deck.id === currentDeckId ? { ...deck, lastStudied: Date.now() } : deck));
+  // ⭐️ デプロイ警告回避
+  const closeDeck = useCallback(() => {
+    setDecks(prevDecks => prevDecks.map(deck => deck.id === currentDeckId ? { ...deck, lastStudied: Date.now() } : deck));
     setIsAutoPlaying(false); setCurrentDeckId(null);
     setView('decks');
-  };
+  }, [currentDeckId]);
 
   const deleteDeck = (e, id) => {
     e.stopPropagation(); 
@@ -270,12 +276,12 @@ function App() {
     return text.split(/\*\*(.*?)\*\*/g).map((part, index) => index % 2 === 1 ? <span key={index} className="highlight-word">{part}</span> : part);
   };
 
-  // ⭐️⭐️ 指で引っ張って箱にしまう「ドラッグ＆ドロップ」のメイン処理 ⭐️⭐️
+  // ⭐️⭐️ 指で引っ張って箱にしまう「ドラッグ＆ドロップ」処理（エラー完全修正済） ⭐️⭐️
   const handleTouchStart = (e) => {
-    touchEndX.current = null;
-    touchEndY.current = null;
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
+    touchEndX.current = null;
+    touchEndY.current = null;
   };
 
   const handleTouchMove = (e) => {
@@ -286,51 +292,42 @@ function App() {
     const diffX = touchStartX.current - touchEndX.current; // 横移動
     const diffY = touchEndY.current - touchStartY.current; // 縦移動（下へ引くとプラス）
 
-    // 下に引く動きが横移動より大きく、かつ一定以上引っ張った場合
     if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) {
       setPullDownY(diffY);
     }
   };
 
   const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current || !touchStartY.current || !touchEndY.current) {
-      setPullDownY(0); return;
-    }
-
-    const diffX = touchStartX.current - touchEndX.current;
-    
-    // 120px以上下に引っ張って指を離した場合、収納アニメーションを発動
+    // 縦に120px以上引っ張って指を離した場合、収納アニメーションを発動
     if (pullDownY > 120) {
-      executeStoreAnimation();
+      setIsStoring(true);
+      setPullDownY(window.innerHeight); // 画面の下まで一気に突き落とす
+      setTimeout(() => {
+        if (view === 'study') closeDeck();
+        else if (view === 'decks') setView('boxes');
+        setIsStoring(false);
+        setPullDownY(0);
+      }, 400); // 落下時間待機
     } else {
       // 引っ張りが足りない場合は元に戻す
       setPullDownY(0);
-
-      // 縦の引っ張りでなければ、通常の「横スワイプ（カードめくり）」処理を実行
-      if (Math.abs(diffX) > 50 && pullDownY < 50 && view === 'study') {
-        if (diffX > 0) { stopAutoPlayIfActive(); nextCard(); } 
-        else { stopAutoPlayIfActive(); prevCard(); }
+      
+      // 横スワイプの判定（カードめくり）
+      if (touchStartX.current && touchEndX.current && view === 'study') {
+        const diffX = touchStartX.current - touchEndX.current;
+        if (Math.abs(diffX) > 50 && pullDownY < 50) {
+          stopAutoPlayIfActive();
+          if (diffX > 0) nextCard(); else prevCard(); 
+        }
       }
     }
+    
+    // 値をリセット
+    touchStartX.current = null;
+    touchStartY.current = null;
+    touchEndX.current = null;
+    touchEndY.current = null;
   };
-
-  // ⭐️ 収納アニメーションを実行して画面を切り替える
-  const executeStoreAnimation = () => {
-    setIsStoring(true);
-    setPullDownY(window.innerHeight); // 画面の下まで一気に突き落とす
-    setTimeout(() => {
-      if (view === 'study') {
-        closeDeck(); // カードを束に戻す
-      } else if (view === 'decks') {
-        setView('boxes'); // 束を箱に戻す
-      }
-      setIsStoring(false);
-      setPullDownY(0);
-    }, 400); // 落下時間待機
-  };
-
-  const nextCard = () => { setIsFlipped(false); setTimeout(() => setCurrentIndex((prev) => (prev + 1) % cards.length), 150); };
-  const prevCard = () => { setIsFlipped(false); setTimeout(() => setCurrentIndex((prev) => (prev - 1 + cards.length) % cards.length), 150); };
 
   // ⭐️ 引っ張った時の画面の変形スタイル
   const dynamicStyle = {
@@ -340,7 +337,6 @@ function App() {
     width: '100%',
     height: '100%'
   };
-
 
   // ==========================================
   // 画面1：すべての箱が並ぶホーム画面
@@ -377,7 +373,7 @@ function App() {
   }
 
   // ==========================================
-  // 画面2＆3：束一覧 ＆ 暗記モード（ドラッグ＆ドロップ対応枠）
+  // 画面2＆3：束一覧 ＆ 暗記モード（ドラッグ対応枠）
   // ==========================================
   return (
     <div 
@@ -385,7 +381,7 @@ function App() {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{ overflow: 'hidden', position: 'relative' }} // 引っ張りエフェクトのために固定
+      style={{ overflow: 'hidden', position: 'relative' }} 
     >
       <div style={dynamicStyle}>
         
