@@ -1,38 +1,146 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+.gentle-bg {
+  background-color: #f7f6f2; 
+  background-image: radial-gradient(circle at top, #ffffff 0%, #f7f6f2 100%);
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  flex-direction: column; 
+  justify-content: flex-start; 
+  align-items: center;     
+  padding: 40px 20px;
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+  box-sizing: border-box;
 }
 
-.App-link {
-  color: #61dafb;
+.overlay { max-width: 600px; width: 100%; text-align: center; }
+
+/* ⭐️ ドラッグ＆ドロップ対応のレイアウト調整 */
+.inner-view-wrapper {
+  display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; margin: 0 auto;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.hint-text { color: #a39c96; font-size: 13px; margin-top: -10px; margin-bottom: 20px; }
+
+/* ⭐️ 引っ張った時に下から現れる「しまう用ボックス」 */
+.virtual-drop-zone {
+  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+  z-index: 100; pointer-events: none; transition: opacity 0.2s;
 }
+.drop-box-mini { transform: scale(0.8); }
+
+.study-header {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; border-bottom: 2px dashed #e8e4db; padding-bottom: 15px;
+}
+
+.back-to-desk-btn {
+  background: none; border: none; color: #8fb8a8; font-weight: bold;
+  font-size: 16px; cursor: pointer; padding: 10px; transition: 0.2s;
+}
+.back-to-desk-btn:hover { color: #6d8e82; transform: translateX(-5px); }
+
+.study-timer-box { width: 80px; text-align: right; font-size: 15px; color: #a39c96; font-weight: bold; font-family: 'Courier New', Courier, monospace; display: flex; align-items: center; justify-content: flex-end; gap: 5px; transition: all 0.3s; }
+.completed-timer { color: #27ae60; transform: scale(1.1); }
+.timer-icon { font-size: 14px; opacity: 0.7; }
+
+.app-title { color: #6d5b53; font-weight: 600; letter-spacing: 2px; margin-bottom: 30px; }
+
+.input-section { display: flex; gap: 10px; justify-content: center; margin-bottom: 40px; width: 100%;}
+.input-section input { background: #ffffff; border: 2px solid #e8e4db; padding: 14px; border-radius: 8px; width: 65%; font-size: 16px; transition: all 0.3s; color: #4a4a4a; }
+.input-section input:focus { outline: none; border-color: #8fb8a8; box-shadow: 0 0 8px rgba(143, 184, 168, 0.4); }
+.add-btn { background-color: #8fb8a8; color: white; border: none; padding: 0 24px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
+.add-btn:hover { background-color: #7a9e90; }
+
+/* -------------------------------------------
+   収納ボックス一覧
+------------------------------------------- */
+.desk-view { justify-content: flex-start; width: 100%; }
+.create-deck-section { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; width: 100%; max-width: 500px; }
+.create-deck-section input { background: #ffffff; border: 2px dashed #c4b5a5; padding: 14px; border-radius: 8px; width: 100%; font-size: 16px; outline: none; }
+.create-deck-section input:focus { border-style: solid; border-color: #8fb8a8; }
+
+.boxes-grid { display: flex; flex-wrap: wrap; gap: 60px 50px; justify-content: center; width: 100%; max-width: 900px; padding: 40px 0; }
+.storage-box-container { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; }
+
+/* ⭐️ 震えを「上品なブルッ」に抑えました */
+@keyframes reviewShake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  10%, 30%, 50% { transform: translateX(-2px) rotate(-1deg); }
+  20%, 40%, 60% { transform: translateX(2px) rotate(1deg); }
+  70%, 100% { transform: translateX(0) rotate(0deg); }
+}
+
+.polite-shake {
+  animation: reviewShake 2.5s ease-in-out infinite; /* 少し間隔を空けて上品に震える */
+  transform-origin: bottom center;
+}
+
+.alert-text { color: #d35400 !important; font-weight: 800 !important; }
+.storage-box { position: relative; width: 220px; height: 140px; perspective: 800px; }
+.box-body { position: absolute; bottom: 0; width: 100%; height: 110px; background-color: #d1c4b7; border-radius: 8px; border: 2px solid #b8a898; display: flex; align-items: center; justify-content: center; box-shadow: 0 15px 25px rgba(109, 91, 83, 0.2), inset 0 -10px 20px rgba(0,0,0,0.05); z-index: 2; }
+.box-label { background: #ffffff; padding: 6px 16px; border-radius: 4px; font-weight: bold; color: #6d5b53; border: 1px dashed #b8a898; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); }
+.box-lid { position: absolute; top: 15px; width: 100%; height: 30px; background-color: #e3d9cd; border-radius: 6px; border: 2px solid #b8a898; transform-origin: top; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 3; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+.storage-box-container:hover .box-lid { transform: rotateX(60deg); }
+.box-instruction { margin-top: 25px; color: #a39c96; font-weight: bold; font-size: 15px; }
+
+/* 束の一覧 */
+.decks-grid { display: flex; flex-wrap: wrap; gap: 70px 60px; justify-content: center; width: 100%; max-width: 900px; padding: 30px 0; }
+.deck-bundle { width: 210px; height: 160px; position: relative; cursor: pointer; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.deck-bundle:hover { transform: translateY(-10px) rotate(-2deg); }
+.deck-paper { position: absolute; width: 100%; height: 100%; background: #ffffff; border: 1px solid #e8e4db; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
+.stack-bottom { transform: rotate(5deg) translate(4px, 4px); background: #fdfbf7; }
+.stack-middle { transform: rotate(-3deg) translate(-2px, 2px); background: #faf8f5; }
+.top-cover { display: flex; flex-direction: column; justify-content: center; align-items: center; background: #ffffff; z-index: 2; padding: 15px 15px 15px 25px; text-align: center; }
+.deck-name { color: #6d5b53; font-size: 17px; margin: 0 0 8px 0; word-break: break-all; }
+.deck-count { color: #a39c96; font-size: 13px; margin: 0 0 10px 0; }
+.deck-record { font-size: 12px; color: #8fb8a8; font-weight: bold; margin: 8px 0 0 0; font-family: 'Courier New', Courier, monospace; }
+
+.status-badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 12px; display: inline-block; white-space: nowrap; }
+.status-new { background-color: #f0f3f4; color: #7f8c8d; border: 1px solid #d5dbdb; }      
+.status-fresh { background-color: #eafaf1; color: #27ae60; border: 1px solid #abebc6; }    
+.status-review { background-color: #fef9e7; color: #d4ac0d; border: 1px solid #f9e79f; }   
+.status-warning { background-color: #f5f5f5; color: #999999; border: 1px solid #dddddd; } 
+.rubber-band { position: absolute; top: 0; bottom: 0; left: 12px; width: 6px; background-color: #e6b0aa; box-shadow: 2px 0 3px rgba(0,0,0,0.1), inset 1px 0 2px rgba(255,255,255,0.4); z-index: 5; border-radius: 2px; transform: rotate(1deg); }
+.delete-deck-btn { position: absolute; top: -10px; right: -10px; width: 26px; height: 26px; background: #fff; border: 1px solid #e8e4db; border-radius: 50%; color: #d98880; font-weight: bold; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.delete-deck-btn:hover { background: #fdedec; }
+
+/* -------------------------------------------
+   暗記モード（カード本体）
+------------------------------------------- */
+.card-animation-wrapper { animation: turnPageHorizontal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+@keyframes turnPageHorizontal { 0% { transform: translateX(80px) rotateY(-30deg) scale(0.95); opacity: 0; } 100% { transform: translateX(0) rotateY(0) scale(1); opacity: 1; } }
+
+.card-container { width: 90vw; max-width: 480px; height: 320px; perspective: 1000px; cursor: pointer; filter: drop-shadow(0 10px 20px rgba(109, 91, 83, 0.15)); margin: 0 auto; }
+.card-inner { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+.card-container.flipped .card-inner { transform: rotateX(-180deg); }
+.card-front, .card-back { width: 100%; height: 100%; position: absolute; backface-visibility: hidden; background-color: #ffffff; border-radius: 12px; border: 1px solid #e8e4db; }
+.card-back { transform: rotateX(180deg); }
+.ring-hole { position: absolute; top: 15px; left: 15px; width: 20px; height: 20px; background-color: #f7f6f2; border-radius: 50%; box-shadow: inset 1px 2px 4px rgba(0,0,0,0.2); z-index: 10; }
+.card-front { display: flex; align-items: center; justify-content: center; padding: 0 20px; box-sizing: border-box; }
+.word-text { font-size: clamp(40px, 10vw, 64px); color: #333333; font-weight: 800; margin: 0; padding: 0; text-align: center; width: 100%; line-height: 1; }
+.back-content { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+.meaning-section { text-align: center; width: 100%; padding: 0 20px; transform: translateY(-55px); }
+.core-meaning { font-size: clamp(24px, 6vw, 32px); color: #4a4a4a; font-weight: bold; margin: 0; }
+.example-section { position: absolute; bottom: 0; left: 0; width: 100%; border-top: 1px solid #f0eee9; background-color: #faf9f6; padding: 20px; box-sizing: border-box; border-radius: 0 0 12px 12px; }
+.example-en { font-size: clamp(20px, 5.5vw, 26px); font-weight: 700; color: #333333; margin: 0; line-height: 1.4; }
+.highlight-word { font-weight: 800; color: #333333; background: linear-gradient(transparent 50%, #fef08a 50%); padding: 0 2px; border-radius: 2px; }
+.example-ja { font-size: clamp(15px, 4vw, 18px); color: #888888; margin-top: 10px; font-weight: 500; }
+.card-counter { color: #a39c96; font-weight: bold; letter-spacing: 1px; margin-bottom: 20px; font-size: 16px; }
+.empty-deck-msg { color: #a39c96; margin-top: 40px; font-weight: bold; line-height: 1.6; }
+.completion-message { margin-top: 25px; padding: 15px 20px; background-color: #eafaf1; color: #27ae60; font-weight: bold; font-size: 18px; border-radius: 8px; border: 2px dashed #abebc6; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+.controls { display: flex; justify-content: center; align-items: center; gap: 30px; margin-top: 30px; }
+.nav-btn { background: #ffffff !important; color: #6d5b53 !important; border: 1px solid #e8e4db !important; font-size: 20px !important; width: 60px; height: 60px; border-radius: 50% !important; transition: all 0.2s; cursor: pointer; box-shadow: 0 2px 6px rgba(109, 91, 83, 0.1); }
+.nav-btn:hover { background: #fdfbfb !important; transform: translateY(-2px); }
+.delete-btn { background-color: transparent !important; color: #d98880 !important; border: 1px solid #e6b0aa !important; padding: 10px 24px !important; border-radius: 20px !important; font-size: 16px; cursor: pointer; transition: all 0.2s; }
+.delete-btn:hover { background: #fdedec !important; }
+
+/* オートプレイ */
+.autoplay-controls { margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 15px; background: #ffffff; padding: 15px 20px; border-radius: 12px; border: 1px dashed #c4b5a5; width: 100%; box-sizing: border-box; }
+.autoplay-toggle-btn { background: #fdfbf7; color: #6d5b53; border: 2px solid #e8e4db; padding: 10px 30px; border-radius: 20px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+.autoplay-toggle-btn.active { background: #8fb8a8; color: white; border-color: #8fb8a8; box-shadow: 0 4px 10px rgba(143, 184, 168, 0.3); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(143, 184, 168, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(143, 184, 168, 0); } 100% { box-shadow: 0 0 0 0 rgba(143, 184, 168, 0); } }
+
+.speed-selectors { display: flex; flex-wrap: nowrap; justify-content: space-between; gap: 6px; width: 100%; overflow-x: auto; padding-bottom: 5px; }
+.speed-btn { background: transparent; border: 1px solid #e8e4db; color: #a39c96; padding: 8px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
+.speed-btn.selected { background: #6d5b53; color: white; border-color: #6d5b53; font-weight: bold; }
