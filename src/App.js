@@ -142,7 +142,6 @@ function App() {
     return () => clearInterval(interval);
   }, [view, isCompleted, isBulkMode, studyCards.length]);
 
-  // ⭐️ タイムと日付のフォーマット関数
   const formatTime = (seconds) => seconds ? `${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}` : '--:--';
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
@@ -206,7 +205,6 @@ function App() {
     handleRepeat();
   };
 
-  // ⭐️ 束を一括で「暗記済み」にする機能
   const markDeckAsMemorized = (e, deckId) => {
     e.stopPropagation();
     if (window.confirm('この束をすべて「暗記済み」として完了しますか？')) {
@@ -214,7 +212,7 @@ function App() {
         if (d.id !== deckId) return d;
         return {
           ...d,
-          lastStudied: Date.now(), // 完了日を今日に更新
+          lastStudied: Date.now(), 
           cards: d.cards.map(c => ({ ...c, isMemorized: true }))
         };
       }));
@@ -376,15 +374,22 @@ function App() {
     return text.split(/\*\*(.*?)\*\*/g).map((part, i) => i % 2 === 1 ? <span key={i} className="highlight-word">{part}</span> : part);
   };
 
+  // ⭐️ スクロール判定を修正し、スマホやChromebookで正常に上下スクロールできるように対応
   const handleTouchStart = (e) => {
     if (e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes') return;
     touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; touchEndX.current = null; touchEndY.current = null; 
   };
   const handleTouchMove = (e) => {
+    // スクロール位置が一番上でない場合は、引っ張りアクションを無効化（普通にスクロールさせる）
+    if (window.scrollY > 10) return;
     if (!touchStartX.current || !touchStartY.current || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes') return;
+    
     touchEndX.current = e.touches[0].clientX; touchEndY.current = e.touches[0].clientY;
     const diffY = touchEndY.current - touchStartY.current; const diffX = touchStartX.current - touchEndX.current;
-    if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) setPullDownY(diffY);
+    
+    if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) {
+      setPullDownY(diffY);
+    }
   };
   const handleTouchEnd = () => {
     if (view === 'boxes') return;
@@ -421,28 +426,19 @@ function App() {
     );
   };
 
-  // ⭐️ 束のレンダリング（一括完了ボタンと日付表示を追加）
   const renderDeckCard = (deck, isMemorizedSection) => {
     const status = isMemorizedSection ? getMemorizedStatus(deck.lastStudied) : getEbbinghausStatus(deck.lastStudied);
     return (
       <div key={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake' : ''}`} onClick={() => openDeck(deck.id)}>
         <div className="deck-paper stack-bottom"></div><div className="deck-paper stack-middle"></div>
         <div className="deck-paper top-cover">
-          
-          {/* ⭐️ 学習中の束なら左上に「✅ 一括暗記完了ボタン」を配置 */}
           {!isMemorizedSection && deck.cards.length > 0 && (
-            <button className="deck-memorized-btn" onClick={e => markDeckAsMemorized(e, deck.id)} title="この束をすべて暗記済みにする">
-              ✔
-            </button>
+            <button className="deck-memorized-btn" onClick={e => markDeckAsMemorized(e, deck.id)} title="この束をすべて暗記済みにする">✔</button>
           )}
-
           <h3 className="deck-name">{deck.name}</h3><p className="deck-count">{deck.cards.length} 枚</p>
           <div className={`status-badge ${status.className}`}>{status.label}</div>
-          
-          {/* ⭐️ 具体的な最終学習日を表示 */}
           {deck.lastStudied && <p className="deck-date">🗓 最終学習: {formatDate(deck.lastStudied)}</p>}
           {deck.lastRecordTime !== null && <p className="deck-record">⏱ タイム: {formatTime(deck.lastRecordTime)}</p>}
-          
           <button className="delete-deck-btn" onClick={e => deleteDeck(e, deck.id)}>×</button>
         </div><div className="rubber-band"></div>
       </div>
@@ -491,7 +487,7 @@ function App() {
   }
 
   return (
-    <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ overflow: 'hidden', position: 'relative', padding: 0 }}>
+    <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ padding: 0 }}>
       
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
