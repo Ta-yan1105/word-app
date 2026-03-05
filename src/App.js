@@ -75,6 +75,7 @@ function App() {
   const [printCards, setPrintCards] = useState([]);
 
   const [draggedDeckId, setDraggedDeckId] = useState(null);
+  const [ghostPos, setGhostPos] = useState(null); 
   const touchDragTimer = useRef(null);
 
   const activeDeck = decks.find(d => d.id === currentDeckId);
@@ -265,7 +266,6 @@ function App() {
     }
   };
 
-  // ⭐️ 例文と訳も保存できるように拡張！
   const saveEditedCard = () => {
     if (!editingCard) return;
     setDecks(prev => prev.map(d => {
@@ -311,7 +311,7 @@ function App() {
 
   const downloadTemplate = () => {
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); 
-    const content = '英単語,日本語訳,例文,例文訳\napple,りんご,"I have an **apple**.","私は**りんご**を持っています。"\nsolution,解決策,"We need a good **solution**.","私たちは良い**解決策**が必要です。"\n';
+    const content = '英単語,日本語訳,英語例文(**で囲むと黄色マーカー),例文和訳(**で囲むと黄色マーカー)\napple,りんご,"I have an **apple**.","私は**りんご**を持っています。"\nsolution,解決策,"We need a good **solution**.","私たちは良い**解決策**が必要です。"\n';
     const blob = new Blob([bom, content], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -477,10 +477,12 @@ function App() {
     setDraggedDeckId(null);
   };
   
-  const onTouchStartDeck = (e, id) => {
+  const onTouchStartDeck = (e, deck) => {
     e.stopPropagation(); 
+    const touch = e.touches[0];
     touchDragTimer.current = setTimeout(() => {
-      setDraggedDeckId(id);
+      setDraggedDeckId(deck.id);
+      setGhostPos({ x: touch.clientX, y: touch.clientY, title: deck.name });
     }, 400); 
   };
   const onTouchMoveDeck = (e) => {
@@ -489,6 +491,8 @@ function App() {
       return;
     }
     e.preventDefault(); 
+    const touch = e.touches[0];
+    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null);
   };
   const onTouchEndDeck = (e) => {
     clearTimeout(touchDragTimer.current);
@@ -512,7 +516,10 @@ function App() {
             return newDecks;
          });
       }
-      setTimeout(() => setDraggedDeckId(null), 100);
+      setTimeout(() => {
+        setDraggedDeckId(null);
+        setGhostPos(null);
+      }, 100);
     }
   };
 
@@ -555,7 +562,6 @@ function App() {
             </button>
             <button className="mini-icon-btn" onClick={() => { 
               stopAutoPlayIfActive(); 
-              // ⭐️ 例文も編集できるようにステートを拡張
               setEditingCard({
                 originalWord: c.word, 
                 word: c.word, 
@@ -586,10 +592,10 @@ function App() {
         draggable="true"
         onDragStart={(e) => onDragStart(e, deck.id)}
         onDragEnd={() => setDraggedDeckId(null)}
-        onTouchStart={(e) => onTouchStartDeck(e, deck.id)}
+        onTouchStart={(e) => onTouchStartDeck(e, deck)}
         onTouchMove={onTouchMoveDeck}
         onTouchEnd={onTouchEndDeck}
-        title="ドラッグでエリア間を移動！"
+        title="PC:ドラッグ / スマホ:長押しで並べ替え"
       >
         <div className="deck-paper stack-bottom"></div>
         <div className="deck-paper stack-middle"></div>
@@ -731,24 +737,24 @@ function App() {
   return (
     <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       
-      {/* ⭐️ モーダル画面に「例文」と「和訳」の編集欄を追加！ ** の説明も追加 */}
+      {ghostPos && (
+        <div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>
+          {ghostPos.title}
+        </div>
+      )}
+
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 style={{marginTop: 0, color: '#6d5b53'}}>カードを編集</h3>
-            
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>英単語</label>
             <input className="modal-input" value={editingCard.word} onChange={(e) => setEditingCard({...editingCard, word: e.target.value})} placeholder="英単語" />
-            
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>意味</label>
             <input className="modal-input" value={editingCard.meaning} onChange={(e) => setEditingCard({...editingCard, meaning: e.target.value})} placeholder="意味" />
-            
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>英語例文 <span style={{fontWeight:'normal', fontSize:'11px'}}>(**で囲むと黄色い線が引かれます)</span></label>
             <textarea className="modal-input" value={editingCard.example} onChange={(e) => setEditingCard({...editingCard, example: e.target.value})} placeholder="I have an **apple**." rows="2" />
-            
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>例文和訳 <span style={{fontWeight:'normal', fontSize:'11px'}}>(**で囲むと黄色い線が引かれます)</span></label>
             <textarea className="modal-input" value={editingCard.translation} onChange={(e) => setEditingCard({...editingCard, translation: e.target.value})} placeholder="私は**りんご**を持っています。" rows="2" />
-
             <div className="modal-actions">
               <button className="cancel-btn" onClick={() => setEditingCard(null)}>キャンセル</button>
               <button className="add-btn" onClick={saveEditedCard}>保存する</button>
@@ -839,20 +845,27 @@ function App() {
             )}
 
             <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`}>
+              
+              {/* ⭐️ タイトルとボタンを画面上部に美しく独立配置（要望通り） */}
               {!isFullscreen && (
-                <div className="study-header">
-                  <button className="back-to-desk-btn" onClick={closeDeck}>◀ 戻る</button>
-                  <h2 className="app-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin:0 }}>
-                    {activeDeck?.name}
+                <>
+                  <div className="study-controls-top" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
+                    <button className="back-to-desk-btn" onClick={closeDeck}>◀ 戻る</button>
+                    <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible' }}>⏱ {formatTime(studyTime)}</div>
+                  </div>
+                  
+                  <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
+                    <h2 className="study-deck-title" style={{ margin: 0 }}>
+                      {activeDeck?.name}
+                    </h2>
                     {allCards.length >= 4 && (
-                      <>
+                      <div style={{ display: 'flex', gap: '10px' }}>
                         <button className="test-start-btn" onClick={startTest} title="4択テストに挑戦！">📝 テスト</button>
                         <button className="test-start-btn print-btn" onClick={openPrintPreview} title="紙のテストを印刷する">🖨️ プリント</button>
-                      </>
+                      </div>
                     )}
-                  </h2>
-                  <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible' }}>⏱ {formatTime(studyTime)}</div>
-                </div>
+                  </div>
+                </>
               )}
               
               {!isFullscreen && isBulkMode && (
@@ -939,23 +952,6 @@ function App() {
                       <button className="fullscreen-btn" onClick={toggleFullScreen} title="全集中モード">
                         {isFullscreen ? '解除 ↘️' : '全集中 🔥'}
                       </button>
-                      {isCompleted && (
-                        <div className="completed-timer inline-timer">⏱ {formatTime(studyTime)}</div>
-                      )}
-                    </div>
-                    
-                    {/* ⭐️ ボタンを削除し、バーだけの究極シンプルUIに！ */}
-                    <div className="speed-slider-container" style={{marginTop: '10px'}}>
-                      <div className="speed-slider-wrapper">
-                        <span style={{fontSize:'14px', color:'#7f8c8d', fontWeight:'bold', whiteSpace:'nowrap'}}>🐢 遅</span>
-                        <input type="range" min="1" max="100" value={speedLevel} onChange={(e) => setSpeedLevel(Number(e.target.value))} className="speed-slider" />
-                        <span style={{fontSize:'14px', color:'#7f8c8d', fontWeight:'bold', whiteSpace:'nowrap'}}>速 🐇</span>
-                      </div>
-                      {speedLevel >= 85 && (
-                        <div style={{ fontSize: '11px', color: '#e74c3c', fontWeight: 'bold', marginTop: '6px' }}>
-                          🔇 WPM250以上（音声ミュート中）
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
