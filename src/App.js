@@ -265,11 +265,18 @@ function App() {
     }
   };
 
+  // ⭐️ 例文と訳も保存できるように拡張！
   const saveEditedCard = () => {
     if (!editingCard) return;
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      return { ...d, cards: d.cards.map(c => c.word === editingCard.originalWord ? { ...c, word: editingCard.word, meaning: editingCard.meaning } : c) };
+      return { ...d, cards: d.cards.map(c => c.word === editingCard.originalWord ? { 
+        ...c, 
+        word: editingCard.word, 
+        meaning: editingCard.meaning,
+        example: editingCard.example,
+        translation: editingCard.translation
+      } : c) };
     }));
     setEditingCard(null); 
   };
@@ -546,7 +553,17 @@ function App() {
             <button className="mini-icon-btn" onClick={(e) => toggleMemorize(e, c.word, !isMemorizedList)} title={isMemorizedList ? "学習中に戻す" : "覚えた！"}>
               {isMemorizedList ? '↩️' : '✅'}
             </button>
-            <button className="mini-icon-btn" onClick={() => { stopAutoPlayIfActive(); setEditingCard({originalWord: c.word, word: c.word, meaning: c.meaning}); }}>✏️</button>
+            <button className="mini-icon-btn" onClick={() => { 
+              stopAutoPlayIfActive(); 
+              // ⭐️ 例文も編集できるようにステートを拡張
+              setEditingCard({
+                originalWord: c.word, 
+                word: c.word, 
+                meaning: c.meaning,
+                example: c.example || '',
+                translation: c.translation || ''
+              }); 
+            }}>✏️</button>
             <button className="mini-icon-btn delete-mini" onClick={(e) => deleteSpecificCard(e, c.word)}>✖</button>
           </div>
         </div>
@@ -714,14 +731,24 @@ function App() {
   return (
     <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       
+      {/* ⭐️ モーダル画面に「例文」と「和訳」の編集欄を追加！ ** の説明も追加 */}
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 style={{marginTop: 0, color: '#6d5b53'}}>カードを編集</h3>
+            
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>英単語</label>
             <input className="modal-input" value={editingCard.word} onChange={(e) => setEditingCard({...editingCard, word: e.target.value})} placeholder="英単語" />
+            
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>意味</label>
             <input className="modal-input" value={editingCard.meaning} onChange={(e) => setEditingCard({...editingCard, meaning: e.target.value})} placeholder="意味" />
+            
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>英語例文 <span style={{fontWeight:'normal', fontSize:'11px'}}>(**で囲むと黄色い線が引かれます)</span></label>
+            <textarea className="modal-input" value={editingCard.example} onChange={(e) => setEditingCard({...editingCard, example: e.target.value})} placeholder="I have an **apple**." rows="2" />
+            
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>例文和訳 <span style={{fontWeight:'normal', fontSize:'11px'}}>(**で囲むと黄色い線が引かれます)</span></label>
+            <textarea className="modal-input" value={editingCard.translation} onChange={(e) => setEditingCard({...editingCard, translation: e.target.value})} placeholder="私は**りんご**を持っています。" rows="2" />
+
             <div className="modal-actions">
               <button className="cancel-btn" onClick={() => setEditingCard(null)}>キャンセル</button>
               <button className="add-btn" onClick={saveEditedCard}>保存する</button>
@@ -917,13 +944,12 @@ function App() {
                       )}
                     </div>
                     
-                    {/* ⭐️ ボタンを削除し、スライダーバーを横いっぱいに配置！ */}
-                    <div className="speed-slider-container">
-                      <div className="speed-slider-label">めくるスピードを調整:</div>
+                    {/* ⭐️ ボタンを削除し、バーだけの究極シンプルUIに！ */}
+                    <div className="speed-slider-container" style={{marginTop: '10px'}}>
                       <div className="speed-slider-wrapper">
-                        <span style={{fontSize:'12px', color:'#a39c96', whiteSpace:'nowrap'}}>遅</span>
+                        <span style={{fontSize:'14px', color:'#7f8c8d', fontWeight:'bold', whiteSpace:'nowrap'}}>🐢 遅</span>
                         <input type="range" min="1" max="100" value={speedLevel} onChange={(e) => setSpeedLevel(Number(e.target.value))} className="speed-slider" />
-                        <span style={{fontSize:'12px', color:'#a39c96', whiteSpace:'nowrap'}}>速</span>
+                        <span style={{fontSize:'14px', color:'#7f8c8d', fontWeight:'bold', whiteSpace:'nowrap'}}>速 🐇</span>
                       </div>
                       {speedLevel >= 85 && (
                         <div style={{ fontSize: '11px', color: '#e74c3c', fontWeight: 'bold', marginTop: '6px' }}>

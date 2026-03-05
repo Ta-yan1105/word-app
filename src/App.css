@@ -120,7 +120,6 @@ html, body {
 .test-start-btn:hover { transform: scale(1.05); background: #d68910; }
 .print-btn { background: #8e44ad; }
 .print-btn:hover { background: #732d91; }
-.core-meaning-large { font-size: 34px; font-weight: bold; color: #d35400; margin: 0 0 15px 0; line-height: 1.2; }
 
 .print-preview-container { background: white; width: 210mm; min-height: 297mm; margin: 20px auto; padding: 20mm 15mm; box-shadow: 0 0 15px rgba(0,0,0,0.2); box-sizing: border-box; color: black; }
 .print-controls { display: flex; gap: 15px; justify-content: center; padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e1e4e8; position: sticky; top: 0; z-index: 100; width: 100%; box-sizing: border-box; }
@@ -179,7 +178,6 @@ html, body {
 .study-timer-box { background: #fff; padding: 8px 15px; border-radius: 20px; font-family: monospace; font-size: 18px; font-weight: bold; color: #34495e; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #eee; white-space: nowrap; }
 .completed-timer { color: #2ecc71; border-color: #2ecc71; animation: popIn 0.5s ease-out; }
 
-/* ⭐️ 3層目：カードアニメーション設定 */
 .flashcard-area { display: flex; flex-direction: column; align-items: center; width: 100%; perspective: 1000px; box-sizing: border-box; }
 .card-counter { color: #95a5a6; font-weight: bold; margin-bottom: 10px; }
 
@@ -195,52 +193,46 @@ html, body {
 
 .card-container { width: 100%; height: 100%; position: relative; cursor: pointer; }
 .card-inner { width: 100%; height: 100%; position: absolute; transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1); transform-style: preserve-3d; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 20px; }
-
-/* ⭐️ 回転を「上下回転（rotateX）」に変更！ */
 .card-container.flipped .card-inner { transform: rotateX(180deg); }
 
 .card-front, .card-back { width: 100%; height: 100%; position: absolute; backface-visibility: hidden; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; background: #fff; border: 1px solid #e1e4e8; }
 .card-front { z-index: 2; }
-/* 裏面も上下反転に合わせて調整 */
 .card-back { transform: rotateX(180deg); background: #fafbfc; }
 
 .ring-hole { position: absolute; top: 20px; left: 20px; width: 15px; height: 15px; background-color: #fdfbf7; border-radius: 50%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
 .memorize-check-btn { position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #ecf0f1; background: #fff; color: #ecf0f1; font-size: 20px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; z-index: 10; }
 .memorize-check-btn:hover { border-color: #2ecc71; color: #2ecc71; background: #e8f5e9; transform: scale(1.1); }
 
-.word-text { font-size: clamp(32px, 8vw, 48px); margin: 0; color: #2c3e50; text-align: center; word-break: break-word; }
+/* ⭐️ 表面の英単語を「ド迫力サイズ」に拡大！ */
+.word-text { font-size: clamp(48px, 10vw, 72px); margin: 0; color: #2c3e50; text-align: center; word-break: break-word; }
 
-/* 3層目裏面：黒文字＆中央配置の大迫力レイアウト */
 .back-content { width: 100%; display: flex; flex-direction: column; height: 100%; justify-content: center; align-items: center; }
 .meaning-section { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; }
 
+/* ⭐️ 裏面の意味を「ド迫力サイズ」に拡大！ */
 .core-meaning-large { 
-  font-size: clamp(24px, 7vw, 40px); /* ⭐️ 意味の文字をさらに拡大 */
+  font-size: clamp(36px, 8vw, 56px); 
   font-weight: bold; 
   color: #333; 
   margin: 0; 
   text-align: center;
 }
 
-.meaning-line {
-  margin: 6px 0;
-  line-height: 1.3;
-}
+.meaning-line { margin: 6px 0; line-height: 1.3; }
 
 .example-section { 
   width: 100%; 
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   border-top: 1px dashed #ccc; padding-top: 15px; margin-top: 10px; 
 }
-/* ⭐️ 例文の文字サイズをひとまわり大きく！ */
 .example-en { font-size: clamp(16px, 4.5vw, 22px); color: #34495e; font-style: italic; margin: 0 0 8px 0; line-height: 1.4; text-align: center;}
 .example-ja { font-size: clamp(14px, 4vw, 18px); color: #333; margin: 0; line-height: 1.4; text-align: center; }
 
-/* ⭐️ 黒字に黄色のマーカー（アンダーライン）風のハイライト！ */
+/* ⭐️ 「黒字に黄色の蛍光マーカー」風ハイライト！ */
 .highlight-word { 
   color: #111; 
   font-weight: bold; 
-  background: linear-gradient(transparent 50%, rgba(241, 196, 15, 0.5) 50%); 
+  background: linear-gradient(transparent 50%, rgba(241, 196, 15, 0.6) 50%); 
   padding: 0 2px; 
   border-radius: 0; 
 }
@@ -258,32 +250,25 @@ html, body {
 .repeat-btn, .fullscreen-btn { background: #f8f9fa; border: 1px solid #ddd; padding: 10px 20px; border-radius: 20px; font-size: 14px; cursor: pointer; font-weight: bold; color: #555; transition: all 0.2s; }
 .repeat-btn:hover, .fullscreen-btn:hover { background: #e9ecef; }
 
-/* ⭐️ スピードスライダーを横いっぱいに綺麗に伸ばす */
 .speed-slider-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
-.speed-slider-label { font-size: 12px; color: #7f8c8d; margin-bottom: 5px; font-weight: bold; }
 .speed-slider-wrapper { display: flex; align-items: center; width: 100%; gap: 15px; }
 .speed-slider { flex-grow: 1; width: 100%; max-width: none; accent-color: #3498db; cursor: pointer; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 15px; }
-.modal-input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; width: 100%; }
+
+/* ⭐️ モーダルのテキストエリア対応 */
+.modal-input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; width: 100%; font-family: inherit; }
+textarea.modal-input { resize: vertical; min-height: 60px; }
+
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
 
-/* ⭐️ 全集中（全画面）モード用：白カード＆巨大化！ */
-.fullscreen-active.center-panel { 
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #e0e5ec; z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; 
-}
+.fullscreen-active.center-panel { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #e0e5ec; z-index: 9999; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
 .fullscreen-active .flashcard-area { max-width: 1400px; width: 100%; height: auto; display: flex; justify-content: center; }
-
-/* 全集中時はカードをド迫力サイズに */
-.fullscreen-active .card-animation-wrapper { 
-  width: 90vw; max-width: 1000px; aspect-ratio: 4 / 2.8; height: auto; max-height: 75vh; margin-bottom: 30px; 
-}
-/* 全集中カードは白ベースで影を強く */
+.fullscreen-active .card-animation-wrapper { width: 90vw; max-width: 1000px; aspect-ratio: 4 / 2.8; height: auto; max-height: 75vh; margin-bottom: 30px; }
 .fullscreen-active .card-front, .fullscreen-active .card-back { background: #fff; border-color: #e1e4e8; box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
 .fullscreen-active .word-text { color: #2c3e50; font-size: clamp(60px, 12vw, 120px); }
 .fullscreen-active .core-meaning-large { color: #111; font-size: clamp(40px, 8vw, 80px); }
-/* ⭐️ 全集中モード時の例文も巨大化！ */
 .fullscreen-active .example-en { color: #34495e; font-size: clamp(28px, 4.5vw, 46px); }
 .fullscreen-active .example-ja { color: #7f8c8d; font-size: clamp(22px, 3.5vw, 36px); }
 .fullscreen-active .autoplay-controls { background: #fff; border-color: #e1e4e8; margin-top: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
@@ -291,7 +276,6 @@ html, body {
 @media (max-width: 900px) {
   .decks-split-layout { flex-direction: column; width: 100%; box-sizing: border-box; margin: 0; }
   .decks-unmemorized-area, .decks-memorized-area { width: 100%; box-sizing: border-box; margin: 0; }
-  
   .study-dashboard { flex-direction: column; padding: 10px; width: 100%; box-sizing: border-box; }
   .side-panel { width: 100%; height: auto; max-height: 300px; position: static; }
   .left-panel { order: 2; }
@@ -303,10 +287,8 @@ html, body {
 @media (max-width: 600px) {
   .inner-view-wrapper { padding: 0 10px; }
   .decks-split-layout { gap: 15px; }
-  
   .boxes-grid, .decks-grid { grid-template-columns: repeat(3, 1fr); padding: 10px 0; gap: 8px; width: 100%; box-sizing: border-box; }
   .box-label { font-size: 11px; padding: 2px 4px; }
-  
   .deck-bundle { width: 100%; aspect-ratio: 4 / 3.2; }
   .deck-name { font-size: 12px; margin-bottom: 2px; }
   .deck-stats-mini { font-size: 9px; gap: 4px; padding: 2px; }
@@ -314,14 +296,6 @@ html, body {
   .rubber-band { height: 6px; top: 22%; }
   .delete-deck-btn-corner { width: 20px; height: 20px; font-size: 10px; opacity: 1; }
   .memorized-stamp { font-size: 14px; border-width: 2px; padding: 2px 8px; }
-
-  /* スマホでのカード画面は美しい「4:3」に固定！ */
-  .card-animation-wrapper {
-    aspect-ratio: 4 / 3; 
-    min-height: auto;
-    width: 100%;
-  }
+  .card-animation-wrapper { aspect-ratio: 4 / 3; min-height: auto; width: 100%; }
   .card-front, .card-back { padding: 15px; }
-  
-  .core-meaning-large { font-size: 24px; }
 }
