@@ -3,10 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import './App.css';
 
-const API_KEY = 'AIzaSyDgKNqCHpejyKy67b3SKuUFI5_ONiZqmvw'; 
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-
 const parseCSV = (text) => {
+  text = text.replace(/^\uFEFF/, ''); 
   const rows = []; let row = []; let currentVal = ''; let inQuotes = false;
   for (let i = 0; i < text.length; i++) {
     const char = text[i]; const nextChar = text[i+1];
@@ -34,7 +32,7 @@ function App() {
   const [isStoring, setIsStoring] = useState(false);
 
   const [boxes, setBoxes] = useState([
-    { id: 1, name: '中学英語マスター箱' }, { id: 2, name: '資格・オリジナル箱' }
+    { id: 1, name: '中学レベル' }, { id: 2, name: '資格・オリジナル箱' }
   ]);
 
   const [decks, setDecks] = useState([
@@ -43,12 +41,13 @@ function App() {
       cards: [
         { word: 'shine', meaning: '輝く / 光る', example: 'The stars **shine** brightly.', translation: '星が明るく**輝く**。', isMemorized: false },
         { word: 'have', meaning: '持っている / 食べる', example: 'I **have** a book.', translation: '私は本を**持っています**。', isMemorized: false },
-        { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false }
+        { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false },
+        { word: 'attack', meaning: '攻撃する', example: 'The dog will not **attack** you.', translation: 'その犬はあなたを**攻撃し**ません。', isMemorized: false }
       ] 
     }
   ]);
 
-  const [view, setView] = useState('boxes');
+  const [view, setView] = useState('boxes'); 
   const [currentBoxId, setCurrentBoxId] = useState(null);
   const [currentDeckId, setCurrentDeckId] = useState(null);
 
@@ -60,31 +59,51 @@ function App() {
   const [studyTime, setStudyTime] = useState(0);
   const [hasRecorded, setHasRecorded] = useState(false); 
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [playSpeed, setPlaySpeed] = useState('normal'); 
   const [speedLevel, setSpeedLevel] = useState(40);
-
-  const [word, setWord] = useState('');
-  const [loading, setLoading] = useState(false);
-  
-  // ⭐️ 例文の難易度を設定するステート
-  const [difficulty, setDifficulty] = useState('中学・基礎レベル');
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-
   const [isBulkMode, setIsBulkMode] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
-
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [editingCard, setEditingCard] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const [testQuestions, setTestQuestions] = useState([]);
+  const [currentTestIndex, setCurrentTestIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [showTestResult, setShowTestResult] = useState(false);
+  const [printCards, setPrintCards] = useState([]);
+
+  const [draggedDeckId, setDraggedDeckId] = useState(null);
+  const touchDragTimer = useRef(null);
 
   const activeDeck = decks.find(d => d.id === currentDeckId);
   const allCards = activeDeck ? activeDeck.cards : [];
-  
   const studyCards = allCards.filter(c => !c.isMemorized);
   const memorizedCards = allCards.filter(c => c.isMemorized);
-  
   const isCompleted = studyCards.length > 0 && currentIndex === studyCards.length - 1 && isFlipped;
+
+  const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
+  
+  const deleteCard = () => {
+    stopAutoPlayIfActive();
+    if (window.confirm('このカードを削除しますか？')) {
+      const wordToDelete = studyCards[currentIndex]?.word;
+      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
+      if (currentIndex >= studyCards.length - 1 && studyCards.length > 1) {
+        setCurrentIndex(studyCards.length - 2);
+      }
+      setIsFlipped(false); 
+      setHasRecorded(false);
+    }
+  };
+
+  const deleteSpecificCard = (e, wordToDelete) => {
+    e.stopPropagation(); stopAutoPlayIfActive();
+    if (window.confirm(`「${wordToDelete}」を削除しますか？`)) {
+      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
+    }
+  };
 
   useEffect(() => {
     if (studyCards.length > 0 && currentIndex >= studyCards.length) {
@@ -127,7 +146,7 @@ function App() {
   useEffect(() => {
     if (view === 'study' && !isFlipped && studyCards.length > 0 && studyCards[currentIndex]) {
       if (lastPlayedIndexRef.current !== currentIndex || lastFlippedStateRef.current !== isFlipped) {
-        playAudio(studyCards[currentIndex].word);
+        playAudio(studyCards[currentIndex]?.word || '');
         lastPlayedIndexRef.current = currentIndex;
         lastFlippedStateRef.current = isFlipped;
       }
@@ -137,13 +156,13 @@ function App() {
   }, [currentIndex, isFlipped, studyCards, view, playAudio]);
 
   useEffect(() => {
-    let interval = null;
+    let studyTimerInterval = null;
     if (view === 'study' && !isCompleted && !isBulkMode && studyCards.length > 0) {
-      interval = setInterval(() => setStudyTime(prev => prev + 1), 1000);
+      studyTimerInterval = setInterval(() => setStudyTime(prev => prev + 1), 1000);
     } else if (view !== 'study') {
       setStudyTime(0);
     }
-    return () => clearInterval(interval);
+    return () => { if (studyTimerInterval) clearInterval(studyTimerInterval); };
   }, [view, isCompleted, isBulkMode, studyCards.length]);
 
   const formatTime = (seconds) => seconds ? `${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}` : '--:--';
@@ -155,7 +174,13 @@ function App() {
 
   useEffect(() => {
     if (isCompleted && !hasRecorded && currentDeckId) {
-      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, lastRecordTime: studyTime } : d));
+      setDecks(prev => prev.map(d => {
+        if (d.id === currentDeckId) {
+          const isFaster = d.lastRecordTime === null || studyTime < d.lastRecordTime;
+          return { ...d, lastRecordTime: isFaster ? studyTime : d.lastRecordTime };
+        }
+        return d;
+      }));
       setHasRecorded(true); 
     }
   }, [isCompleted, currentDeckId, studyTime]);
@@ -163,14 +188,38 @@ function App() {
   const nextCard = useCallback(() => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev + 1) % studyCards.length), 150); }, [studyCards.length]);
   const prevCard = useCallback(() => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev - 1 + studyCards.length) % studyCards.length), 150); }, [studyCards.length]);
 
+  // ⭐️ 新機能：キーボードショートカット機能（教壇からのパワポ操作用）
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (view !== 'study' || isBulkMode) return;
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        stopAutoPlayIfActive();
+        setIsFlipped(prev => !prev);
+      } else if (e.code === 'Enter' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        stopAutoPlayIfActive();
+        nextCard();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        stopAutoPlayIfActive();
+        prevCard();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [view, isBulkMode, isAutoPlaying, nextCard, prevCard]);
+
   const elapsedRef = useRef(0);
   const lastTickRef = useRef(Date.now());
 
   useEffect(() => {
-    let interval = null; 
+    let autoPlayTimer = null; 
     if (isAutoPlaying && studyCards.length > 0 && !isCompleted) {
       lastTickRef.current = Date.now();
-      interval = setInterval(() => {
+      autoPlayTimer = setInterval(() => {
         const now = Date.now();
         const delta = now - lastTickRef.current;
         lastTickRef.current = now;
@@ -186,10 +235,8 @@ function App() {
     } else { 
       elapsedRef.current = 0; 
     }
-    return () => { if (interval) clearInterval(interval); };
+    return () => { if (autoPlayTimer) clearInterval(autoPlayTimer); };
   }, [isAutoPlaying, isFlipped, currentIndex, speedLevel, studyCards.length, isCompleted, nextCard]);
-
-  const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
 
   const handleRepeat = () => { stopAutoPlayIfActive(); setCurrentIndex(0); setIsFlipped(false); setStudyTime(0); setHasRecorded(false); };
 
@@ -228,124 +275,6 @@ function App() {
     setEditingCard(null); 
   };
 
-  const deleteSpecificCard = (e, wordToDelete) => {
-    e.stopPropagation(); stopAutoPlayIfActive();
-    if (window.confirm(`「${wordToDelete}」を削除しますか？`)) {
-      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
-    }
-  };
-
-  const getEbbinghausStatus = (lastStudied) => {
-    if (!lastStudied) return { label: '🆕 未学習', className: 'status-new', needsReview: false };
-    const hoursPassed = (Date.now() - lastStudied) / 3600000;
-    if (hoursPassed < 24) return { label: '✅ 定着中', className: 'status-fresh', needsReview: false };
-    if (hoursPassed < 72) return { label: '🔥 復習時', className: 'status-review', needsReview: true, shake: true };
-    return { label: '💤 リセット', className: 'status-warning', needsReview: false };
-  };
-
-  const getMemorizedStatus = (lastStudied) => {
-    if (!lastStudied) return { label: '🏆 暗記完了', className: 'status-perfect', needsReview: false };
-    const daysPassed = Math.floor((Date.now() - lastStudied) / (1000 * 60 * 60 * 24));
-    if (daysPassed >= 14) return { label: `🚨 ${daysPassed}日経過! 復習推奨`, className: 'status-warning', needsReview: true, shake: true };
-    if (daysPassed >= 7) return { label: `⚠️ ${daysPassed}日経過! 記憶チェック`, className: 'status-review', needsReview: true, shake: true };
-    if (daysPassed >= 3) return { label: `🔥 ${daysPassed}日経過! 復習ベスト`, className: 'status-review', needsReview: true, shake: true };
-    if (daysPassed >= 1) return { label: `✅ ${daysPassed}日経過! 短期記憶中`, className: 'status-fresh', needsReview: false };
-    return { label: '🏆 本日暗記完了!', className: 'status-perfect', needsReview: false };
-  };
-
-  // ⭐️ プロンプトに難易度設定を組み込む
-  const fetchMeaning = async (targetWord) => {
-    const prompt = `英単語「${targetWord}」について、必ず以下の【条件】に従って出力してください。
-    【条件】
-    1行目:意味(最大2つ。2つの場合は「 / 」で区切る。※「動詞」などの品詞名は絶対に書かないこと)
-    2行目:【${difficulty}】の英文(※対象単語を「**」で囲む)
-    3行目:和訳(※英文で「**」で囲んだ単語に対応する日本語訳の部分を、必ず「**」で囲む)
-    【禁止事項】挨拶、説明、箇条書き番号、空行は一切含めないでください。`;
-    
-    try {
-      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message);
-      const lines = data.candidates[0].content.parts[0].text.split('\n').map(l => l.trim().replace(/^[1-3].\s*/, '')).filter(l => l);
-      return { coreMeaning: lines[0] || '取得失敗', exampleText: lines[1] || '例文なし', translationText: lines[2] || '' };
-    } catch (e) { return { coreMeaning: 'エラー', exampleText: 'AIの生成に失敗しました。', translationText: '通信環境を確認してください。' }; }
-  };
-
-  const handleAddCard = async () => {
-    if (!word.trim()) return;
-    setLoading(true);
-    try {
-      const res = await fetchMeaning(word);
-      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...d.cards, { word, ...res, isMemorized: false }] } : d));
-      setWord(''); 
-      setTimeout(() => { setCurrentIndex(studyCards.length); setIsFlipped(false); setHasRecorded(false); }, 100);
-    } catch(err) {
-      alert("カードの追加中にエラーが発生しました。");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const downloadTemplate = () => {
-    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); 
-    const content = '英単語,日本語訳,例文,例文訳\napple,りんご,"I have an **apple**.","私は**りんご**を持っています。"\nbanana,,,\n';
-    const blob = new Blob([bom, content], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = '単語帳テンプレート.csv'; a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const text = event.target.result;
-      const parsedData = parseCSV(text);
-      const startIndex = parsedData[0] && parsedData[0][0] && parsedData[0][0].includes('英単語') ? 1 : 0;
-      const rows = parsedData.slice(startIndex).filter(row => row.length > 0 && row[0] && row[0].trim() !== '');
-      processImportData(rows);
-    };
-    reader.readAsText(file);
-    e.target.value = null; 
-  };
-
-  const processImportData = async (rows) => {
-    setLoading(true); setBulkProgress({ current: 0, total: rows.length });
-    const newCards = [];
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const targetWord = row[0]?.trim();
-      let userMeaning = row[1]?.trim() || '';
-      let userExample = row[2]?.trim() || '';
-      let userTrans = row[3]?.trim() || '';
-
-      if (!userMeaning || !userExample || !userTrans) {
-        const res = await fetchMeaning(targetWord);
-        userMeaning = userMeaning || res.coreMeaning;
-        userExample = userExample || res.exampleText;
-        userTrans = userTrans || res.translationText;
-        await new Promise(resolve => setTimeout(resolve, 800)); 
-      }
-      newCards.push({ word: targetWord, meaning: userMeaning, example: userExample, translation: userTrans, isMemorized: false });
-      setBulkProgress({ current: i + 1, total: rows.length });
-    }
-    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...d.cards, ...newCards] } : d));
-    setIsBulkMode(false); setLoading(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false);
-  };
-
-  const deleteCard = () => {
-    stopAutoPlayIfActive();
-    if (window.confirm('このカードを削除しますか？')) {
-      const wordToDelete = studyCards[currentIndex].word;
-      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
-      if (currentIndex >= studyCards.length - 1 && studyCards.length > 1) setCurrentIndex(studyCards.length - 2);
-      setIsFlipped(false); setHasRecorded(false);
-    }
-  };
-
-  // ⭐️ 箱・束の「名前変更」機能
   const renameBox = (e, boxId, currentName) => {
     e.stopPropagation();
     const newName = window.prompt('箱の新しい名前を入力してください:', currentName);
@@ -362,15 +291,124 @@ function App() {
     }
   };
 
+  const getEbbinghausStatus = (deck) => {
+    if (deck.cards.length > 0 && deck.cards.every(c => c.isMemorized)) {
+       return { label: '🏆 暗記済', className: 'status-perfect', needsReview: false };
+    }
+    const lastStudied = deck.lastStudied;
+    if (!lastStudied) return { label: '🆕 未学習', className: 'status-new', needsReview: false };
+    const hoursPassed = (Date.now() - lastStudied) / 3600000;
+    if (hoursPassed < 24) return { label: '✅ 学習中', className: 'status-fresh', needsReview: false };
+    if (hoursPassed < 72) return { label: '🔥 復習推奨', className: 'status-review', needsReview: true, shake: true };
+    return { label: '💤 放置気味', className: 'status-warning', needsReview: false };
+  };
+
+  const downloadTemplate = () => {
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); 
+    const content = '英単語,日本語訳,例文,例文訳\napple,りんご,"I have an **apple**.","私は**りんご**を持っています。"\nsolution,解決策,"We need a good **solution**.","私たちは良い**解決策**が必要です。"\n';
+    const blob = new Blob([bom, content], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = '単語帳インポート用データ.csv'; a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      const parsedData = parseCSV(text);
+      const startIndex = parsedData[0] && parsedData[0][0] && String(parsedData[0][0]).includes('英単語') ? 1 : 0;
+      const rows = parsedData.slice(startIndex).filter(row => row.length > 0 && row[0] && String(row[0]).trim() !== '');
+      processImportData(rows); 
+    };
+    reader.readAsText(file);
+    e.target.value = null; 
+  };
+
+  const processImportData = (rows) => {
+    setLoading(true);
+    try {
+      const newCards = [];
+      for (const row of rows) {
+        const targetWord = row[0] ? String(row[0]).trim() : '';
+        if (!targetWord) continue;
+        newCards.push({ 
+          word: targetWord, 
+          meaning: row[1] ? String(row[1]).trim() : '', 
+          example: row[2] ? String(row[2]).trim() : '', 
+          translation: row[3] ? String(row[3]).trim() : '', 
+          isMemorized: false 
+        });
+      }
+      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...(d.cards || []), ...newCards] } : d));
+    } catch(e) {
+      alert("ファイルの読み込み中にエラーが発生しました。");
+    } finally {
+      setIsBulkMode(false); 
+      setCurrentIndex(0); 
+      setIsFlipped(false); 
+      setHasRecorded(false);
+      setLoading(false);
+    }
+  };
+
+  const startTest = () => {
+    if (allCards.length < 4) {
+      alert("テストを行うには、この束に最低4枚のカードが必要です！");
+      return;
+    }
+    const shuffledCards = [...allCards].sort(() => Math.random() - 0.5);
+    const questions = shuffledCards.map(card => {
+      const wrongAnswers = allCards.filter(c => c.word !== card.word)
+                                   .sort(() => Math.random() - 0.5)
+                                   .slice(0, 3)
+                                   .map(c => c.meaning || '意味なし');
+      const options = [card.meaning || '意味なし', ...wrongAnswers].sort(() => Math.random() - 0.5);
+      return {
+        word: card.word,
+        correct: card.meaning || '意味なし',
+        options: options
+      };
+    });
+
+    setTestQuestions(questions);
+    setCurrentTestIndex(0);
+    setScore(0);
+    setShowTestResult(false);
+    setView('test');
+  };
+
+  const handleAnswer = (selectedOption) => {
+    const isCorrect = selectedOption === testQuestions[currentTestIndex].correct;
+    if (isCorrect) setScore(prev => prev + 1);
+    
+    if (currentTestIndex < testQuestions.length - 1) {
+      setCurrentTestIndex(prev => prev + 1);
+    } else {
+      setShowTestResult(true);
+    }
+  };
+
+  const openPrintPreview = () => {
+    if (allCards.length === 0) {
+      alert("印刷するカードがありません。");
+      return;
+    }
+    setPrintCards([...allCards].sort(() => Math.random() - 0.5));
+    setView('printPreview');
+  };
+
+  const shufflePrintCards = () => {
+    setPrintCards([...printCards].sort(() => Math.random() - 0.5));
+  };
+
   const createNewBox = () => {
     if (!newBoxName.trim()) return;
     const newBox = { id: Date.now(), name: newBoxName };
     setBoxes([...boxes, newBox]); setSelectedBoxForDeck(newBox.id); setNewBoxName('');
-  };
-  const createNewDeck = () => {
-    if (!newDeckName.trim()) return;
-    setDecks([...decks, { id: Date.now(), boxId: Number(selectedBoxForDeck), name: newDeckName, lastStudied: null, lastRecordTime: null, cards: [] }]);
-    setNewDeckName('');
   };
   const createNewDeckInsideBox = () => {
     if (!newDeckNameInside.trim()) return;
@@ -383,7 +421,11 @@ function App() {
   };
 
   const openBox = (boxId) => { setCurrentBoxId(boxId); setView('decks'); };
-  const openDeck = (id) => { setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); };
+  
+  const openDeck = (id) => { 
+    if (draggedDeckId) return;
+    setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); 
+  };
   
   const closeDeck = useCallback(() => {
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
@@ -395,23 +437,92 @@ function App() {
 
   const renderHighlightedText = (text) => {
     if (!text) return null;
-    return String(text).split(/\*\*(.*?)\*\*/g).map((part, i) => i % 2 === 1 ? <span key={i} className="highlight-word">{part}</span> : part);
+    try {
+      return String(text).split(/\*\*(.*?)\*\*/g).map((part, i) => i % 2 === 1 ? <span key={i} className="highlight-word">{part}</span> : part);
+    } catch(e) {
+      return String(text);
+    }
+  };
+
+  const onDragStart = (e, id) => {
+    setDraggedDeckId(id);
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const onDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+  const onDropToArea = (e, targetArea) => {
+    e.preventDefault();
+    if (!draggedDeckId) return;
+    setDecks(prev => {
+      const newDecks = [...prev];
+      const index = newDecks.findIndex(d => d.id === draggedDeckId);
+      if (index !== -1) {
+        const d = newDecks[index];
+        if (targetArea === 'memorized') {
+          newDecks[index] = { ...d, lastStudied: Date.now(), cards: d.cards.map(c => ({...c, isMemorized: true})) };
+        } else if (targetArea === 'unmemorized') {
+          newDecks[index] = { ...d, cards: d.cards.map(c => ({...c, isMemorized: false})) };
+        }
+      }
+      return newDecks;
+    });
+    setDraggedDeckId(null);
+  };
+  
+  const onTouchStartDeck = (e, id) => {
+    e.stopPropagation(); 
+    touchDragTimer.current = setTimeout(() => {
+      setDraggedDeckId(id);
+    }, 400); 
+  };
+  const onTouchMoveDeck = (e) => {
+    if (!draggedDeckId) {
+      clearTimeout(touchDragTimer.current);
+      return;
+    }
+    e.preventDefault(); 
+  };
+  const onTouchEndDeck = (e) => {
+    clearTimeout(touchDragTimer.current);
+    if (draggedDeckId) {
+      const touch = e.changedTouches[0];
+      if(touch) {
+         const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+         const targetMemArea = elem?.closest('.decks-memorized-area');
+         const targetUnmemArea = elem?.closest('.decks-unmemorized-area');
+
+         setDecks(prev => {
+            let newDecks = [...prev];
+            const index = newDecks.findIndex(d => d.id === draggedDeckId);
+            if (index !== -1) {
+              if (targetMemArea) {
+                 newDecks[index] = { ...newDecks[index], lastStudied: Date.now(), cards: newDecks[index].cards.map(c => ({...c, isMemorized: true})) };
+              } else if (targetUnmemArea) {
+                 newDecks[index] = { ...newDecks[index], cards: newDecks[index].cards.map(c => ({...c, isMemorized: false})) };
+              }
+            }
+            return newDecks;
+         });
+      }
+      setTimeout(() => setDraggedDeckId(null), 100);
+    }
   };
 
   const handleTouchStart = (e) => {
-    if (e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes') return;
+    if (draggedDeckId || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes' || view === 'printPreview') return;
     touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; touchEndX.current = null; touchEndY.current = null; 
   };
   const handleTouchMove = (e) => {
-    if (window.scrollY > 10) return;
-    if (!touchStartX.current || !touchStartY.current || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes') return;
-    
+    if (draggedDeckId || window.scrollY > 10) return;
+    if (!touchStartX.current || !touchStartY.current || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes' || view === 'printPreview') return;
     touchEndX.current = e.touches[0].clientX; touchEndY.current = e.touches[0].clientY;
     const diffY = touchEndY.current - touchStartY.current; const diffX = touchStartX.current - touchEndX.current;
     if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) setPullDownY(diffY);
   };
   const handleTouchEnd = () => {
-    if (view === 'boxes') return;
+    if (view === 'boxes' || view === 'printPreview') return;
     if (pullDownY > 120) {
       setIsStoring(true); setPullDownY(window.innerHeight);
       setTimeout(() => { if (view === 'study') closeDeck(); else if (view === 'decks') setView('boxes'); setIsStoring(false); setPullDownY(0); }, 400);
@@ -445,83 +556,85 @@ function App() {
     );
   };
 
-  const renderDeckCard = (deck, isMemorizedSection) => {
-    const status = isMemorizedSection ? getMemorizedStatus(deck.lastStudied) : getEbbinghausStatus(deck.lastStudied);
+  const renderDeckCard = (deck) => {
+    const status = getEbbinghausStatus(deck);
+    const isDragging = draggedDeckId === deck.id;
+    const isAllMemorized = deck.cards.length > 0 && deck.cards.every(c => c.isMemorized);
+
     return (
-      <div key={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''}`} onClick={() => openDeck(deck.id)}>
-        <div className="deck-paper stack-bottom"></div><div className="deck-paper stack-middle"></div>
+      <div 
+        key={deck.id} 
+        data-id={deck.id}
+        className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''} ${isDragging ? 'dragging' : ''}`} 
+        onClick={() => openDeck(deck.id)}
+        draggable="true"
+        onDragStart={(e) => onDragStart(e, deck.id)}
+        onDragEnd={() => setDraggedDeckId(null)}
+        onTouchStart={(e) => onTouchStartDeck(e, deck.id)}
+        onTouchMove={onTouchMoveDeck}
+        onTouchEnd={onTouchEndDeck}
+        title="ドラッグでエリア間を移動！"
+      >
+        <div className="deck-paper stack-bottom"></div>
+        <div className="deck-paper stack-middle"></div>
         <div className="deck-paper top-cover">
-          {!isMemorizedSection && deck.cards.length > 0 && (
-            <button className="deck-memorized-btn" onClick={e => markDeckAsMemorized(e, deck.id)} title="この束をすべて暗記済みにする">✔</button>
-          )}
-          
-          {/* ⭐️ 束の名前変更ボタン（✏️） */}
-          <h3 className="deck-name">
+          <h3 className="deck-name" title={deck.name}>
             {deck.name}
-            <button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)} title="名前を変更">✏️</button>
+            <button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)}>✏️</button>
           </h3>
           
-          <p className="deck-count">{deck.cards.length} 枚</p>
-          <div className={`status-badge ${status.className}`}>{status.label}</div>
-          {deck.lastStudied && <p className="deck-date">🗓 最終学習: {formatDate(deck.lastStudied)}</p>}
-          {deck.lastRecordTime !== null && <p className="deck-record">⏱ タイム: {formatTime(deck.lastRecordTime)}</p>}
-          <button className="delete-deck-btn" onClick={e => deleteDeck(e, deck.id)}>×</button>
-        </div><div className="rubber-band"></div>
+          <button className="delete-deck-btn-corner" onClick={e => deleteDeck(e, deck.id)}>×</button>
+
+          <div className="deck-info-bottom">
+            <span className={`status-badge ${status.className}`}>{status.label}</span>
+            <div className="deck-stats-mini">
+              <span>🗂 {deck.cards.length}枚</span>
+              {deck.lastStudied && <span>🗓 {formatDate(deck.lastStudied)}</span>}
+              {deck.lastRecordTime !== null && <span>⏱ 最速 {formatTime(deck.lastRecordTime)}</span>}
+            </div>
+          </div>
+
+          {isAllMemorized && <div className="memorized-stamp">💮 暗記済</div>}
+
+        </div>
+        <div className="rubber-band"></div>
       </div>
     );
   };
 
   if (view === 'boxes') {
     return (
-      <div className="app-container gentle-bg desk-view" style={{padding: 0}}>
-        
+      <div className="app-container gentle-bg desk-view">
         <div className="hero-section">
           <h1 className="app-main-title">Redline Vocabulary</h1>
-          <h2 className="app-subtitle">限界突破の英単語</h2>
-          <p className="app-message">
-            知っている英単語の数は、あなたが認識できる「世界の広さ」に直結します。<br/>
-            5万語〜10万語という限界を突破した先には、英語を日本語のように自然に理解できるネイティブの景色が待っています。<br/>
-            さあ、脳の限界を超えて、新しい世界への扉を開きましょう！
-          </p>
         </div>
 
         <div className="integrated-creation-area">
           <div className="creation-row">
-            <span className="creation-label">📦 新しい箱</span>
-            <input type="text" placeholder="箱の名前 (例: 英検用)" value={newBoxName} onChange={(e) => setNewBoxName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewBox()} />
+            <span className="creation-label" title="新しい箱を作る">📦</span>
+            <input type="text" placeholder="箱の名前を入力して追加" value={newBoxName} onChange={(e) => setNewBoxName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewBox()} />
             <button onClick={createNewBox} className="add-btn mini-btn">作る</button>
-          </div>
-          <div className="creation-divider"></div>
-          <div className="creation-row">
-            <span className="creation-label">🔖 新しい束</span>
-            <input type="text" placeholder="束の名前 (例: Day 1)" value={newDeckName} onChange={(e) => setNewDeckName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeck()} />
-            <select value={selectedBoxForDeck} onChange={e => setSelectedBoxForDeck(e.target.value)} className="box-selector">
-              {boxes.map(b => <option key={b.id} value={b.id}>{b.name} に収納</option>)}
-            </select>
-            <button onClick={createNewDeck} className="add-btn mini-btn">作る</button>
           </div>
         </div>
 
         <div className="boxes-grid">
           {boxes.map(box => {
             const hasReview = decks.filter(d => d.boxId === box.id).some(d => {
-              if (d.cards.length > 0 && d.cards.every(c => c.isMemorized)) return getMemorizedStatus(d.lastStudied).needsReview;
-              return getEbbinghausStatus(d.lastStudied).needsReview;
+              if (d.cards.length > 0 && d.cards.every(c => c.isMemorized)) return false;
+              return getEbbinghausStatus(d).needsReview;
             });
             return (
-              <div key={box.id} className={`storage-box-container ${hasReview ? 'polite-shake-once' : ''}`} onClick={() => openBox(box.id)}>
-                <div className="storage-box">
-                  <div className="box-lid"></div>
-                  <div className="box-body">
-                    {/* ⭐️ 箱の名前変更ボタン（✏️） */}
-                    <span className="box-label">
-                      {box.name}
-                      <button className="inline-edit-btn" onClick={(e) => renameBox(e, box.id, box.name)} title="名前を変更">✏️</button>
-                    </span>
+              <div key={box.id} className={`storage-box-container ${hasReview ? 'polite-shake-once' : ''}`}>
+                <div className="storage-box" onClick={() => openBox(box.id)}>
+                  <div className="box-lid-line"></div>
+                  <div className="box-label-wrapper">
+                    <span className="box-label" title={box.name}>{box.name}</span>
                   </div>
+                  <div className="box-handle"></div>
                 </div>
-                <p className="box-instruction">{hasReview ? <span className="alert-text">🔥 復習のタイミング！</span> : 'タップして開ける'}</p>
-                <button className="delete-deck-btn" style={{top: '10px'}} onClick={e => deleteBox(e, box.id)}>×</button>
+                <button className="inline-edit-btn box-edit-icon" onClick={(e) => renameBox(e, box.id, box.name)}>✏️</button>
+                <p className="box-instruction">{hasReview ? <span className="alert-text">🔥 復習のタイミング！</span> : 'タップして開く'}</p>
+                <button className="delete-deck-btn" style={{top: '5px'}} onClick={e => deleteBox(e, box.id)}>×</button>
               </div>
             );
           })}
@@ -530,8 +643,77 @@ function App() {
     );
   }
 
+  if (view === 'test') {
+    return (
+      <div className="app-container gentle-bg desk-view">
+        <div className="test-container">
+          {showTestResult ? (
+            <div className="test-result">
+              <h2 style={{fontSize: '32px', color: '#27ae60'}}>テスト終了！</h2>
+              <p style={{fontSize: '24px', fontWeight: 'bold'}}>スコア: {score} / {testQuestions.length}</p>
+              <div className="test-actions">
+                <button className="add-btn" onClick={() => startTest()}>🔄 もう一度テストする</button>
+                <button className="cancel-btn" onClick={() => setView('study')}>◀ 学習に戻る</button>
+              </div>
+            </div>
+          ) : (
+            <div className="test-quiz-area">
+              <p className="test-counter">問題 {currentTestIndex + 1} / {testQuestions.length}</p>
+              <h1 className="test-word">{testQuestions[currentTestIndex]?.word}</h1>
+              <p className="test-hint">この単語の正しい意味はどれ？</p>
+              
+              <div className="test-options">
+                {testQuestions[currentTestIndex]?.options.map((option, idx) => (
+                  <button key={idx} className="test-option-btn" onClick={() => handleAnswer(option)}>
+                    {option}
+                  </button>
+                ))}
+              </div>
+              <button className="cancel-btn" style={{marginTop: '30px'}} onClick={() => setView('study')}>中断して戻る</button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'printPreview') {
+    return (
+      <div className="app-container gentle-bg desk-view">
+        <div className="print-controls no-print">
+          <button className="cancel-btn" onClick={() => setView('study')}>◀ 学習に戻る</button>
+          <button className="add-btn" onClick={shufflePrintCards} style={{backgroundColor: '#8e44ad'}}>🔄 問題をシャッフル</button>
+          <button className="add-btn" onClick={() => window.print()} style={{backgroundColor: '#e74c3c'}}>🖨️ 印刷する (PDF保存)</button>
+        </div>
+
+        <div className="print-preview-container print-area">
+          <div className="print-header">
+            <div>
+              <h1 className="print-title">{activeDeck?.name} - 単語テスト</h1>
+            </div>
+            <div className="print-info-box">
+              <span>　　年　　月　　日</span>
+              <span>氏名：____________________________</span>
+              <span>得点：　　 / {printCards.length}</span>
+            </div>
+          </div>
+          
+          <div className="print-questions">
+            {printCards.map((c, i) => (
+              <div key={i} className="print-q-row">
+                <div className="print-q-num">({i + 1})</div>
+                <div className="print-q-ja">{(c.meaning || '').split('/')[0]}</div>
+                <div className="print-q-ans"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ overflow: 'hidden', position: 'relative', padding: 0 }}>
+    <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
@@ -553,50 +735,60 @@ function App() {
         
         {view === 'decks' && (() => {
           const boxDecks = decks.filter(d => d.boxId === currentBoxId);
-          const newDecks = boxDecks.filter(d => d.lastStudied === null || d.cards.length === 0);
-          const memorizedDecks = boxDecks.filter(d => d.cards.length > 0 && d.lastStudied !== null && d.cards.every(c => c.isMemorized));
-          const learningDecks = boxDecks.filter(d => d.cards.length > 0 && d.lastStudied !== null && d.cards.some(c => !c.isMemorized));
+          const unmemorizedDecks = boxDecks.filter(d => !(d.cards.length > 0 && d.cards.every(c => c.isMemorized)));
+          const memorizedDecks = boxDecks.filter(d => d.cards.length > 0 && d.cards.every(c => c.isMemorized));
 
           return (
-            <div className="inner-view-wrapper" style={{maxWidth: '1000px', width: '100%', padding: '0 20px'}}>
+            <div className="inner-view-wrapper">
               <div className="study-header">
-                <button className="back-to-desk-btn" onClick={() => setView('boxes')}>◀ 戻る</button>
+                <button className="back-to-desk-btn" onClick={() => setView('boxes')}>◀ 箱に戻る</button>
                 <h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2>
                 <div style={{width: '80px'}}></div>
               </div>
-              <p className="hint-text">💡 画面を下に引っ張っても戻れます</p>
-
-              <div className="box-inner-creation">
-                <input type="text" placeholder="新しい束の名前 (例: Day 1)" value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
-                <button onClick={createNewDeckInsideBox} className="add-btn mini-btn">束を作る</button>
+              
+              <div className="integrated-creation-area">
+                <div className="creation-row">
+                  <span className="creation-label" title="新しい束を作る">🔖</span>
+                  <input type="text" placeholder="新しい暗記カードの束を入力" value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
+                  <button onClick={createNewDeckInsideBox} className="add-btn mini-btn">追加</button>
+                </div>
               </div>
 
-              {learningDecks.length > 0 && (
-                <div className="decks-section">
-                  <h3 className="section-heading">📖 学習中の束</h3>
-                  <div className="decks-grid">
-                    {learningDecks.map(d => renderDeckCard(d, false))}
-                  </div>
+              <div className="decks-split-layout">
+                <div 
+                  className="decks-unmemorized-area"
+                  onDragOver={onDragOver}
+                  onDrop={(e) => onDropToArea(e, 'unmemorized')}
+                >
+                  <h3 className="area-title">📖 学習中・未修の束</h3>
+                  <p className="area-hint">※右のエリアにドロップすると、すべて暗記済みになります。</p>
+                  
+                  {unmemorizedDecks.length === 0 ? (
+                     <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>未修の束はありません。</p>
+                  ) : (
+                    <div className="decks-grid">
+                      {unmemorizedDecks.map(d => renderDeckCard(d))}
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {memorizedDecks.length > 0 && (
-                <div className="decks-section">
-                  <h3 className="section-heading">🏆 暗記済みの束 <span style={{fontSize:'12px', color:'#a39c96', fontWeight:'normal'}}>(忘却曲線で復習タイミングをお知らせします)</span></h3>
-                  <div className="decks-grid">
-                    {memorizedDecks.map(d => renderDeckCard(d, true))}
-                  </div>
-                </div>
-              )}
+                <div 
+                  className="decks-memorized-area"
+                  onDragOver={onDragOver}
+                  onDrop={(e) => onDropToArea(e, 'memorized')}
+                >
+                  <h3 className="area-title" style={{color: '#27ae60'}}>🏆 暗記済の束</h3>
+                  <p className="area-hint">※ここに束をドロップすると一発で暗記済みに！</p>
 
-              {newDecks.length > 0 && (
-                <div className="decks-section">
-                  <h3 className="section-heading">🆕 未学習・新しい束</h3>
-                  <div className="decks-grid">
-                    {newDecks.map(d => renderDeckCard(d, false))}
-                  </div>
+                  {memorizedDecks.length === 0 ? (
+                     <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>まだ暗記済みの束はありません。</p>
+                  ) : (
+                    <div className="decks-grid memorized-grid">
+                      {memorizedDecks.map(d => renderDeckCard(d))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           );
         })()}
@@ -607,6 +799,13 @@ function App() {
             {!isFullscreen && (
               <div className="side-panel left-panel">
                 <h3 className="panel-title">📖 学習中 ({studyCards.length})</h3>
+                
+                <div className="panel-top-action" style={{ padding: '10px' }}>
+                  <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#e67e22'}}>
+                    📂 CSVから単語を追加
+                  </button>
+                </div>
+                
                 <div className="mini-card-list">
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}
                 </div>
@@ -617,57 +816,40 @@ function App() {
               {!isFullscreen && (
                 <div className="study-header">
                   <button className="back-to-desk-btn" onClick={closeDeck}>◀ 戻る</button>
-                  <h2 className="app-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin:0 }}>{activeDeck?.name}</h2>
+                  <h2 className="app-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin:0 }}>
+                    {activeDeck?.name}
+                    {allCards.length >= 4 && (
+                      <>
+                        <button className="test-start-btn" onClick={startTest} title="4択テストに挑戦！">📝 テスト</button>
+                        <button className="test-start-btn print-btn" onClick={openPrintPreview} title="紙のテストを印刷する">🖨️ プリント</button>
+                      </>
+                    )}
+                  </h2>
                   <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible' }}>⏱ {formatTime(studyTime)}</div>
                 </div>
               )}
               
-              {!isFullscreen && !isBulkMode && (
-                <div className="input-section" style={{ marginTop: '10px' }}>
-                  <input type="text" placeholder="単語を追加..." value={word} onChange={e => setWord(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAddCard()} disabled={loading} />
-                  
-                  {/* ⭐️ 難易度（例文レベル）セレクト */}
-                  <select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="difficulty-selector" disabled={loading}>
-                    <option value="中学・基礎レベル">🔰 中学・基礎レベル</option>
-                    <option value="高校・共通テストレベル">🎓 高校・共通テストレベル</option>
-                    <option value="TOEIC・英検準1級レベル">💼 TOEIC・英検準1級レベル</option>
-                    <option value="英検1級・英字新聞レベル">📰 英検1級・英字新聞レベル</option>
-                  </select>
-
-                  <button onClick={handleAddCard} className="add-btn" disabled={loading}>{loading ? '...' : '追加'}</button>
-                  <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn">📑 エクセルで丸投げ追加</button>
-                </div>
-              )}
-
               {!isFullscreen && isBulkMode && (
-                <div className="bulk-input-section" style={{ marginTop: '10px' }}>
-                  <p className="bulk-hint">テンプレートに単語を書いて、ファイルをアップロードしてください</p>
+                <div className="bulk-input-section" style={{ marginTop: '0px' }}>
+                  <p className="bulk-hint" style={{fontSize:'16px', color:'#333'}}>スプレッドシートやChatGPTで作成したCSVデータを読み込みます。</p>
                   
-                  {/* ⭐️ 一括追加時にも難易度を選べる */}
-                  <div style={{marginBottom: '15px', textAlign: 'center'}}>
-                    <label style={{fontSize: '13px', fontWeight: 'bold', color: '#6d5b53', marginRight: '10px'}}>例文の難易度:</label>
-                    <select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="difficulty-selector" disabled={loading}>
-                      <option value="中学・基礎レベル">🔰 中学・基礎レベル</option>
-                      <option value="高校・共通テストレベル">🎓 高校・共通テストレベル</option>
-                      <option value="TOEIC・英検準1級レベル">💼 TOEIC・英検準1級レベル</option>
-                      <option value="英検1級・英字新聞レベル">📰 英検1級・英字新聞レベル</option>
-                    </select>
-                  </div>
-
                   <div className="bulk-file-actions">
                     <button onClick={downloadTemplate} className="add-btn bulk-template-btn">📥 テンプレート(CSV)をダウンロード</button>
-                    <label className="add-btn bulk-upload-btn">
-                      {loading ? '処理中...' : '📂 ファイルを選択してインポート'}
+                    <label className="add-btn bulk-upload-btn" style={{backgroundColor: '#27ae60'}}>
+                      {loading ? '読み込み中...' : '📂 CSVファイルを選択して追加'}
                       <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
                     </label>
                   </div>
-                  <p className="bulk-note" style={{ color: '#e74c3c', fontWeight: 'bold' }}>※A列(英単語)だけ入力し、B〜D列が入力されない場合は、AIが自動で作成します！</p>
-                  {loading && (
-                    <div className="bulk-progress">
-                      <p>カードを生成中... ({bulkProgress.current} / {bulkProgress.total})</p>
-                      <div className="progress-bar-container"><div className="progress-bar-fill" style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}></div></div>
-                    </div>
-                  )}
+                  <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5' }}>
+                    💡 ChatGPTへの指示例コピペ用：<br/>
+                    <span style={{color: '#555', fontWeight: 'normal', display: 'block', background: '#f0f2f5', padding: '10px', borderRadius: '8px', marginTop: '5px', textAlign: 'left'}}>
+                      「以下の英単語リストをアプリ用にCSV化して。<br/>
+                      【条件】1.列は「英単語, 日本語訳, 英語例文, 例文和訳」の4列。<br/>
+                      2.例文と和訳内の対象単語を ** で囲む。3.コードブロックで出力。<br/>
+                      【リスト】（ここに単語を貼る）」
+                    </span>
+                  </p>
+                  
                   <div className="bulk-actions" style={{ marginTop: '15px' }}>
                     <button onClick={() => setIsBulkMode(false)} className="cancel-btn" disabled={loading}>閉じる</button>
                   </div>
@@ -683,25 +865,25 @@ function App() {
                 </div>
               ) : studyCards.length > 0 ? (
                 
-                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`}>
+                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ display: isBulkMode ? 'none' : 'flex' }}>
                   {!isFullscreen && <p className="card-counter">{currentIndex + 1} / {studyCards.length}</p>}
                   
+                  {/* ⭐️ 次へ進むときの「スライドイン・ページめくりアニメーション」用の key 設定 */}
                   <div className="card-animation-wrapper" key={currentIndex}>
                     <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
                       <div className="card-inner">
                         <div className="card-front">
                           <div className="ring-hole"></div>
                           <button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)} title="覚えたらチェック！">✔</button>
-                          <h1 className="word-text">{studyCards[currentIndex]?.word}</h1>
+                          <h1 className="word-text">{studyCards[currentIndex]?.word || ''}</h1>
                         </div>
                         
                         <div className="card-back">
-                          <div className="ring-hole"></div>
-                          <button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)} title="覚えたらチェック！">✔</button>
-                          
                           <div className="back-content">
                             <div className="meaning-section">
-                              <h2 className="core-meaning">{(studyCards[currentIndex]?.meaning || '').split('/').map((m, i) => <span key={i} style={{display:'block', margin:'4px 0'}}>{m.trim()}</span>)}</h2>
+                              <div className="core-meaning-large">
+                                {String(studyCards[currentIndex]?.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{m.trim()}</div>)}
+                              </div>
                             </div>
                             <div className="example-section">
                               <p className="example-en">{renderHighlightedText(studyCards[currentIndex]?.example || '')}</p>
@@ -714,13 +896,17 @@ function App() {
                   </div>
                   
                   {!isFullscreen && (
-                    <div className="controls"><button onClick={() => {stopAutoPlayIfActive(); prevCard();}} className="nav-btn">◀</button><button onClick={deleteCard} className="delete-btn">捨てる</button><button onClick={() => {stopAutoPlayIfActive(); nextCard();}} className="nav-btn">▶</button></div>
+                    <div className="controls">
+                      <button onClick={() => {stopAutoPlayIfActive(); prevCard();}} className="nav-btn">◀</button>
+                      <button onClick={deleteCard} className="delete-btn">捨てる</button>
+                      <button onClick={() => {stopAutoPlayIfActive(); nextCard();}} className="nav-btn">▶</button>
+                    </div>
                   )}
 
                   <div className="autoplay-controls">
                     <div className="autoplay-actions-row">
                       <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={() => setIsAutoPlaying(!isAutoPlaying)}>
-                        {isAutoPlaying ? '⏸ 停止' : '▶️ スタート'}
+                        {isAutoPlaying ? '⏸ 停止' : '▶️ 自動めくり'}
                       </button>
                       <button className="repeat-btn" onClick={handleRepeat} title="最初からやり直す">
                         🔄 もう1回
@@ -742,10 +928,10 @@ function App() {
 
                     <div className="speed-slider-container">
                       <div className="speed-slider-label">めくるスピードを調整:</div>
-                      <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
-                        <span style={{fontSize:'12px', color:'#a39c96'}}>遅</span>
+                      <div className="speed-slider-wrapper">
+                        <span style={{fontSize:'12px', color:'#a39c96', whiteSpace:'nowrap'}}>遅</span>
                         <input type="range" min="1" max="100" value={speedLevel} onChange={(e) => setSpeedLevel(Number(e.target.value))} className="speed-slider" />
-                        <span style={{fontSize:'12px', color:'#a39c96'}}>速</span>
+                        <span style={{fontSize:'12px', color:'#a39c96', whiteSpace:'nowrap'}}>速</span>
                       </div>
                       {speedLevel >= 85 && (
                         <div style={{ fontSize: '11px', color: '#e74c3c', fontWeight: 'bold', marginTop: '6px' }}>
@@ -755,9 +941,7 @@ function App() {
                     </div>
                   </div>
                 </div>
-              ) : (
-                !isFullscreen && <div className="empty-deck-msg"><p>まだこの束にはカードがありません。</p></div>
-              )}
+              ) : null}
             </div>
 
             {!isFullscreen && (
@@ -776,7 +960,6 @@ function App() {
           </div>
         )}
       </div>
-      {pullDownY > 10 && <div className="virtual-drop-zone" style={{ opacity: Math.min(1, pullDownY / 100) }}><div className="storage-box drop-box-mini"><div className="box-body"><span className="box-label">👇 しまう</span></div></div></div>}
     </div>
   );
 }
