@@ -25,7 +25,6 @@ html, body {
   overflow-x: hidden; 
 }
 
-/* ⭐️ ヘッダーエリアのダークデザイン */
 .hero-section { 
   text-align: center; 
   padding: 40px 20px 50px; 
@@ -39,7 +38,6 @@ html, body {
   align-items: center;
 }
 
-/* ⭐️ 燃えるタイトルエフェクト！一番上に君臨！ */
 .burning-text {
   font-size: clamp(36px, 8vw, 80px); 
   font-weight: 900;
@@ -47,11 +45,7 @@ html, body {
   letter-spacing: 3px;
   font-style: italic; 
   color: #fff;
-  text-shadow: 
-    0 -2px 4px #fff,
-    0 -4px 10px #ff0,
-    0 -8px 20px #ff8000,
-    0 -16px 40px #f00;
+  text-shadow: 0 -2px 4px #fff, 0 -4px 10px #ff0, 0 -8px 20px #ff8000, 0 -16px 40px #f00;
   animation: burn 1.5s ease-in-out infinite alternate;
   order: 1; 
 }
@@ -60,7 +54,6 @@ html, body {
   100% { text-shadow: 0 -3px 6px #fff, 0 -5px 12px #ff0, 0 -10px 25px #ff8000, 0 -20px 50px #f00; transform: translateY(-2px); }
 }
 
-/* ⭐️ 日本語の美しさを引き出す、明朝体のド迫力サブタイトル！ */
 .burning-subtitle {
   font-family: "Sawarabi Mincho", "Hiragino Mincho ProN", "Yu Mincho", "MS PMincho", serif;
   font-size: clamp(20px, 5vw, 36px);
@@ -68,10 +61,7 @@ html, body {
   color: #fff;
   margin: 10px 0 30px 0;
   letter-spacing: 6px;
-  text-shadow: 
-    0 0 10px rgba(255, 215, 0, 0.8),
-    0 0 20px rgba(255, 140, 0, 0.8),
-    0 0 30px rgba(255, 0, 0, 0.8);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 140, 0, 0.8), 0 0 30px rgba(255, 0, 0, 0.8);
   animation: pulse-glow 2s infinite alternate;
   order: 2; 
 }
@@ -80,42 +70,19 @@ html, body {
   100% { text-shadow: 0 0 15px rgba(255, 215, 0, 1), 0 0 30px rgba(255, 140, 0, 1), 0 0 40px rgba(255, 0, 0, 1); }
 }
 
-/* その下に箱作成欄を配置 */
 .creation-header-row {
-  display: flex; 
-  align-items: center; 
-  justify-content: center;
-  gap: 10px; 
-  flex-wrap: nowrap; 
-  width: 100%;
-  max-width: 600px;
-  background: rgba(255, 255, 255, 0.1); 
-  padding: 10px 15px;
-  border-radius: 8px;
-  box-sizing: border-box;
-  order: 3;
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: nowrap; 
+  width: 100%; max-width: 600px; margin: 0 auto; background: rgba(255, 255, 255, 0.1); 
+  padding: 10px 15px; border-radius: 8px; box-sizing: border-box; order: 3;
 }
-.creation-header-row input { 
-  flex-grow: 1; min-width: 0; padding: 12px; border: none; border-radius: 6px; font-size: 15px; box-sizing: border-box; background: #f8f9fa;
-}
+.creation-header-row input { flex-grow: 1; min-width: 0; padding: 12px; border: none; border-radius: 6px; font-size: 15px; box-sizing: border-box; background: #f8f9fa; }
 
 
-/* 2層目以降のタイトルデザイン */
 .study-deck-title {
-  font-size: clamp(28px, 6vw, 48px); 
-  font-weight: 900;
-  margin: 0;
-  letter-spacing: 2px;
-  font-style: italic;
+  font-size: clamp(28px, 6vw, 48px); font-weight: 900; margin: 0; letter-spacing: 2px; font-style: italic;
   background: linear-gradient(135deg, #8b0000 0%, #e74c3c 50%, #ff7675 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: #e74c3c; 
-  filter: drop-shadow(2px 4px 4px rgba(231, 76, 60, 0.2));
-  line-height: 1.2;
-  text-align: center;
-  word-break: break-word;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: #e74c3c; 
+  filter: drop-shadow(2px 4px 4px rgba(231, 76, 60, 0.2)); line-height: 1.2; text-align: center; word-break: break-word;
 }
 
 .integrated-creation-area { 
@@ -129,134 +96,51 @@ html, body {
 .mini-btn { padding: 12px 20px; font-size: 15px; white-space: nowrap; flex-shrink: 0; }
 
 .boxes-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 40px;
-  padding: 0 20px 40px 20px; width: 100%; max-width: 1000px; margin: 0 auto; box-sizing: border-box;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 30px;
+  padding: 0 20px 20px 20px; width: 100%; max-width: 1000px; margin: 0 auto; box-sizing: border-box;
 }
 
-.storage-box-container { display: flex; flex-direction: column; align-items: center; position: relative; width: 100%; z-index: 1; }
+.storage-box-container { 
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; 
+  position: relative; width: 100%; height: 100%; z-index: 1; 
+}
 
-/* ⭐️ 箱の「上」に、タップ指示と編集ボタンを美しいプレートで1列に整列！ */
 .box-top-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 10px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 6px 15px;
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 12px; width: 100%; background: rgba(255, 255, 255, 0.9);
+  padding: 6px 10px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); box-sizing: border-box;
+  flex-wrap: nowrap; height: 40px; 
 }
+
 .box-instruction {
-  font-size: 14px;
-  color: #34495e;
-  font-weight: bold;
-  margin: 0;
-  white-space: nowrap;
+  font-size: 13px; color: #34495e; font-weight: bold; margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
 }
 .box-icon-btn {
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
+  background: #f8f9fa; border: 1px solid #ddd; border-radius: 50%; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px;
+  transition: all 0.2s; flex-shrink: 0;
 }
-.box-icon-btn:hover {
-  background: #fff;
-  transform: scale(1.15);
-  border-color: #3498db;
-  color: #3498db;
-}
-.delete-box-btn:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
-}
+.box-icon-btn:hover { background: #fff; transform: scale(1.15); border-color: #3498db; color: #3498db; }
+.delete-box-btn:hover { border-color: #e74c3c; color: #e74c3c; }
 
-/* ⭐️ プラスチックケース風の箱デザイン */
 .storage-box { 
-  width: 100%; 
-  aspect-ratio: 4 / 3.5; 
-  background: rgba(255, 255, 255, 0.4); 
-  border: 1px solid rgba(200, 200, 200, 0.6); 
-  border-radius: 12px; 
-  position: relative; 
-  cursor: pointer; 
-  transition: all 0.3s ease; 
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
-  backdrop-filter: blur(5px);
-  /* ⭐️ アニメーションのために overflow は hidden にしない */
+  width: 100%; aspect-ratio: 4 / 3; background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(200, 200, 200, 0.6); 
+  border-radius: 12px; position: relative; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+  display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(5px);
 }
-.storage-box:hover { 
-  transform: translateY(-4px); 
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1); 
-  border-color: #1abc9c;
-}
+.storage-box:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-color: #1abc9c; }
 
-/* ⭐️ 箱が「カパッ」と開くアニメーション！ */
-.box-lid { 
-  position: absolute; 
-  top: 0; left: 0; 
-  width: 100%; height: 35%; 
-  background: rgba(255, 255, 255, 0.6); 
-  border-bottom: 2px solid rgba(200, 200, 200, 0.8); 
-  border-radius: 12px 12px 0 0; 
-  transform-origin: top; 
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-  z-index: 2; 
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
+.box-lid-line { position: absolute; top: 0; left: 0; width: 100%; height: 35%; background: rgba(255, 255, 255, 0.6); border-bottom: 2px solid rgba(200, 200, 200, 0.8); border-radius: 12px 12px 0 0; transform-origin: top; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 2; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.opening-anim { animation: boxFadeOut 0.45s ease-in forwards; }
+.opening-anim .box-lid-line { transform: rotateX(85deg); }
+@keyframes boxFadeOut { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0; transform: scale(1.1) translateY(-10px); } }
 
-.opening-anim {
-  animation: boxFadeOut 0.45s ease-in forwards;
-}
-.opening-anim .box-lid {
-  transform: rotateX(85deg); /* フタが奥に開く */
-}
-@keyframes boxFadeOut {
-  0% { opacity: 1; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-  100% { opacity: 0; transform: scale(1.1) translateY(-10px); }
-}
+.box-label-wrapper { margin-top: auto; margin-bottom: 15%; width: 80%; background: #fff; border: 2px solid #1abc9c; border-radius: 4px; padding: 8px 10px; box-sizing: border-box; box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 1; }
+.box-label { font-size: 14px; font-weight: bold; color: #555; text-align: center; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* 緑色のラベルシール風 */
-.box-label-wrapper { 
-  margin-top: auto;
-  margin-bottom: 25px; 
-  width: 80%; 
-  background: #fff; 
-  border: 2px solid #1abc9c; 
-  border-radius: 4px; 
-  padding: 8px 10px; 
-  box-sizing: border-box; 
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
-  z-index: 1; 
-}
-.box-label { 
-  font-size: 16px; 
-  font-weight: bold; 
-  color: #333; 
-  text-align: center; 
-  display: block; 
-  white-space: nowrap; 
-  overflow: hidden; 
-  text-overflow: ellipsis; 
-}
-
-/* 古いUIをリセット */
 .inline-edit-btn { background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; font-size: 14px; cursor: pointer; padding: 0; margin-left: 5px; opacity: 0.6; transition: opacity 0.2s; }
 .inline-edit-btn:hover { opacity: 1; }
-
 
 .inner-view-wrapper { max-width: 1200px; width: 100%; margin: 0 auto; padding: 0 20px; box-sizing: border-box; display: flex; flex-direction: column; }
 
@@ -301,6 +185,16 @@ html, body {
 .drag-ghost { position: fixed; transform: translate(-50%, -50%); background-color: rgba(52, 152, 219, 0.95); color: white; padding: 10px 20px; border-radius: 8px; pointer-events: none; z-index: 9999; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 .dragging-mini { opacity: 0.4; transform: scale(0.95); border: 1px dashed #3498db; }
 
+/* ⭐️ ミュート用ボタンデザイン */
+.mute-toggle-btn {
+  background: #fff; border: 1px solid #ddd; padding: 6px 12px; border-radius: 20px;
+  font-size: 13px; font-weight: bold; color: #555; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.2s; white-space: nowrap;
+}
+.mute-toggle-btn:hover { background: #f8f9fa; border-color: #bdc3c7; }
+
+/* ⭐️ スピーカーCSS削除済み */
+
 .test-container { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 600px; width: 90%; margin: 40px auto; text-align: center; }
 .test-counter { font-size: 14px; color: #7f8c8d; font-weight: bold; margin-bottom: 10px; }
 .test-word { font-size: 48px; font-weight: bold; color: #2c3e50; margin: 0 0 10px 0; }
@@ -332,6 +226,7 @@ html, body {
   .print-q-row { page-break-inside: avoid; break-inside: avoid; }
 }
 
+.app-title { color: #2c3e50; }
 .add-btn { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
 .add-btn:hover { background-color: #2980b9; }
 .add-btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
@@ -458,14 +353,16 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
   .creation-header-row { flex-wrap: wrap; }
   .inner-view-wrapper { padding: 0 10px; }
   .decks-split-layout { gap: 15px; }
-  .boxes-grid, .decks-grid { grid-template-columns: repeat(3, 1fr); padding: 10px 0; gap: 8px; width: 100%; box-sizing: border-box; }
+  
+  .boxes-grid { grid-template-columns: repeat(2, 1fr); padding: 10px; gap: 15px; width: 100%; box-sizing: border-box; }
+  .decks-grid { grid-template-columns: repeat(3, 1fr); padding: 10px 0; gap: 8px; width: 100%; box-sizing: border-box; }
   
   .box-label { font-size: 11px; padding: 2px 4px; }
-  
-  /* ⭐️ スマホでの箱上部アクションパネルの調整 */
-  .box-top-actions { gap: 8px; margin-bottom: 6px; padding: 4px 8px; border-radius: 12px; }
+  .box-top-actions { gap: 8px; margin-bottom: 6px; padding: 4px 8px; height: 32px; border-radius: 12px; }
   .box-instruction { font-size: 10px; }
-  .box-icon-btn { font-size: 12px; width: 22px; height: 22px; }
+  .box-icon-btn { font-size: 11px; width: 22px; height: 22px; }
+  
+  .mute-toggle-btn { font-size: 11px; padding: 4px 8px; }
 
   .deck-bundle { width: 100%; aspect-ratio: 4 / 3.2; }
   .deck-name { font-size: 12px; margin-bottom: 2px; }
@@ -474,8 +371,10 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
   .rubber-band { height: 6px; top: 22%; }
   .delete-deck-btn-corner { width: 20px; height: 20px; font-size: 10px; opacity: 1; }
   .memorized-stamp { font-size: 14px; border-width: 2px; padding: 2px 8px; }
+  
   .card-animation-wrapper { aspect-ratio: 4 / 3; min-height: auto; width: 100%; }
   .card-front, .card-back { padding: 15px; }
+
   .autoplay-actions-row { gap: 5px; }
   .autoplay-toggle-btn, .repeat-btn, .fullscreen-btn { font-size: 12px; padding: 10px 5px; }
 }

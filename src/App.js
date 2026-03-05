@@ -60,6 +60,8 @@ function App() {
   const [hasRecorded, setHasRecorded] = useState(false); 
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [speedLevel, setSpeedLevel] = useState(40);
+  
+  const [isMuted, setIsMuted] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -129,35 +131,85 @@ function App() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const lastPlayedIndexRef = useRef(-1);
-  const lastFlippedStateRef = useRef(true);
+
+  // =========================================================================
+  // ⭐️ 限界突破音声システム（アクション直結型 ＆ Macバグ対応版）
+  // =========================================================================
+  
+  // 起動時に音声リストを非同期でロード（Macの沈黙バグ対策）
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+  }, []);
+
+  // ゴミ箱に捨てられないように変数を保持（Macバグ対策）
+  const currentUtteranceRef = useRef(null);
 
   const playAudio = useCallback((text) => {
-    if (speedLevel >= 85) return;
+    if (isMuted || !text) return; 
     if ('speechSynthesis' in window) {
+      
+      // 連続で鳴るとMacやiOSがフリーズするため必ずキャンセル
       window.speechSynthesis.cancel(); 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US'; 
-      utterance.rate = 0.7 + (speedLevel - 1) * (0.8 / 99);
-      utterance.pitch = 1.05; 
-      const voices = window.speechSynthesis.getVoices();
-      const premiumVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Online Natural') || v.name.includes('Premium') || v.name.includes('Samantha') || v.name.includes('Google US English')));
-      utterance.voice = premiumVoice || voices.find(v => v.lang.startsWith('en'));
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [speedLevel]);
 
-  useEffect(() => {
-    if (view === 'study' && !isFlipped && studyCards.length > 0 && studyCards[currentIndex]) {
-      if (lastPlayedIndexRef.current !== currentIndex || lastFlippedStateRef.current !== isFlipped) {
-        playAudio(studyCards[currentIndex]?.word || '');
-        lastPlayedIndexRef.current = currentIndex;
-        lastFlippedStateRef.current = isFlipped;
-      }
-    } else if (isFlipped) {
-      lastPlayedIndexRef.current = -1;
+      // Safari/Mac特有の「cancel直後のspeakは無視されるバグ」を防ぐため、50ミリ秒の猶予（魔法のディレイ）を与える
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        currentUtteranceRef.current = utterance; // 変数を保持して消滅を防ぐ
+        
+        utterance.lang = 'en-US'; 
+        
+        // 人間が聞き取れる限界の1.5倍速を上限とする
+        let calculatedRate = 0.8 + (speedLevel / 100) * 0.8; 
+        if (calculatedRate > 1.5) calculatedRate = 1.5; 
+        utterance.rate = calculatedRate;
+        utterance.volume = 1;
+        
+        const voices = window.speechSynthesis.getVoices();
+        if (voices && voices.length > 0) {
+          // ネイティブ発音を最優先で設定
+          const premiumVoice = voices.find(v => 
+            v.lang.startsWith('en') && 
+            (v.name.includes('Samantha') || v.name.includes('Premium') || v.name.includes('Google') || v.name.includes('Alex'))
+          );
+          utterance.voice = premiumVoice || voices.find(v => v.lang.startsWith('en'));
+        }
+        
+        window.speechSynthesis.speak(utterance);
+      }, 50); // 👈 この50msが命！
     }
-  }, [currentIndex, isFlipped, studyCards, view, playAudio]);
+  }, [speedLevel, isMuted]);
+
+  // =========================================================================
+
+  // ⭐️ イベント直結！ボタンを押した「その指の動き」の中で音を鳴らす（ブロック絶対回避）
+  const handleNextCard = useCallback(() => {
+    stopAutoPlayIfActive();
+    setIsFlipped(false);
+    const nextIdx = (currentIndex + 1) % studyCards.length;
+    playAudio(studyCards[nextIdx]?.word); // 👈 アクションに直結！
+    setTimeout(() => setCurrentIndex(nextIdx), 150);
+  }, [currentIndex, studyCards, playAudio]);
+
+  const handlePrevCard = useCallback(() => {
+    stopAutoPlayIfActive();
+    setIsFlipped(false);
+    const prevIdx = (currentIndex - 1 + studyCards.length) % studyCards.length;
+    playAudio(studyCards[prevIdx]?.word); // 👈 アクションに直結！
+    setTimeout(() => setCurrentIndex(prevIdx), 150);
+  }, [currentIndex, studyCards, playAudio]);
+
+  const handleRepeat = () => { 
+    stopAutoPlayIfActive(); 
+    setCurrentIndex(0); 
+    setIsFlipped(false); 
+    setStudyTime(0); 
+    setHasRecorded(false); 
+    if (studyCards.length > 0) playAudio(studyCards[0].word); // 👈 アクションに直結！
+  };
+
 
   useEffect(() => {
     let studyTimerInterval = null;
@@ -189,11 +241,15 @@ function App() {
     }
   }, [isCompleted, currentDeckId, studyTime]);
 
-  const nextCard = useCallback(() => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev + 1) % studyCards.length), 150); }, [studyCards.length]);
-  const prevCard = useCallback(() => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev - 1 + studyCards.length) % studyCards.length), 150); }, [studyCards.length]);
 
+  // キーボード操作時も「直結イベント」で鳴らす
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // 最初のキー入力でロック解除（念のため）
+      if ('speechSynthesis' in window && !isMuted) {
+         const dummy = new SpeechSynthesisUtterance(''); dummy.volume = 0; window.speechSynthesis.speak(dummy);
+      }
+
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (view !== 'study' || isBulkMode) return;
 
@@ -203,21 +259,20 @@ function App() {
         setIsFlipped(prev => !prev);
       } else if (e.code === 'Enter' || e.key === 'ArrowRight') {
         e.preventDefault();
-        stopAutoPlayIfActive();
-        nextCard();
+        handleNextCard(); // 👈 アクション直結！
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        stopAutoPlayIfActive();
-        prevCard();
+        handlePrevCard(); // 👈 アクション直結！
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view, isBulkMode, isAutoPlaying, nextCard, prevCard]);
+  }, [view, isBulkMode, isAutoPlaying, handleNextCard, handlePrevCard, isMuted]);
 
   const elapsedRef = useRef(0);
   const lastTickRef = useRef(Date.now());
 
+  // 自動めくり（AutoPlay）時の発音
   useEffect(() => {
     let autoPlayTimer = null; 
     if (isAutoPlaying && studyCards.length > 0 && !isCompleted) {
@@ -228,20 +283,27 @@ function App() {
         lastTickRef.current = now;
         elapsedRef.current += delta;
         const currentDelay = 4000 - (speedLevel - 1) * (3600 / 99);
+        
         if (elapsedRef.current >= currentDelay) {
           elapsedRef.current = 0; 
-          if (!isFlipped) setIsFlipped(true); 
-          else if (currentIndex < studyCards.length - 1) nextCard(); 
-          else setIsAutoPlaying(false);
+          if (!isFlipped) {
+            setIsFlipped(true); 
+          } else if (currentIndex < studyCards.length - 1) {
+            const nextIdx = currentIndex + 1;
+            playAudio(studyCards[nextIdx]?.word); // 👈 自動めくり時の発音
+            setIsFlipped(false);
+            setTimeout(() => setCurrentIndex(nextIdx), 150);
+          } else {
+            setIsAutoPlaying(false);
+          }
         }
       }, 50);
     } else { 
       elapsedRef.current = 0; 
     }
     return () => { if (autoPlayTimer) clearInterval(autoPlayTimer); };
-  }, [isAutoPlaying, isFlipped, currentIndex, speedLevel, studyCards.length, isCompleted, nextCard]);
+  }, [isAutoPlaying, isFlipped, currentIndex, speedLevel, studyCards.length, isCompleted, playAudio]);
 
-  const handleRepeat = () => { stopAutoPlayIfActive(); setCurrentIndex(0); setIsFlipped(false); setStudyTime(0); setHasRecorded(false); };
 
   const toggleMemorize = (e, wordToMark, isMemorized) => {
     if (e) e.stopPropagation(); 
@@ -404,9 +466,16 @@ function App() {
     }, 450);
   };
   
+  // ⭐️ デッキを開く（タップ）というユーザーの動きに直接音声を乗せて発動！
   const openDeck = (id) => { 
     if (draggedDeckId) return;
     setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); 
+    
+    const targetDeck = decks.find(d => d.id === id);
+    const targetCards = targetDeck ? targetDeck.cards.filter(c => !c.isMemorized) : [];
+    if (targetCards.length > 0) {
+      playAudio(targetCards[0].word); // 👈 アクション直結！絶対に鳴る！
+    }
   };
   
   const closeDeck = useCallback(() => {
@@ -489,6 +558,7 @@ function App() {
     const diffY = touchEndY.current - touchStartY.current; const diffX = touchStartX.current - touchEndX.current;
     if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) setPullDownY(diffY);
   };
+  
   const handleTouchEnd = () => {
     if (view === 'boxes' || view === 'printPreview') return;
     if (pullDownY > 120) {
@@ -497,7 +567,12 @@ function App() {
     } else {
       setPullDownY(0);
       const diffX = touchStartX.current - (touchEndX.current || touchStartX.current);
-      if (Math.abs(diffX) > 50 && view === 'study') { stopAutoPlayIfActive(); if (diffX > 0) nextCard(); else prevCard(); }
+      // ⭐️ スワイプ時も「直結イベント」で鳴らす！
+      if (Math.abs(diffX) > 50 && view === 'study') { 
+        stopAutoPlayIfActive(); 
+        if (diffX > 0) handleNextCard(); 
+        else handlePrevCard(); 
+      }
     }
   };
 
@@ -569,13 +644,9 @@ function App() {
     );
   };
 
-  // ==========================================
-  // 1層目: 箱の画面（最終デザイン！）
-  // ==========================================
   if (view === 'boxes') {
     return (
       <div className="app-container gentle-bg desk-view" style={{padding: 0}}>
-        
         <div className="hero-section">
           <h1 className="burning-text">REDLINE VOCABULARY</h1>
           <h2 className="burning-subtitle">〜 限界突破の英単語 〜</h2>
@@ -597,9 +668,7 @@ function App() {
 
             return (
               <div key={box.id} className={`storage-box-container ${hasReview ? 'polite-shake-once' : ''}`}>
-                
                 <div className="box-top-actions">
-                  {/* ⭐️ 「👇」アイコンに変更！ */}
                   <span className="box-instruction">{hasReview ? <span className="alert-text">🔥 復習！</span> : '👇 タップで開く'}</span>
                   <button className="box-icon-btn" onClick={(e) => renameBox(e, box.id, box.name)} title="名前を変更">✏️</button>
                   <button className="box-icon-btn delete-box-btn" onClick={(e) => deleteBox(e, box.id)} title="箱を削除">✖</button>
@@ -730,7 +799,7 @@ function App() {
               <div className="decks-split-layout">
                 <div className="decks-unmemorized-area" onDragOver={onDragOver} onDrop={(e) => onDropToArea(e, 'unmemorized')}>
                   <h3 className="area-title">📖 学習中・未修の束</h3>
-                  <p className="area-hint">※右のエリアにドロップすると、すべて暗記済みになります。</p>
+                  <p className="area-hint">※暗記エリアにドロップすると、すべて暗記済みになります。</p>
                   {unmemorizedDecks.length === 0 ? (
                      <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>未修の束はありません。</p>
                   ) : (
@@ -778,7 +847,12 @@ function App() {
                 <>
                   <div className="study-controls-top" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
                     <button className="back-to-desk-btn" onClick={closeDeck}>◀ 戻る</button>
-                    <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible' }}>⏱ {formatTime(studyTime)}</div>
+                    <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                      <button className="mute-toggle-btn" onClick={() => setIsMuted(!isMuted)}>
+                        {isMuted ? '🔇 音声: オフ' : '🔊 音声: オン'}
+                      </button>
+                      <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible' }}>⏱ {formatTime(studyTime)}</div>
+                    </div>
                   </div>
                   <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
                     <h2 className="study-deck-title" style={{ margin: 0 }}>{activeDeck?.name}</h2>
@@ -835,7 +909,10 @@ function App() {
                         <div className="card-front">
                           <div className="ring-hole"></div>
                           <button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)} title="覚えたらチェック！">✔</button>
+                          
+                          {/* スピーカーを撤去し、ノイズレスなデザインへ！ */}
                           <h1 className="word-text">{studyCards[currentIndex]?.word || ''}</h1>
+                          
                         </div>
                         <div className="card-back">
                           <div className="back-content">
@@ -856,9 +933,9 @@ function App() {
                   
                   {!isFullscreen && (
                     <div className="controls">
-                      <button onClick={() => {stopAutoPlayIfActive(); prevCard();}} className="nav-btn">◀</button>
+                      <button onClick={handlePrevCard} className="nav-btn">◀</button>
                       <button onClick={deleteCard} className="delete-btn">捨てる</button>
-                      <button onClick={() => {stopAutoPlayIfActive(); nextCard();}} className="nav-btn">▶</button>
+                      <button onClick={handleNextCard} className="nav-btn">▶</button>
                     </div>
                   )}
 
