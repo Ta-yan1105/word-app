@@ -78,6 +78,9 @@ function App() {
   const [ghostPos, setGhostPos] = useState(null); 
   const touchDragTimer = useRef(null);
 
+  const [draggedCardWord, setDraggedCardWord] = useState(null);
+  const [openingBoxId, setOpeningBoxId] = useState(null);
+
   const activeDeck = decks.find(d => d.id === currentDeckId);
   const allCards = activeDeck ? activeDeck.cards : [];
   const studyCards = allCards.filter(c => !c.isMemorized);
@@ -241,7 +244,8 @@ function App() {
   const handleRepeat = () => { stopAutoPlayIfActive(); setCurrentIndex(0); setIsFlipped(false); setStudyTime(0); setHasRecorded(false); };
 
   const toggleMemorize = (e, wordToMark, isMemorized) => {
-    e.stopPropagation(); stopAutoPlayIfActive();
+    if (e) e.stopPropagation(); 
+    stopAutoPlayIfActive();
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
       return { ...d, cards: d.cards.map(c => c.word === wordToMark ? { ...c, isMemorized: isMemorized } : c) };
@@ -271,11 +275,7 @@ function App() {
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
       return { ...d, cards: d.cards.map(c => c.word === editingCard.originalWord ? { 
-        ...c, 
-        word: editingCard.word, 
-        meaning: editingCard.meaning,
-        example: editingCard.example,
-        translation: editingCard.translation
+        ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation
       } : c) };
     }));
     setEditingCard(null); 
@@ -342,74 +342,42 @@ function App() {
         const targetWord = row[0] ? String(row[0]).trim() : '';
         if (!targetWord) continue;
         newCards.push({ 
-          word: targetWord, 
-          meaning: row[1] ? String(row[1]).trim() : '', 
-          example: row[2] ? String(row[2]).trim() : '', 
-          translation: row[3] ? String(row[3]).trim() : '', 
-          isMemorized: false 
+          word: targetWord, meaning: row[1] ? String(row[1]).trim() : '', 
+          example: row[2] ? String(row[2]).trim() : '', translation: row[3] ? String(row[3]).trim() : '', isMemorized: false 
         });
       }
       setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...(d.cards || []), ...newCards] } : d));
     } catch(e) {
       alert("ファイルの読み込み中にエラーが発生しました。");
     } finally {
-      setIsBulkMode(false); 
-      setCurrentIndex(0); 
-      setIsFlipped(false); 
-      setHasRecorded(false);
-      setLoading(false);
+      setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false);
     }
   };
 
   const startTest = () => {
-    if (allCards.length < 4) {
-      alert("テストを行うには、この束に最低4枚のカードが必要です！");
-      return;
-    }
+    if (allCards.length < 4) { alert("テストには最低4枚のカードが必要です！"); return; }
     const shuffledCards = [...allCards].sort(() => Math.random() - 0.5);
     const questions = shuffledCards.map(card => {
-      const wrongAnswers = allCards.filter(c => c.word !== card.word)
-                                   .sort(() => Math.random() - 0.5)
-                                   .slice(0, 3)
-                                   .map(c => c.meaning || '意味なし');
+      const wrongAnswers = allCards.filter(c => c.word !== card.word).sort(() => Math.random() - 0.5).slice(0, 3).map(c => c.meaning || '意味なし');
       const options = [card.meaning || '意味なし', ...wrongAnswers].sort(() => Math.random() - 0.5);
-      return {
-        word: card.word,
-        correct: card.meaning || '意味なし',
-        options: options
-      };
+      return { word: card.word, correct: card.meaning || '意味なし', options: options };
     });
-
-    setTestQuestions(questions);
-    setCurrentTestIndex(0);
-    setScore(0);
-    setShowTestResult(false);
-    setView('test');
+    setTestQuestions(questions); setCurrentTestIndex(0); setScore(0); setShowTestResult(false); setView('test');
   };
 
   const handleAnswer = (selectedOption) => {
     const isCorrect = selectedOption === testQuestions[currentTestIndex].correct;
     if (isCorrect) setScore(prev => prev + 1);
-    
-    if (currentTestIndex < testQuestions.length - 1) {
-      setCurrentTestIndex(prev => prev + 1);
-    } else {
-      setShowTestResult(true);
-    }
+    if (currentTestIndex < testQuestions.length - 1) { setCurrentTestIndex(prev => prev + 1); } 
+    else { setShowTestResult(true); }
   };
 
   const openPrintPreview = () => {
-    if (allCards.length === 0) {
-      alert("印刷するカードがありません。");
-      return;
-    }
-    setPrintCards([...allCards].sort(() => Math.random() - 0.5));
-    setView('printPreview');
+    if (allCards.length === 0) { alert("印刷するカードがありません。"); return; }
+    setPrintCards([...allCards].sort(() => Math.random() - 0.5)); setView('printPreview');
   };
 
-  const shufflePrintCards = () => {
-    setPrintCards([...printCards].sort(() => Math.random() - 0.5));
-  };
+  const shufflePrintCards = () => { setPrintCards([...printCards].sort(() => Math.random() - 0.5)); };
 
   const createNewBox = () => {
     if (!newBoxName.trim()) return;
@@ -426,7 +394,15 @@ function App() {
     if (window.confirm('箱と中の束をすべて削除しますか？')) { setBoxes(boxes.filter(b => b.id !== boxId)); setDecks(decks.filter(d => d.boxId !== boxId)); }
   };
 
-  const openBox = (boxId) => { setCurrentBoxId(boxId); setView('decks'); };
+  const openBox = (boxId) => { 
+    if (openingBoxId) return; 
+    setOpeningBoxId(boxId); 
+    setTimeout(() => {
+      setCurrentBoxId(boxId); 
+      setView('decks'); 
+      setOpeningBoxId(null);
+    }, 450);
+  };
   
   const openDeck = (id) => { 
     if (draggedDeckId) return;
@@ -445,19 +421,11 @@ function App() {
     if (!text) return null;
     try {
       return String(text).split(/\*\*(.*?)\*\*/g).map((part, i) => i % 2 === 1 ? <span key={i} className="highlight-word">{part}</span> : part);
-    } catch(e) {
-      return String(text);
-    }
+    } catch(e) { return String(text); }
   };
 
-  const onDragStart = (e, id) => {
-    setDraggedDeckId(id);
-    e.dataTransfer.effectAllowed = "move";
-  };
-  const onDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
+  const onDragStart = (e, id) => { setDraggedDeckId(id); e.dataTransfer.effectAllowed = "move"; };
+  const onDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
   const onDropToArea = (e, targetArea) => {
     e.preventDefault();
     if (!draggedDeckId) return;
@@ -466,11 +434,8 @@ function App() {
       const index = newDecks.findIndex(d => d.id === draggedDeckId);
       if (index !== -1) {
         const d = newDecks[index];
-        if (targetArea === 'memorized') {
-          newDecks[index] = { ...d, lastStudied: Date.now(), cards: d.cards.map(c => ({...c, isMemorized: true})) };
-        } else if (targetArea === 'unmemorized') {
-          newDecks[index] = { ...d, cards: d.cards.map(c => ({...c, isMemorized: false})) };
-        }
+        if (targetArea === 'memorized') { newDecks[index] = { ...d, lastStudied: Date.now(), cards: d.cards.map(c => ({...c, isMemorized: true})) }; } 
+        else if (targetArea === 'unmemorized') { newDecks[index] = { ...d, cards: d.cards.map(c => ({...c, isMemorized: false})) }; }
       }
       return newDecks;
     });
@@ -486,10 +451,7 @@ function App() {
     }, 400); 
   };
   const onTouchMoveDeck = (e) => {
-    if (!draggedDeckId) {
-      clearTimeout(touchDragTimer.current);
-      return;
-    }
+    if (!draggedDeckId) { clearTimeout(touchDragTimer.current); return; }
     e.preventDefault(); 
     const touch = e.touches[0];
     setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null);
@@ -502,24 +464,17 @@ function App() {
          const elem = document.elementFromPoint(touch.clientX, touch.clientY);
          const targetMemArea = elem?.closest('.decks-memorized-area');
          const targetUnmemArea = elem?.closest('.decks-unmemorized-area');
-
          setDecks(prev => {
             let newDecks = [...prev];
             const index = newDecks.findIndex(d => d.id === draggedDeckId);
             if (index !== -1) {
-              if (targetMemArea) {
-                 newDecks[index] = { ...newDecks[index], lastStudied: Date.now(), cards: newDecks[index].cards.map(c => ({...c, isMemorized: true})) };
-              } else if (targetUnmemArea) {
-                 newDecks[index] = { ...newDecks[index], cards: newDecks[index].cards.map(c => ({...c, isMemorized: false})) };
-              }
+              if (targetMemArea) { newDecks[index] = { ...newDecks[index], lastStudied: Date.now(), cards: newDecks[index].cards.map(c => ({...c, isMemorized: true})) }; } 
+              else if (targetUnmemArea) { newDecks[index] = { ...newDecks[index], cards: newDecks[index].cards.map(c => ({...c, isMemorized: false})) }; }
             }
             return newDecks;
          });
       }
-      setTimeout(() => {
-        setDraggedDeckId(null);
-        setGhostPos(null);
-      }, 100);
+      setTimeout(() => { setDraggedDeckId(null); setGhostPos(null); }, 100);
     }
   };
 
@@ -550,25 +505,23 @@ function App() {
 
   const renderMiniCard = (c, isMemorizedList, index = null) => {
     return (
-      <div key={c.word} className="mini-card">
+      <div 
+        key={c.word} 
+        className={`mini-card ${draggedCardWord === c.word ? 'dragging-mini' : ''}`}
+        draggable="true"
+        onDragStart={(e) => { setDraggedCardWord(c.word); e.dataTransfer.effectAllowed = "move"; }}
+        onDragEnd={() => setDraggedCardWord(null)}
+        title="ドラッグで移動できます"
+      >
         <div className="mini-card-header">
           <span className="mini-word">
-            {index !== null && <span className="mini-index">{index}.</span>}
-            {c.word}
+            {index !== null && <span className="mini-index">{index}.</span>}{c.word}
           </span>
           <div className="mini-icons">
-            <button className="mini-icon-btn" onClick={(e) => toggleMemorize(e, c.word, !isMemorizedList)} title={isMemorizedList ? "学習中に戻す" : "覚えた！"}>
-              {isMemorizedList ? '↩️' : '✅'}
-            </button>
+            <button className="mini-icon-btn" onClick={(e) => toggleMemorize(e, c.word, !isMemorizedList)} title={isMemorizedList ? "学習中に戻す" : "覚えた！"}>{isMemorizedList ? '↩️' : '✅'}</button>
             <button className="mini-icon-btn" onClick={() => { 
               stopAutoPlayIfActive(); 
-              setEditingCard({
-                originalWord: c.word, 
-                word: c.word, 
-                meaning: c.meaning,
-                example: c.example || '',
-                translation: c.translation || ''
-              }); 
+              setEditingCard({ originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '' }); 
             }}>✏️</button>
             <button className="mini-icon-btn delete-mini" onClick={(e) => deleteSpecificCard(e, c.word)}>✖</button>
           </div>
@@ -585,8 +538,7 @@ function App() {
 
     return (
       <div 
-        key={deck.id} 
-        data-id={deck.id}
+        key={deck.id} data-id={deck.id}
         className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''} ${isDragging ? 'dragging' : ''}`} 
         onClick={() => openDeck(deck.id)}
         draggable="true"
@@ -600,13 +552,8 @@ function App() {
         <div className="deck-paper stack-bottom"></div>
         <div className="deck-paper stack-middle"></div>
         <div className="deck-paper top-cover">
-          <h3 className="deck-name" title={deck.name}>
-            {deck.name}
-            <button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)}>✏️</button>
-          </h3>
-          
+          <h3 className="deck-name" title={deck.name}>{deck.name}<button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)}>✏️</button></h3>
           <button className="delete-deck-btn-corner" onClick={e => deleteDeck(e, deck.id)}>×</button>
-
           <div className="deck-info-bottom">
             <span className={`status-badge ${status.className}`}>{status.label}</span>
             <div className="deck-stats-mini">
@@ -615,25 +562,26 @@ function App() {
               {deck.lastRecordTime !== null && <span>⏱ 最速 {formatTime(deck.lastRecordTime)}</span>}
             </div>
           </div>
-
           {isAllMemorized && <div className="memorized-stamp">💮 暗記済</div>}
-
         </div>
         <div className="rubber-band"></div>
       </div>
     );
   };
 
+  // ==========================================
+  // 1層目: 箱の画面（最終デザイン！）
+  // ==========================================
   if (view === 'boxes') {
     return (
-      <div className="app-container gentle-bg desk-view">
+      <div className="app-container gentle-bg desk-view" style={{padding: 0}}>
+        
         <div className="hero-section">
-          <h1 className="app-main-title">Redline Vocabulary</h1>
-        </div>
-
-        <div className="integrated-creation-area">
-          <div className="creation-row">
-            <span className="creation-label" title="新しい箱を作る">📦</span>
+          <h1 className="burning-text">REDLINE VOCABULARY</h1>
+          <h2 className="burning-subtitle">〜 限界突破の英単語 〜</h2>
+          
+          <div className="creation-header-row">
+            <span className="creation-label" title="新しい箱を作る" style={{color: '#fff'}}>📦</span>
             <input type="text" placeholder="箱の名前を入力して追加" value={newBoxName} onChange={(e) => setNewBoxName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewBox()} />
             <button onClick={createNewBox} className="add-btn mini-btn">作る</button>
           </div>
@@ -645,18 +593,24 @@ function App() {
               if (d.cards.length > 0 && d.cards.every(c => c.isMemorized)) return false;
               return getEbbinghausStatus(d).needsReview;
             });
+            const isOpening = openingBoxId === box.id;
+
             return (
               <div key={box.id} className={`storage-box-container ${hasReview ? 'polite-shake-once' : ''}`}>
-                <div className="storage-box" onClick={() => openBox(box.id)}>
+                
+                <div className="box-top-actions">
+                  {/* ⭐️ 「👇」アイコンに変更！ */}
+                  <span className="box-instruction">{hasReview ? <span className="alert-text">🔥 復習！</span> : '👇 タップで開く'}</span>
+                  <button className="box-icon-btn" onClick={(e) => renameBox(e, box.id, box.name)} title="名前を変更">✏️</button>
+                  <button className="box-icon-btn delete-box-btn" onClick={(e) => deleteBox(e, box.id)} title="箱を削除">✖</button>
+                </div>
+
+                <div className={`storage-box ${isOpening ? 'opening-anim' : ''}`} onClick={() => openBox(box.id)}>
                   <div className="box-lid-line"></div>
                   <div className="box-label-wrapper">
                     <span className="box-label" title={box.name}>{box.name}</span>
                   </div>
-                  <div className="box-handle"></div>
                 </div>
-                <button className="inline-edit-btn box-edit-icon" onClick={(e) => renameBox(e, box.id, box.name)}>✏️</button>
-                <p className="box-instruction">{hasReview ? <span className="alert-text">🔥 復習のタイミング！</span> : 'タップして開く'}</p>
-                <button className="delete-deck-btn" style={{top: '5px'}} onClick={e => deleteBox(e, box.id)}>×</button>
               </div>
             );
           })}
@@ -683,12 +637,9 @@ function App() {
               <p className="test-counter">問題 {currentTestIndex + 1} / {testQuestions.length}</p>
               <h1 className="test-word">{testQuestions[currentTestIndex]?.word}</h1>
               <p className="test-hint">この単語の正しい意味はどれ？</p>
-              
               <div className="test-options">
                 {testQuestions[currentTestIndex]?.options.map((option, idx) => (
-                  <button key={idx} className="test-option-btn" onClick={() => handleAnswer(option)}>
-                    {option}
-                  </button>
+                  <button key={idx} className="test-option-btn" onClick={() => handleAnswer(option)}>{option}</button>
                 ))}
               </div>
               <button className="cancel-btn" style={{marginTop: '30px'}} onClick={() => setView('study')}>中断して戻る</button>
@@ -707,19 +658,11 @@ function App() {
           <button className="add-btn" onClick={shufflePrintCards} style={{backgroundColor: '#8e44ad'}}>🔄 問題をシャッフル</button>
           <button className="add-btn" onClick={() => window.print()} style={{backgroundColor: '#e74c3c'}}>🖨️ 印刷する (PDF保存)</button>
         </div>
-
         <div className="print-preview-container print-area">
           <div className="print-header">
-            <div>
-              <h1 className="print-title">{activeDeck?.name} - 単語テスト</h1>
-            </div>
-            <div className="print-info-box">
-              <span>　　年　　月　　日</span>
-              <span>氏名：____________________________</span>
-              <span>得点：　　 / {printCards.length}</span>
-            </div>
+            <div><h1 className="print-title">{activeDeck?.name} - 単語テスト</h1></div>
+            <div className="print-info-box"><span>　　年　　月　　日</span><span>氏名：____________________________</span><span>得点：　　 / {printCards.length}</span></div>
           </div>
-          
           <div className="print-questions">
             {printCards.map((c, i) => (
               <div key={i} className="print-q-row">
@@ -738,9 +681,7 @@ function App() {
     <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       
       {ghostPos && (
-        <div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>
-          {ghostPos.title}
-        </div>
+        <div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>{ghostPos.title}</div>
       )}
 
       {editingCard && (
@@ -787,37 +728,23 @@ function App() {
               </div>
 
               <div className="decks-split-layout">
-                <div 
-                  className="decks-unmemorized-area"
-                  onDragOver={onDragOver}
-                  onDrop={(e) => onDropToArea(e, 'unmemorized')}
-                >
+                <div className="decks-unmemorized-area" onDragOver={onDragOver} onDrop={(e) => onDropToArea(e, 'unmemorized')}>
                   <h3 className="area-title">📖 学習中・未修の束</h3>
                   <p className="area-hint">※右のエリアにドロップすると、すべて暗記済みになります。</p>
-                  
                   {unmemorizedDecks.length === 0 ? (
                      <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>未修の束はありません。</p>
                   ) : (
-                    <div className="decks-grid">
-                      {unmemorizedDecks.map(d => renderDeckCard(d))}
-                    </div>
+                    <div className="decks-grid">{unmemorizedDecks.map(d => renderDeckCard(d))}</div>
                   )}
                 </div>
 
-                <div 
-                  className="decks-memorized-area"
-                  onDragOver={onDragOver}
-                  onDrop={(e) => onDropToArea(e, 'memorized')}
-                >
+                <div className="decks-memorized-area" onDragOver={onDragOver} onDrop={(e) => onDropToArea(e, 'memorized')}>
                   <h3 className="area-title" style={{color: '#27ae60'}}>🏆 暗記済の束</h3>
                   <p className="area-hint">※ここに束をドロップすると一発で暗記済みに！</p>
-
                   {memorizedDecks.length === 0 ? (
                      <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>まだ暗記済みの束はありません。</p>
                   ) : (
-                    <div className="decks-grid memorized-grid">
-                      {memorizedDecks.map(d => renderDeckCard(d))}
-                    </div>
+                    <div className="decks-grid memorized-grid">{memorizedDecks.map(d => renderDeckCard(d))}</div>
                   )}
                 </div>
               </div>
@@ -827,37 +754,34 @@ function App() {
 
         {view === 'study' && (
           <div className="study-dashboard">
-            
             {!isFullscreen && (
-              <div className="side-panel left-panel">
-                <h3 className="panel-title">📖 学習中 ({studyCards.length})</h3>
-                
+              <div 
+                className="side-panel left-panel"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedCardWord) { toggleMemorize(null, draggedCardWord, false); setDraggedCardWord(null); }
+                }}
+              >
+                <h3 className="panel-title" title="右のカードをドラッグして戻せます">📖 学習中 ({studyCards.length})</h3>
                 <div className="panel-top-action" style={{ padding: '10px' }}>
                   <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#e67e22'}}>
                     📂 CSVから単語を追加
                   </button>
                 </div>
-                
-                <div className="mini-card-list">
-                  {studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}
-                </div>
+                <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}</div>
               </div>
             )}
 
             <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`}>
-              
-              {/* ⭐️ タイトルとボタンを画面上部に美しく独立配置（要望通り） */}
               {!isFullscreen && (
                 <>
                   <div className="study-controls-top" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
                     <button className="back-to-desk-btn" onClick={closeDeck}>◀ 戻る</button>
                     <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible' }}>⏱ {formatTime(studyTime)}</div>
                   </div>
-                  
                   <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
-                    <h2 className="study-deck-title" style={{ margin: 0 }}>
-                      {activeDeck?.name}
-                    </h2>
+                    <h2 className="study-deck-title" style={{ margin: 0 }}>{activeDeck?.name}</h2>
                     {allCards.length >= 4 && (
                       <div style={{ display: 'flex', gap: '10px' }}>
                         <button className="test-start-btn" onClick={startTest} title="4択テストに挑戦！">📝 テスト</button>
@@ -871,7 +795,6 @@ function App() {
               {!isFullscreen && isBulkMode && (
                 <div className="bulk-input-section" style={{ marginTop: '0px' }}>
                   <p className="bulk-hint" style={{fontSize:'16px', color:'#333'}}>スプレッドシートやChatGPTで作成したCSVデータを読み込みます。</p>
-                  
                   <div className="bulk-file-actions">
                     <button onClick={downloadTemplate} className="add-btn bulk-template-btn">📥 テンプレート(CSV)をダウンロード</button>
                     <label className="add-btn bulk-upload-btn" style={{backgroundColor: '#27ae60'}}>
@@ -888,7 +811,6 @@ function App() {
                       【リスト】（ここに単語を貼る）」
                     </span>
                   </p>
-                  
                   <div className="bulk-actions" style={{ marginTop: '15px' }}>
                     <button onClick={() => setIsBulkMode(false)} className="cancel-btn" disabled={loading}>閉じる</button>
                   </div>
@@ -915,7 +837,6 @@ function App() {
                           <button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)} title="覚えたらチェック！">✔</button>
                           <h1 className="word-text">{studyCards[currentIndex]?.word || ''}</h1>
                         </div>
-                        
                         <div className="card-back">
                           <div className="back-content">
                             <div className="meaning-section">
@@ -946,12 +867,15 @@ function App() {
                       <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={() => setIsAutoPlaying(!isAutoPlaying)}>
                         {isAutoPlaying ? '⏸ 停止' : '▶️ 自動めくり'}
                       </button>
-                      <button className="repeat-btn" onClick={handleRepeat} title="最初からやり直す">
-                        🔄 もう1回
-                      </button>
-                      <button className="fullscreen-btn" onClick={toggleFullScreen} title="全集中モード">
-                        {isFullscreen ? '解除 ↘️' : '全集中 🔥'}
-                      </button>
+                      <button className="repeat-btn" onClick={handleRepeat} title="最初からやり直す">🔄 もう1回</button>
+                      <button className="fullscreen-btn" onClick={toggleFullScreen} title="全集中モード">{isFullscreen ? '解除 ↘️' : '全集中 🔥'}</button>
+                    </div>
+                    <div className="speed-slider-container" style={{marginTop: '15px'}}>
+                      <div className="speed-slider-wrapper">
+                        <span style={{fontSize:'14px', color:'#7f8c8d', fontWeight:'bold', whiteSpace:'nowrap'}}>🐢 遅</span>
+                        <input type="range" min="1" max="100" value={speedLevel} onChange={(e) => setSpeedLevel(Number(e.target.value))} className="speed-slider" />
+                        <span style={{fontSize:'14px', color:'#7f8c8d', fontWeight:'bold', whiteSpace:'nowrap'}}>速 🐇</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -959,11 +883,18 @@ function App() {
             </div>
 
             {!isFullscreen && (
-              <div className="side-panel right-panel">
-                <h3 className="panel-title">✅ 暗記済 ({memorizedCards.length})</h3>
+              <div 
+                className="side-panel right-panel"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (draggedCardWord) { toggleMemorize(null, draggedCardWord, true); setDraggedCardWord(null); }
+                }}
+              >
+                <h3 className="panel-title" title="左のカードをドラッグして暗記済みに！">✅ 暗記済 ({memorizedCards.length})</h3>
                 <div className="mini-card-list">
                   {memorizedCards.length === 0 ? (
-                    <p className="empty-mini-msg">カード右上の「✔」を押すとここに移動します</p>
+                    <p className="empty-mini-msg">左の単語をここにドラッグで移動！</p>
                   ) : (
                     memorizedCards.map(c => renderMiniCard(c, true))
                   )}
