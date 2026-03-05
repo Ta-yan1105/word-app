@@ -41,7 +41,7 @@ function App() {
     { 
       id: 1, boxId: 1, name: '基本の動詞', lastStudied: Date.now() - (1000 * 60 * 60 * 48), lastRecordTime: 125,
       cards: [
-        { word: 'play', meaning: 'する / 遊ぶ', example: 'I **play** soccer.', translation: '私はサッカーを**します**。', isMemorized: false },
+        { word: 'shine', meaning: '輝く / 光る', example: 'The stars **shine** brightly.', translation: '星が明るく**輝く**。', isMemorized: false },
         { word: 'have', meaning: '持っている / 食べる', example: 'I **have** a book.', translation: '私は本を**持っています**。', isMemorized: false },
         { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false }
       ] 
@@ -65,6 +65,10 @@ function App() {
 
   const [word, setWord] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // ⭐️ 例文の難易度を設定するステート
+  const [difficulty, setDifficulty] = useState('中学・基礎レベル');
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -210,11 +214,7 @@ function App() {
     if (window.confirm('この束をすべて「暗記済み」として完了しますか？')) {
       setDecks(prev => prev.map(d => {
         if (d.id !== deckId) return d;
-        return {
-          ...d,
-          lastStudied: Date.now(), 
-          cards: d.cards.map(c => ({ ...c, isMemorized: true }))
-        };
+        return { ...d, lastStudied: Date.now(), cards: d.cards.map(c => ({ ...c, isMemorized: true })) };
       }));
     }
   };
@@ -246,37 +246,44 @@ function App() {
   const getMemorizedStatus = (lastStudied) => {
     if (!lastStudied) return { label: '🏆 暗記完了', className: 'status-perfect', needsReview: false };
     const daysPassed = Math.floor((Date.now() - lastStudied) / (1000 * 60 * 60 * 24));
-    
     if (daysPassed >= 14) return { label: `🚨 ${daysPassed}日経過! 復習推奨`, className: 'status-warning', needsReview: true, shake: true };
     if (daysPassed >= 7) return { label: `⚠️ ${daysPassed}日経過! 記憶チェック`, className: 'status-review', needsReview: true, shake: true };
     if (daysPassed >= 3) return { label: `🔥 ${daysPassed}日経過! 復習ベスト`, className: 'status-review', needsReview: true, shake: true };
     if (daysPassed >= 1) return { label: `✅ ${daysPassed}日経過! 短期記憶中`, className: 'status-fresh', needsReview: false };
-    
     return { label: '🏆 本日暗記完了!', className: 'status-perfect', needsReview: false };
   };
 
+  // ⭐️ プロンプトに難易度設定を組み込む
   const fetchMeaning = async (targetWord) => {
     const prompt = `英単語「${targetWord}」について、必ず以下の【条件】に従って出力してください。
     【条件】
     1行目:意味(最大2つ。2つの場合は「 / 」で区切る。※「動詞」などの品詞名は絶対に書かないこと)
-    2行目:中学レベル英文(対象単語を「**」で囲む)
+    2行目:【${difficulty}】の英文(※対象単語を「**」で囲む)
     3行目:和訳(※英文で「**」で囲んだ単語に対応する日本語訳の部分を、必ず「**」で囲む)
     【禁止事項】挨拶、説明、箇条書き番号、空行は一切含めないでください。`;
+    
     try {
       const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) });
       const data = await res.json();
       if (data.error) throw new Error(data.error.message);
       const lines = data.candidates[0].content.parts[0].text.split('\n').map(l => l.trim().replace(/^[1-3].\s*/, '')).filter(l => l);
       return { coreMeaning: lines[0] || '取得失敗', exampleText: lines[1] || '例文なし', translationText: lines[2] || '' };
-    } catch (e) { return { coreMeaning: 'エラー', exampleText: e.message, translationText: '' }; }
+    } catch (e) { return { coreMeaning: 'エラー', exampleText: 'AIの生成に失敗しました。', translationText: '通信環境を確認してください。' }; }
   };
 
   const handleAddCard = async () => {
     if (!word.trim()) return;
     setLoading(true);
-    const res = await fetchMeaning(word);
-    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...d.cards, { word, ...res, isMemorized: false }] } : d));
-    setWord(''); setCurrentIndex(studyCards.length); setIsFlipped(false); setHasRecorded(false); setLoading(false);
+    try {
+      const res = await fetchMeaning(word);
+      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...d.cards, { word, ...res, isMemorized: false }] } : d));
+      setWord(''); 
+      setTimeout(() => { setCurrentIndex(studyCards.length); setIsFlipped(false); setHasRecorded(false); }, 100);
+    } catch(err) {
+      alert("カードの追加中にエラーが発生しました。");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const downloadTemplate = () => {
@@ -338,6 +345,23 @@ function App() {
     }
   };
 
+  // ⭐️ 箱・束の「名前変更」機能
+  const renameBox = (e, boxId, currentName) => {
+    e.stopPropagation();
+    const newName = window.prompt('箱の新しい名前を入力してください:', currentName);
+    if (newName !== null && newName.trim() !== '') {
+      setBoxes(prev => prev.map(b => b.id === boxId ? { ...b, name: newName.trim() } : b));
+    }
+  };
+
+  const renameDeck = (e, deckId, currentName) => {
+    e.stopPropagation();
+    const newName = window.prompt('束の新しい名前を入力してください:', currentName);
+    if (newName !== null && newName.trim() !== '') {
+      setDecks(prev => prev.map(d => d.id === deckId ? { ...d, name: newName.trim() } : d));
+    }
+  };
+
   const createNewBox = () => {
     if (!newBoxName.trim()) return;
     const newBox = { id: Date.now(), name: newBoxName };
@@ -371,25 +395,20 @@ function App() {
 
   const renderHighlightedText = (text) => {
     if (!text) return null;
-    return text.split(/\*\*(.*?)\*\*/g).map((part, i) => i % 2 === 1 ? <span key={i} className="highlight-word">{part}</span> : part);
+    return String(text).split(/\*\*(.*?)\*\*/g).map((part, i) => i % 2 === 1 ? <span key={i} className="highlight-word">{part}</span> : part);
   };
 
-  // ⭐️ スクロール判定を修正し、スマホやChromebookで正常に上下スクロールできるように対応
   const handleTouchStart = (e) => {
     if (e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes') return;
     touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; touchEndX.current = null; touchEndY.current = null; 
   };
   const handleTouchMove = (e) => {
-    // スクロール位置が一番上でない場合は、引っ張りアクションを無効化（普通にスクロールさせる）
     if (window.scrollY > 10) return;
     if (!touchStartX.current || !touchStartY.current || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes') return;
     
     touchEndX.current = e.touches[0].clientX; touchEndY.current = e.touches[0].clientY;
     const diffY = touchEndY.current - touchStartY.current; const diffX = touchStartX.current - touchEndX.current;
-    
-    if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) {
-      setPullDownY(diffY);
-    }
+    if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) setPullDownY(diffY);
   };
   const handleTouchEnd = () => {
     if (view === 'boxes') return;
@@ -429,13 +448,20 @@ function App() {
   const renderDeckCard = (deck, isMemorizedSection) => {
     const status = isMemorizedSection ? getMemorizedStatus(deck.lastStudied) : getEbbinghausStatus(deck.lastStudied);
     return (
-      <div key={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake' : ''}`} onClick={() => openDeck(deck.id)}>
+      <div key={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''}`} onClick={() => openDeck(deck.id)}>
         <div className="deck-paper stack-bottom"></div><div className="deck-paper stack-middle"></div>
         <div className="deck-paper top-cover">
           {!isMemorizedSection && deck.cards.length > 0 && (
             <button className="deck-memorized-btn" onClick={e => markDeckAsMemorized(e, deck.id)} title="この束をすべて暗記済みにする">✔</button>
           )}
-          <h3 className="deck-name">{deck.name}</h3><p className="deck-count">{deck.cards.length} 枚</p>
+          
+          {/* ⭐️ 束の名前変更ボタン（✏️） */}
+          <h3 className="deck-name">
+            {deck.name}
+            <button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)} title="名前を変更">✏️</button>
+          </h3>
+          
+          <p className="deck-count">{deck.cards.length} 枚</p>
           <div className={`status-badge ${status.className}`}>{status.label}</div>
           {deck.lastStudied && <p className="deck-date">🗓 最終学習: {formatDate(deck.lastStudied)}</p>}
           {deck.lastRecordTime !== null && <p className="deck-record">⏱ タイム: {formatTime(deck.lastRecordTime)}</p>}
@@ -445,11 +471,20 @@ function App() {
     );
   };
 
-
   if (view === 'boxes') {
     return (
       <div className="app-container gentle-bg desk-view" style={{padding: 0}}>
-        <h2 className="app-title">あなたの単語帳ボックス</h2>
+        
+        <div className="hero-section">
+          <h1 className="app-main-title">Redline Vocabulary</h1>
+          <h2 className="app-subtitle">限界突破の英単語</h2>
+          <p className="app-message">
+            知っている英単語の数は、あなたが認識できる「世界の広さ」に直結します。<br/>
+            5万語〜10万語という限界を突破した先には、英語を日本語のように自然に理解できるネイティブの景色が待っています。<br/>
+            さあ、脳の限界を超えて、新しい世界への扉を開きましょう！
+          </p>
+        </div>
+
         <div className="integrated-creation-area">
           <div className="creation-row">
             <span className="creation-label">📦 新しい箱</span>
@@ -474,8 +509,17 @@ function App() {
               return getEbbinghausStatus(d.lastStudied).needsReview;
             });
             return (
-              <div key={box.id} className={`storage-box-container ${hasReview ? 'polite-shake' : ''}`} onClick={() => openBox(box.id)}>
-                <div className="storage-box"><div className="box-lid"></div><div className="box-body"><span className="box-label">{box.name}</span></div></div>
+              <div key={box.id} className={`storage-box-container ${hasReview ? 'polite-shake-once' : ''}`} onClick={() => openBox(box.id)}>
+                <div className="storage-box">
+                  <div className="box-lid"></div>
+                  <div className="box-body">
+                    {/* ⭐️ 箱の名前変更ボタン（✏️） */}
+                    <span className="box-label">
+                      {box.name}
+                      <button className="inline-edit-btn" onClick={(e) => renameBox(e, box.id, box.name)} title="名前を変更">✏️</button>
+                    </span>
+                  </div>
+                </div>
                 <p className="box-instruction">{hasReview ? <span className="alert-text">🔥 復習のタイミング！</span> : 'タップして開ける'}</p>
                 <button className="delete-deck-btn" style={{top: '10px'}} onClick={e => deleteBox(e, box.id)}>×</button>
               </div>
@@ -487,7 +531,7 @@ function App() {
   }
 
   return (
-    <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ padding: 0 }}>
+    <div className="app-container gentle-bg desk-view" onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ overflow: 'hidden', position: 'relative', padding: 0 }}>
       
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
@@ -517,7 +561,7 @@ function App() {
             <div className="inner-view-wrapper" style={{maxWidth: '1000px', width: '100%', padding: '0 20px'}}>
               <div className="study-header">
                 <button className="back-to-desk-btn" onClick={() => setView('boxes')}>◀ 戻る</button>
-                <h2 className="app-title">📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2>
+                <h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2>
                 <div style={{width: '80px'}}></div>
               </div>
               <p className="hint-text">💡 画面を下に引っ張っても戻れます</p>
@@ -573,7 +617,7 @@ function App() {
               {!isFullscreen && (
                 <div className="study-header">
                   <button className="back-to-desk-btn" onClick={closeDeck}>◀ 戻る</button>
-                  <h2 className="app-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>{activeDeck?.name}</h2>
+                  <h2 className="app-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin:0 }}>{activeDeck?.name}</h2>
                   <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible' }}>⏱ {formatTime(studyTime)}</div>
                 </div>
               )}
@@ -581,6 +625,15 @@ function App() {
               {!isFullscreen && !isBulkMode && (
                 <div className="input-section" style={{ marginTop: '10px' }}>
                   <input type="text" placeholder="単語を追加..." value={word} onChange={e => setWord(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleAddCard()} disabled={loading} />
+                  
+                  {/* ⭐️ 難易度（例文レベル）セレクト */}
+                  <select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="difficulty-selector" disabled={loading}>
+                    <option value="中学・基礎レベル">🔰 中学・基礎レベル</option>
+                    <option value="高校・共通テストレベル">🎓 高校・共通テストレベル</option>
+                    <option value="TOEIC・英検準1級レベル">💼 TOEIC・英検準1級レベル</option>
+                    <option value="英検1級・英字新聞レベル">📰 英検1級・英字新聞レベル</option>
+                  </select>
+
                   <button onClick={handleAddCard} className="add-btn" disabled={loading}>{loading ? '...' : '追加'}</button>
                   <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn">📑 エクセルで丸投げ追加</button>
                 </div>
@@ -589,6 +642,18 @@ function App() {
               {!isFullscreen && isBulkMode && (
                 <div className="bulk-input-section" style={{ marginTop: '10px' }}>
                   <p className="bulk-hint">テンプレートに単語を書いて、ファイルをアップロードしてください</p>
+                  
+                  {/* ⭐️ 一括追加時にも難易度を選べる */}
+                  <div style={{marginBottom: '15px', textAlign: 'center'}}>
+                    <label style={{fontSize: '13px', fontWeight: 'bold', color: '#6d5b53', marginRight: '10px'}}>例文の難易度:</label>
+                    <select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="difficulty-selector" disabled={loading}>
+                      <option value="中学・基礎レベル">🔰 中学・基礎レベル</option>
+                      <option value="高校・共通テストレベル">🎓 高校・共通テストレベル</option>
+                      <option value="TOEIC・英検準1級レベル">💼 TOEIC・英検準1級レベル</option>
+                      <option value="英検1級・英字新聞レベル">📰 英検1級・英字新聞レベル</option>
+                    </select>
+                  </div>
+
                   <div className="bulk-file-actions">
                     <button onClick={downloadTemplate} className="add-btn bulk-template-btn">📥 テンプレート(CSV)をダウンロード</button>
                     <label className="add-btn bulk-upload-btn">
@@ -636,11 +701,11 @@ function App() {
                           
                           <div className="back-content">
                             <div className="meaning-section">
-                              <h2 className="core-meaning">{studyCards[currentIndex]?.meaning.split('/').map((m, i) => <span key={i} style={{display:'block', margin:'4px 0'}}>{m.trim()}</span>)}</h2>
+                              <h2 className="core-meaning">{(studyCards[currentIndex]?.meaning || '').split('/').map((m, i) => <span key={i} style={{display:'block', margin:'4px 0'}}>{m.trim()}</span>)}</h2>
                             </div>
                             <div className="example-section">
-                              <p className="example-en">{renderHighlightedText(studyCards[currentIndex]?.example)}</p>
-                              <p className="example-ja">{renderHighlightedText(studyCards[currentIndex]?.translation)}</p>
+                              <p className="example-en">{renderHighlightedText(studyCards[currentIndex]?.example || '')}</p>
+                              <p className="example-ja">{renderHighlightedText(studyCards[currentIndex]?.translation || '')}</p>
                             </div>
                           </div>
                         </div>

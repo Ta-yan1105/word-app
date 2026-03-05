@@ -1,26 +1,22 @@
-/* ⭐️ 全体スクロールを許可するための設定（ChromeBook, スマホ対応） */
-body, html {
-  margin: 0; padding: 0; width: 100%; height: 100%;
-}
+/* ⭐️ 全体スクロールを許可するための設定 */
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
 
 :fullscreen { background-color: #f7f6f2; overflow: auto; }
 
-.app-container {
-  overflow-x: hidden;
-  overflow-y: auto; /* ⭐️ これが一番重要！小さな画面でも縦スクロール可能にする */
-  min-height: 100vh;
-  width: 100%;
-  position: relative;
-}
+.app-container { overflow-x: hidden; overflow-y: auto; min-height: 100vh; width: 100%; position: relative; }
 
 .gentle-bg {
   background-color: #f7f6f2; 
   background-image: radial-gradient(circle at top, #ffffff 0%, #f7f6f2 100%);
-  display: flex; flex-direction: column; 
-  justify-content: flex-start; align-items: center; padding: 40px 20px;
+  display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 40px 20px;
   font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
   box-sizing: border-box;
 }
+
+.hero-section { text-align: center; margin-bottom: 40px; max-width: 700px; }
+.app-main-title { color: #c0392b; font-size: clamp(32px, 6vw, 48px); font-weight: 900; letter-spacing: 3px; margin: 0 0 5px 0; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+.app-subtitle { color: #6d5b53; font-size: clamp(16px, 3vw, 20px); font-weight: 700; letter-spacing: 5px; margin: 0 0 20px 0; }
+.app-message { color: #5a4b44; font-size: 15px; line-height: 1.8; font-weight: 500; background: rgba(255,255,255,0.6); padding: 20px; border-radius: 12px; border: 1px dashed #d1c4b7; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
 
 .overlay { max-width: 600px; width: 100%; text-align: center; }
 .inner-view-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; margin: 0 auto; padding-bottom: 50px; }
@@ -39,21 +35,27 @@ body, html {
 
 .app-title { color: #6d5b53; font-weight: 600; letter-spacing: 2px; margin-bottom: 25px; text-align: center; }
 
-/* ⭐️ 入力エリアをスマホでも綺麗に折り返す */
-.input-section { display: flex; gap: 8px; justify-content: center; margin-bottom: 40px; width: 100%; flex-wrap: wrap; }
+/* ⭐️ 難易度プルダウンのデザイン追加 */
+.difficulty-selector {
+  background: #fdfbf7; border: 1px solid #e8e4db; padding: 12px;
+  border-radius: 8px; font-size: 14px; color: #4a4a4a; outline: none; cursor: pointer;
+  min-width: 180px;
+}
+.difficulty-selector:focus { border-color: #8fb8a8; }
+
+.input-section { display: flex; gap: 8px; justify-content: center; margin-bottom: 40px; width: 100%; flex-wrap: wrap; align-items: center;}
 .input-section input { background: #ffffff; border: 2px solid #e8e4db; padding: 12px; border-radius: 8px; flex-grow: 1; font-size: 15px; transition: all 0.3s; color: #4a4a4a; min-width: 150px;}
 .input-section input:focus { outline: none; border-color: #8fb8a8; box-shadow: 0 0 8px rgba(143, 184, 168, 0.4); }
-.add-btn { background-color: #8fb8a8; color: white; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
+.add-btn { background-color: #8fb8a8; color: white; border: none; padding: 12px 16px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: background-color 0.2s; white-space: nowrap; height: 46px; }
 .add-btn:hover { background-color: #7a9e90; }
 .add-btn:disabled { background-color: #c4b5a5; cursor: not-allowed; }
 
-/* ⭐️ ホーム画面の作成エリア（スマホで縦並びになるよう調整） */
 .integrated-creation-area { background: #ffffff; border: 2px dashed #e8e4db; border-radius: 12px; padding: 20px; width: 100%; max-width: 500px; margin-bottom: 40px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
 .creation-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .creation-label { font-weight: bold; color: #6d5b53; width: 90px; font-size: 14px; flex-shrink: 0; }
 .creation-row input { flex-grow: 1; background: #fdfbf7; border: 1px solid #e8e4db; padding: 10px; border-radius: 6px; font-size: 14px; color: #4a4a4a; min-width: 120px; }
 .box-selector { background: #fdfbf7; border: 1px solid #e8e4db; padding: 10px; border-radius: 6px; color: #4a4a4a; font-size: 13px; max-width: 140px; }
-.mini-btn { padding: 10px 15px; }
+.mini-btn { padding: 10px 15px; height: auto;}
 .creation-divider { height: 1px; background-color: #e8e4db; margin: 15px 0; }
 
 .bulk-toggle-btn { background-color: #d1c4b7; }
@@ -74,28 +76,31 @@ body, html {
 .cancel-btn:hover { background-color: #fdedec; }
 
 .desk-view { justify-content: flex-start; width: 100%; }
-
-/* ⭐️ 箱と束のグリッド（スマホで綺麗に並ぶように隙間を調整） */
 .boxes-grid { display: flex; flex-wrap: wrap; gap: 60px 40px; justify-content: center; width: 100%; max-width: 900px; padding: 10px 0 50px 0; }
 .storage-box-container { display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; }
-@keyframes reviewShake { 0%, 100% { transform: translateX(0) rotate(0deg); } 10%, 30%, 50% { transform: translateX(-2px) rotate(-1deg); } 20%, 40%, 60% { transform: translateX(2px) rotate(1deg); } 70%, 100% { transform: translateX(0) rotate(0deg); } }
-.polite-shake { animation: reviewShake 2.5s ease-in-out infinite; transform-origin: bottom center; }
+
+@keyframes reviewShakeOnce { 0% { transform: translateX(0) rotate(0deg); } 25% { transform: translateX(-4px) rotate(-2deg); } 50% { transform: translateX(4px) rotate(2deg); } 75% { transform: translateX(-2px) rotate(-1deg); } 100% { transform: translateX(0) rotate(0deg); } }
+.polite-shake-once { animation: reviewShakeOnce 1s ease-in-out 1; transform-origin: bottom center; }
 .alert-text { color: #d35400 !important; font-weight: 800 !important; }
+
+/* ⭐️ 箱の名前変更ボタン（インライン） */
+.inline-edit-btn { background: none; border: none; cursor: pointer; font-size: 14px; margin-left: 5px; opacity: 0.5; transition: opacity 0.2s; padding: 2px; }
+.inline-edit-btn:hover { opacity: 1; transform: scale(1.1); }
 
 .storage-box { position: relative; width: 200px; height: 130px; perspective: 800px; }
 .box-body { position: absolute; bottom: 0; width: 100%; height: 100px; background-color: #d1c4b7; border-radius: 8px; border: 2px solid #b8a898; display: flex; align-items: center; justify-content: center; box-shadow: 0 15px 25px rgba(109, 91, 83, 0.2), inset 0 -10px 20px rgba(0,0,0,0.05); z-index: 2; }
-.box-label { background: #ffffff; padding: 6px 16px; border-radius: 4px; font-weight: bold; color: #6d5b53; border: 1px dashed #b8a898; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); font-size: 14px; text-align: center; }
+.box-label { background: #ffffff; padding: 6px 16px; border-radius: 4px; font-weight: bold; color: #6d5b53; border: 1px dashed #b8a898; box-shadow: 1px 1px 3px rgba(0,0,0,0.1); font-size: 14px; text-align: center; display: flex; align-items: center; justify-content: center;}
 .box-lid { position: absolute; top: 15px; width: 100%; height: 30px; background-color: #e3d9cd; border-radius: 6px; border: 2px solid #b8a898; transform-origin: top; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 3; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
 .storage-box-container:hover .box-lid { transform: rotateX(60deg); }
 .box-instruction { margin-top: 25px; color: #a39c96; font-weight: bold; font-size: 14px; text-align: center;}
 
-.decks-section { width: 100%; margin-bottom: 40px; }
-.section-heading { font-size: 18px; color: #6d5b53; border-bottom: 2px solid #e8e4db; padding-bottom: 8px; margin-bottom: 30px; text-align: left; width: 100%; padding-left: 10px; }
+.decks-section { width: 100%; margin-bottom: 40px; display: flex; flex-direction: column; align-items: center; }
+.section-heading { font-size: 18px; color: #6d5b53; border-bottom: 2px solid #e8e4db; padding-bottom: 8px; margin-bottom: 30px; text-align: center; width: 100%; max-width: 900px; }
 .box-inner-creation { display: flex; gap: 10px; justify-content: center; margin: 20px 0 40px 0; width: 100%; max-width: 400px; flex-wrap: wrap;}
 .box-inner-creation input { flex-grow: 1; background: #ffffff; border: 2px dashed #8fb8a8; padding: 12px; border-radius: 8px; font-size: 14px; color: #4a4a4a; min-width: 200px;}
 .box-inner-creation input:focus { border-style: solid; outline: none; }
 
-.decks-grid { display: flex; flex-wrap: wrap; gap: 50px 40px; justify-content: center; width: 100%; max-width: 900px; padding: 10px; }
+.decks-grid { display: flex; flex-wrap: wrap; gap: 50px 40px; justify-content: center; width: 100%; max-width: 900px; padding: 10px 20px; box-sizing: border-box; }
 .deck-bundle { width: 190px; height: 140px; position: relative; cursor: pointer; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .deck-bundle:hover { transform: translateY(-10px) rotate(-2deg); }
 .deck-paper { position: absolute; width: 100%; height: 100%; background: #ffffff; border: 1px solid #e8e4db; border-radius: 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05); }
@@ -107,7 +112,7 @@ body, html {
 .deck-memorized-btn:hover { background: #eafaf1; transform: scale(1.1); }
 .deck-date { font-size: 11px; color: #a39c96; margin: 8px 0 0 0; font-weight: bold;}
 
-.deck-name { color: #6d5b53; font-size: 15px; margin: 0 0 8px 0; word-break: break-all; }
+.deck-name { display: flex; align-items: center; justify-content: center; color: #6d5b53; font-size: 15px; margin: 0 0 8px 0; word-break: break-all; }
 .deck-count { color: #a39c96; font-size: 12px; margin: 0 0 8px 0; }
 .deck-record { font-size: 11px; color: #8fb8a8; font-weight: bold; margin: 4px 0 0 0; font-family: 'Courier New', Courier, monospace; }
 
@@ -125,33 +130,15 @@ body, html {
 .card-animation-wrapper { animation: turnPageHorizontal 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; width: 100%; }
 @keyframes turnPageHorizontal { 0% { transform: translateX(80px) rotateY(-30deg) scale(0.95); opacity: 0; } 100% { transform: translateX(0) rotateY(0) scale(1); opacity: 1; } }
 
-
-/* -------------------------------------------
-   ⭐️⭐️ 3ペイン・ダッシュボード（スマホ対応） ⭐️⭐️
-------------------------------------------- */
-.study-dashboard {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  width: 100%; max-width: 100%; padding: 0; box-sizing: border-box;
-}
-
-/* ⭐️ 画面が小さい時（スマホやChromebookの半分ウィンドウなど）は縦に並べるか隠す */
+.study-dashboard { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; max-width: 100%; padding: 0 10px; box-sizing: border-box; }
 @media (max-width: 1050px) {
-  .study-dashboard {
-    flex-direction: column; align-items: center; gap: 20px;
-  }
-  .side-panel {
-    /* スマホ等ではサイドパネルは邪魔なので、下部に置くか非表示にする */
-    display: none !important; 
-  }
+  .study-dashboard { flex-direction: column; align-items: center; gap: 20px; }
+  .side-panel { display: none !important; }
   .center-panel { width: 100%; max-width: 100%; }
 }
-
 .center-panel { flex-grow: 1; display: flex; flex-direction: column; align-items: center; max-width: 600px; margin: 0 auto; width: 100%; }
 
-.side-panel {
-  width: 250px; background: #ffffff; border-radius: 12px; border: 2px dashed #e8e4db; padding: 15px;
-  max-height: 75vh; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.02); flex-shrink: 0;
-}
+.side-panel { width: 260px; background: #ffffff; border-radius: 12px; border: 2px dashed #e8e4db; padding: 15px; max-height: 75vh; overflow-y: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.02); flex-shrink: 0; }
 .panel-title { font-size: 15px; color: #6d5b53; border-bottom: 2px solid #e8e4db; padding-bottom: 10px; margin-top: 0; margin-bottom: 15px; text-align: center; }
 .mini-card-list { display: flex; flex-direction: column; gap: 10px; }
 .mini-index { color: #a39c96; font-size: 13px; margin-right: 6px; font-weight: normal; }
@@ -172,12 +159,8 @@ body, html {
 .modal-input:focus { outline: none; border-color: #8fb8a8; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
 
-/* ⭐️ カードのレスポンシブ対応 */
 .card-container { width: 90vw; max-width: 480px; height: 300px; perspective: 1000px; cursor: pointer; filter: drop-shadow(0 10px 20px rgba(109, 91, 83, 0.15)); margin: 0 auto; transition: all 0.4s ease; }
-@media (max-width: 500px) {
-  .card-container { height: 260px; }
-}
-
+@media (max-width: 500px) { .card-container { height: 260px; } }
 .card-inner { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
 .card-container.flipped .card-inner { transform: rotateX(-180deg); }
 .card-front, .card-back { width: 100%; height: 100%; position: absolute; backface-visibility: hidden; background-color: #ffffff; border-radius: 12px; border: 1px solid #e8e4db; }
@@ -207,16 +190,14 @@ body, html {
 .delete-btn { background-color: transparent !important; color: #d98880 !important; border: 1px solid #e6b0aa !important; padding: 10px 24px !important; border-radius: 20px !important; font-size: 16px; cursor: pointer; transition: all 0.2s; }
 .delete-btn:hover { background: #fdedec !important; }
 
-/* コントロールパネルのレスポンシブ対応 */
-.autoplay-controls { margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 15px; background: #ffffff; padding: 15px; border-radius: 12px; border: 1px dashed #c4b5a5; width: 100%; box-sizing: border-box; }
+.autoplay-controls { margin-top: 30px; display: flex; flex-direction: column; align-items: center; gap: 15px; background: #ffffff; padding: 15px 20px; border-radius: 12px; border: 1px dashed #c4b5a5; width: 100%; box-sizing: border-box; }
 .autoplay-actions-row { display: flex; gap: 10px; justify-content: center; align-items: center; width: 100%; flex-wrap: wrap;}
 .autoplay-toggle-btn { background: #fdfbf7; color: #6d5b53; border: 2px solid #e8e4db; padding: 10px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
 .autoplay-toggle-btn.active { background: #8fb8a8; color: white; border-color: #8fb8a8; box-shadow: 0 4px 10px rgba(143, 184, 168, 0.3); animation: pulse 2s infinite; }
 .repeat-btn { background: #fdfbf7; color: #6d5b53; border: 2px solid #e8e4db; padding: 10px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-.repeat-btn:hover { background-color: #e8e4db; transform: translateY(-1px); }
+.repeat-btn:hover { background: #e8e4db; transform: translateY(-1px); }
 .fullscreen-btn { background: #fdfbf7; border: 2px solid #e8e4db; color: #d35400; padding: 10px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
 .fullscreen-btn:hover { background: #fdf9f4; transform: translateY(-1px); border-color: #e67e22; }
-
 .inline-timer { margin-left: 5px; font-size: 15px; font-weight: bold; color: #27ae60; background: #eafaf1; padding: 8px 12px; border-radius: 20px; border: 2px dashed #abebc6; animation: popIn 0.5s ease; }
 
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(143, 184, 168, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(143, 184, 168, 0); } 100% { box-shadow: 0 0 0 0 rgba(143, 184, 168, 0); } }
