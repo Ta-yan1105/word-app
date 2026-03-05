@@ -188,7 +188,6 @@ function App() {
   const nextCard = useCallback(() => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev + 1) % studyCards.length), 150); }, [studyCards.length]);
   const prevCard = useCallback(() => { setIsFlipped(false); setTimeout(() => setCurrentIndex(prev => (prev - 1 + studyCards.length) % studyCards.length), 150); }, [studyCards.length]);
 
-  // ⭐️ 新機能：キーボードショートカット機能（教壇からのパワポ操作用）
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -868,7 +867,6 @@ function App() {
                 <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ display: isBulkMode ? 'none' : 'flex' }}>
                   {!isFullscreen && <p className="card-counter">{currentIndex + 1} / {studyCards.length}</p>}
                   
-                  {/* ⭐️ 次へ進むときの「スライドイン・ページめくりアニメーション」用の key 設定 */}
                   <div className="card-animation-wrapper" key={currentIndex}>
                     <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
                       <div className="card-inner">
@@ -919,13 +917,7 @@ function App() {
                       )}
                     </div>
                     
-                    <div className="speed-selectors">
-                      <button className={`speed-btn ${speedLevel === 15 ? 'selected' : ''}`} onClick={() => setSpeedLevel(15)}>🐢 遅め</button>
-                      <button className={`speed-btn ${speedLevel === 40 ? 'selected' : ''}`} onClick={() => setSpeedLevel(40)}>🚶 普通</button>
-                      <button className={`speed-btn ${speedLevel === 70 ? 'selected' : ''}`} onClick={() => setSpeedLevel(70)}>🐇 高速</button>
-                      <button className={`speed-btn ${speedLevel === 95 ? 'selected' : ''}`} onClick={() => setSpeedLevel(95)}>💫 神速</button>
-                    </div>
-
+                    {/* ⭐️ ボタンを削除し、スライダーバーを横いっぱいに配置！ */}
                     <div className="speed-slider-container">
                       <div className="speed-slider-label">めくるスピードを調整:</div>
                       <div className="speed-slider-wrapper">
