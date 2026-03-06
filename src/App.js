@@ -59,15 +59,18 @@ function App() {
   const [studyTime, setStudyTime] = useState(0);
   const [hasRecorded, setHasRecorded] = useState(false); 
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
-  const [speedLevel, setSpeedLevel] = useState(40);
-  
+  const [displaySeconds, setDisplaySeconds] = useState(2.0);
   const [isMuted, setIsMuted] = useState(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
   const [editingCard, setEditingCard] = useState(null);
+  const [addingCard, setAddingCard] = useState(false);
+  const [newCardData, setNewCardData] = useState({ word: '', meaning: '', example: '', translation: '' });
+  
   const [loading, setLoading] = useState(false);
 
   const [testQuestions, setTestQuestions] = useState([]);
@@ -133,72 +136,72 @@ function App() {
 
 
   // =========================================================================
-  // ⭐️ 限界突破音声システム（アクション直結型 ＆ Macバグ対応版）
+  // ⭐️ 最終奥義：辞書API(Youdao) MP3直接再生システム
+  // オープンな辞書APIを利用し、CORSエラーを回避して確実にネイティブ音声を鳴らします
   // =========================================================================
   
-  // 起動時に音声リストを非同期でロード（Macの沈黙バグ対策）
-  useEffect(() => {
+  const fallbackTTS = useCallback((text, rate) => {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = rate;
+      window.speechSynthesis.speak(utterance);
     }
   }, []);
 
-  // ゴミ箱に捨てられないように変数を保持（Macバグ対策）
-  const currentUtteranceRef = useRef(null);
-
   const playAudio = useCallback((text) => {
     if (isMuted || !text) return; 
-    if ('speechSynthesis' in window) {
-      
-      // 連続で鳴るとMacやiOSがフリーズするため必ずキャンセル
-      window.speechSynthesis.cancel(); 
 
-      // Safari/Mac特有の「cancel直後のspeakは無視されるバグ」を防ぐため、50ミリ秒の猶予（魔法のディレイ）を与える
-      setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        currentUtteranceRef.current = utterance; // 変数を保持して消滅を防ぐ
-        
-        utterance.lang = 'en-US'; 
-        
-        // 人間が聞き取れる限界の1.5倍速を上限とする
-        let calculatedRate = 0.8 + (speedLevel / 100) * 0.8; 
-        if (calculatedRate > 1.5) calculatedRate = 1.5; 
-        utterance.rate = calculatedRate;
-        utterance.volume = 1;
-        
-        const voices = window.speechSynthesis.getVoices();
-        if (voices && voices.length > 0) {
-          // ネイティブ発音を最優先で設定
-          const premiumVoice = voices.find(v => 
-            v.lang.startsWith('en') && 
-            (v.name.includes('Samantha') || v.name.includes('Premium') || v.name.includes('Google') || v.name.includes('Alex'))
-          );
-          utterance.voice = premiumVoice || voices.find(v => v.lang.startsWith('en'));
-        }
-        
-        window.speechSynthesis.speak(utterance);
-      }, 50); // 👈 この50msが命！
+    // 余計な記号を省いて単語のみを抽出
+    const cleanWord = String(text).replace(/[^a-zA-Z\s\-']/g, '').trim();
+    if (!cleanWord) return;
+
+    // スピードバーに基づく再生速度の計算 (0.5倍速 〜 最大1.5倍速)
+    let rate = 1.0;
+    if (displaySeconds < 2.0) {
+      rate = 1.0 + ((2.0 - displaySeconds) / 2.0) * 0.5;
+    } else if (displaySeconds > 2.0) {
+      rate = 1.0 - ((displaySeconds - 2.0) / 2.0) * 0.2;
     }
-  }, [speedLevel, isMuted]);
+    rate = rate > 1.5 ? 1.5 : (rate < 0.5 ? 0.5 : rate);
 
+    try {
+      // ⭐️ Youdao Dictionary API (type=2はUSネイティブ発音)。ブロックされない最強のURLです！
+      const audioUrl = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(cleanWord)}&type=2`;
+      const audio = new Audio(audioUrl);
+      audio.playbackRate = rate;
+      
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          // 万が一通信が切れている場合は、内蔵の音声エンジンを動かす
+          fallbackTTS(cleanWord, rate);
+        });
+      }
+    } catch (e) {
+      fallbackTTS(cleanWord, rate);
+    }
+  }, [displaySeconds, isMuted, fallbackTTS]);
   // =========================================================================
 
-  // ⭐️ イベント直結！ボタンを押した「その指の動き」の中で音を鳴らす（ブロック絶対回避）
-  const handleNextCard = useCallback(() => {
+
+  const handleNextCard = useCallback((e) => {
+    if (e) e.stopPropagation();
     stopAutoPlayIfActive();
     setIsFlipped(false);
     const nextIdx = (currentIndex + 1) % studyCards.length;
-    playAudio(studyCards[nextIdx]?.word); // 👈 アクションに直結！
-    setTimeout(() => setCurrentIndex(nextIdx), 150);
+    setCurrentIndex(nextIdx);
+    playAudio(studyCards[nextIdx]?.word); 
   }, [currentIndex, studyCards, playAudio]);
 
-  const handlePrevCard = useCallback(() => {
+  const handlePrevCard = useCallback((e) => {
+    if (e) e.stopPropagation();
     stopAutoPlayIfActive();
     setIsFlipped(false);
     const prevIdx = (currentIndex - 1 + studyCards.length) % studyCards.length;
-    playAudio(studyCards[prevIdx]?.word); // 👈 アクションに直結！
-    setTimeout(() => setCurrentIndex(prevIdx), 150);
+    setCurrentIndex(prevIdx);
+    playAudio(studyCards[prevIdx]?.word); 
   }, [currentIndex, studyCards, playAudio]);
 
   const handleRepeat = () => { 
@@ -207,7 +210,7 @@ function App() {
     setIsFlipped(false); 
     setStudyTime(0); 
     setHasRecorded(false); 
-    if (studyCards.length > 0) playAudio(studyCards[0].word); // 👈 アクションに直結！
+    if (studyCards.length > 0) playAudio(studyCards[0].word); 
   };
 
 
@@ -241,15 +244,8 @@ function App() {
     }
   }, [isCompleted, currentDeckId, studyTime]);
 
-
-  // キーボード操作時も「直結イベント」で鳴らす
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // 最初のキー入力でロック解除（念のため）
-      if ('speechSynthesis' in window && !isMuted) {
-         const dummy = new SpeechSynthesisUtterance(''); dummy.volume = 0; window.speechSynthesis.speak(dummy);
-      }
-
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (view !== 'study' || isBulkMode) return;
 
@@ -259,20 +255,20 @@ function App() {
         setIsFlipped(prev => !prev);
       } else if (e.code === 'Enter' || e.key === 'ArrowRight') {
         e.preventDefault();
-        handleNextCard(); // 👈 アクション直結！
+        handleNextCard(); 
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        handlePrevCard(); // 👈 アクション直結！
+        handlePrevCard(); 
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view, isBulkMode, isAutoPlaying, handleNextCard, handlePrevCard, isMuted]);
+  }, [view, isBulkMode, isAutoPlaying, handleNextCard, handlePrevCard]);
 
   const elapsedRef = useRef(0);
   const lastTickRef = useRef(Date.now());
 
-  // 自動めくり（AutoPlay）時の発音
+  // 自動めくりモード
   useEffect(() => {
     let autoPlayTimer = null; 
     if (isAutoPlaying && studyCards.length > 0 && !isCompleted) {
@@ -282,27 +278,29 @@ function App() {
         const delta = now - lastTickRef.current;
         lastTickRef.current = now;
         elapsedRef.current += delta;
-        const currentDelay = 4000 - (speedLevel - 1) * (3600 / 99);
+        
+        const currentDelay = displaySeconds === 0 ? 150 : displaySeconds * 1000;
         
         if (elapsedRef.current >= currentDelay) {
           elapsedRef.current = 0; 
-          if (!isFlipped) {
+          
+          if (!isFlipped && displaySeconds !== 0) {
             setIsFlipped(true); 
           } else if (currentIndex < studyCards.length - 1) {
             const nextIdx = currentIndex + 1;
-            playAudio(studyCards[nextIdx]?.word); // 👈 自動めくり時の発音
+            setCurrentIndex(nextIdx);
+            playAudio(studyCards[nextIdx]?.word); 
             setIsFlipped(false);
-            setTimeout(() => setCurrentIndex(nextIdx), 150);
           } else {
             setIsAutoPlaying(false);
           }
         }
-      }, 50);
+      }, 50); 
     } else { 
       elapsedRef.current = 0; 
     }
     return () => { if (autoPlayTimer) clearInterval(autoPlayTimer); };
-  }, [isAutoPlaying, isFlipped, currentIndex, speedLevel, studyCards.length, isCompleted, playAudio]);
+  }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, playAudio]);
 
 
   const toggleMemorize = (e, wordToMark, isMemorized) => {
@@ -330,6 +328,30 @@ function App() {
         return { ...d, lastStudied: Date.now(), cards: d.cards.map(c => ({ ...c, isMemorized: true })) };
       }));
     }
+  };
+
+  const saveNewCard = () => {
+    if (!newCardData.word.trim() || !newCardData.meaning.trim()) {
+      alert("「英単語」と「意味」は必ず入力してください！");
+      return;
+    }
+    setDecks(prev => prev.map(d => {
+      if (d.id === currentDeckId) {
+        return { 
+          ...d, 
+          cards: [...d.cards, { 
+            word: newCardData.word.trim(), 
+            meaning: newCardData.meaning.trim(), 
+            example: newCardData.example.trim(), 
+            translation: newCardData.translation.trim(), 
+            isMemorized: false 
+          }] 
+        };
+      }
+      return d;
+    }));
+    setAddingCard(false); 
+    setNewCardData({ word: '', meaning: '', example: '', translation: '' }); 
   };
 
   const saveEditedCard = () => {
@@ -466,15 +488,15 @@ function App() {
     }, 450);
   };
   
-  // ⭐️ デッキを開く（タップ）というユーザーの動きに直接音声を乗せて発動！
   const openDeck = (id) => { 
     if (draggedDeckId) return;
     setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); 
     
+    // デッキを開いた直後の最初の単語を確実に発音！
     const targetDeck = decks.find(d => d.id === id);
     const targetCards = targetDeck ? targetDeck.cards.filter(c => !c.isMemorized) : [];
     if (targetCards.length > 0) {
-      playAudio(targetCards[0].word); // 👈 アクション直結！絶対に鳴る！
+      setTimeout(() => playAudio(targetCards[0].word), 150); 
     }
   };
   
@@ -558,7 +580,6 @@ function App() {
     const diffY = touchEndY.current - touchStartY.current; const diffX = touchStartX.current - touchEndX.current;
     if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) setPullDownY(diffY);
   };
-  
   const handleTouchEnd = () => {
     if (view === 'boxes' || view === 'printPreview') return;
     if (pullDownY > 120) {
@@ -567,9 +588,7 @@ function App() {
     } else {
       setPullDownY(0);
       const diffX = touchStartX.current - (touchEndX.current || touchStartX.current);
-      // ⭐️ スワイプ時も「直結イベント」で鳴らす！
       if (Math.abs(diffX) > 50 && view === 'study') { 
-        stopAutoPlayIfActive(); 
         if (diffX > 0) handleNextCard(); 
         else handlePrevCard(); 
       }
@@ -673,7 +692,6 @@ function App() {
                   <button className="box-icon-btn" onClick={(e) => renameBox(e, box.id, box.name)} title="名前を変更">✏️</button>
                   <button className="box-icon-btn delete-box-btn" onClick={(e) => deleteBox(e, box.id)} title="箱を削除">✖</button>
                 </div>
-
                 <div className={`storage-box ${isOpening ? 'opening-anim' : ''}`} onClick={() => openBox(box.id)}>
                   <div className="box-lid-line"></div>
                   <div className="box-label-wrapper">
@@ -773,6 +791,26 @@ function App() {
         </div>
       )}
 
+      {addingCard && (
+        <div className="modal-overlay" onClick={() => setAddingCard(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{marginTop: 0, color: '#27ae60'}}>新しいカードを作成</h3>
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>英単語 (必須)</label>
+            <input className="modal-input" value={newCardData.word} onChange={(e) => setNewCardData({...newCardData, word: e.target.value})} placeholder="apple" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>意味 (必須)</label>
+            <input className="modal-input" value={newCardData.meaning} onChange={(e) => setNewCardData({...newCardData, meaning: e.target.value})} placeholder="りんご" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>英語例文 <span style={{fontWeight:'normal', fontSize:'11px'}}>(**で囲むと黄色い線)</span></label>
+            <textarea className="modal-input" value={newCardData.example} onChange={(e) => setNewCardData({...newCardData, example: e.target.value})} placeholder="I have an **apple**." rows="2" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>例文和訳 <span style={{fontWeight:'normal', fontSize:'11px'}}>(**で囲むと黄色い線)</span></label>
+            <textarea className="modal-input" value={newCardData.translation} onChange={(e) => setNewCardData({...newCardData, translation: e.target.value})} placeholder="私は**りんご**を持っています。" rows="2" />
+            <div className="modal-actions">
+              <button className="cancel-btn" onClick={() => setAddingCard(false)}>キャンセル</button>
+              <button className="add-btn" style={{backgroundColor: '#27ae60'}} onClick={saveNewCard}>追加する</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={dynamicStyle}>
         
         {view === 'decks' && (() => {
@@ -833,11 +871,16 @@ function App() {
                 }}
               >
                 <h3 className="panel-title" title="右のカードをドラッグして戻せます">📖 学習中 ({studyCards.length})</h3>
-                <div className="panel-top-action" style={{ padding: '10px' }}>
+                
+                <div className="panel-top-action" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#27ae60'}}>
+                    ✏️ 手動で単語を1枚追加
+                  </button>
                   <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#e67e22'}}>
                     📂 CSVから単語を追加
                   </button>
                 </div>
+                
                 <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}</div>
               </div>
             )}
@@ -910,8 +953,9 @@ function App() {
                           <div className="ring-hole"></div>
                           <button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)} title="覚えたらチェック！">✔</button>
                           
-                          {/* スピーカーを撤去し、ノイズレスなデザインへ！ */}
-                          <h1 className="word-text">{studyCards[currentIndex]?.word || ''}</h1>
+                          <h1 className="word-text" onClick={(e) => { e.stopPropagation(); playAudio(studyCards[currentIndex]?.word); }} title="タップで発音を確認">
+                            {studyCards[currentIndex]?.word || ''}
+                          </h1>
                           
                         </div>
                         <div className="card-back">
@@ -947,11 +991,41 @@ function App() {
                       <button className="repeat-btn" onClick={handleRepeat} title="最初からやり直す">🔄 もう1回</button>
                       <button className="fullscreen-btn" onClick={toggleFullScreen} title="全集中モード">{isFullscreen ? '解除 ↘️' : '全集中 🔥'}</button>
                     </div>
+                    
+                    {/* ⭐️ 究極の「表示間隔」UI完成版！ */}
                     <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                      <div className="speed-slider-wrapper">
-                        <span style={{fontSize:'14px', color:'#7f8c8d', fontWeight:'bold', whiteSpace:'nowrap'}}>🐢 遅</span>
-                        <input type="range" min="1" max="100" value={speedLevel} onChange={(e) => setSpeedLevel(Number(e.target.value))} className="speed-slider" />
-                        <span style={{fontSize:'14px', color:'#7f8c8d', fontWeight:'bold', whiteSpace:'nowrap'}}>速 🐇</span>
+                      <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center'}}>
+                        表示間隔: {displaySeconds === 0 ? '⚡️ 神速 (0.0 秒)' : `${displaySeconds.toFixed(1)} 秒`}
+                      </div>
+                      
+                      <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
+                        {/* ⭐️ 左のアイコン：0なら👼、それ以外は🐇 */}
+                        <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>
+                          速 {displaySeconds === 0 ? '👼' : '🐇'}
+                        </span>
+                        
+                        {/* ⭐️ 真ん中のスライダーと等間隔の目盛り */}
+                        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}>
+                            <span>0</span>
+                            <span>1</span>
+                            <span>2</span>
+                            <span>3</span>
+                            <span>4</span>
+                          </div>
+                          <input 
+                            type="range" min="0" max="4.0" step="0.1" 
+                            value={displaySeconds} 
+                            onChange={(e) => setDisplaySeconds(Number(e.target.value))} 
+                            className="speed-slider" 
+                            style={{ width: '100%', margin: 0 }} 
+                          />
+                        </div>
+
+                        {/* ⭐️ 右のアイコン：遅 🐢 */}
+                        <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>
+                          🐢 遅
+                        </span>
                       </div>
                     </div>
                   </div>
