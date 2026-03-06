@@ -2,7 +2,6 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-// ⭐️ スマホ・Chromebook対応： signInWithPopup に戻し、即座に開く方式を採用
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
@@ -29,7 +28,7 @@ const DICT = {
     promptBoxRename: "箱の新しい名前を入力してください:", promptDeckRename: "束の新しい名前を入力してください:", alertReq: "「英単語」と「意味」は必ず入力してください！", alertCsvError: "ファイルの読み込み中にエラーが発生しました。",
     testNeeds4: "テストには最低4枚のカードが必要です！", testFinished: "テスト終了！", score: "スコア:", tryAgainBtn: "🔄 もう一度テストする", backToStudyBtn: "◀ 学習に戻る",
     question: "問題", testHint: "この単語の正しい意味はどれ？", quitBtn: "中断して戻る", noPrintCards: "印刷するカードがありません。", shuffleBtn: "🔄 問題をシャッフル",
-    printTestTitle: "- 単語テスト", printDate: "　　年　　月　　日", printName: "氏名：____________________________", printScore: "得点：　　 / ",
+    printTestTitle: "- 単語テスト", printDate: "日付：　　年　　月　　日", printName: "氏名：____________________________", printScore: "得点：　　 / ",
     m_h1: "公式 取扱説明書", m_s1: "1. はじめに（基本構造）", m_p1: "このアプリは、現実の単語帳と同じように直感的に操作できます。",
     m_l1_1: "📦 箱（Box）：一番外側の入れ物です。「中学英語」「英検」など大きなカテゴリを作ります。", m_l1_2: "🔖 束（Deck）：箱の中に入る単語カードの束です。「基本動詞 50語」など、学習しやすい単位で作ります。", m_l1_3: "📇 単語カード：実際のフラッシュカードです。束を開くと学習が始まります。",
     m_s2: "2. 単語カードの作り方", m_p2: "学習画面（束を開いた状態）の左側メニューから追加できます。", m_s2_1: "✏️ 手動で1枚ずつ追加", m_p2_1: "「手動で単語を1枚追加」ボタンを押すと、その場でカードを作成できます。",
@@ -88,6 +87,15 @@ const parseCSV = (text) => {
   return rows;
 };
 
+// ⭐️ 配列を指定した数ごとに分割する魔法の関数
+const chunkArray = (array, size) => {
+  const chunked = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunked.push(array.slice(i, i + size));
+  }
+  return chunked;
+};
+
 function App() {
   const [lang, setLang] = useState('ja'); 
   const t = DICT[lang];
@@ -98,7 +106,6 @@ function App() {
   const [boxes, setBoxes] = useState(() => { const savedBoxes = localStorage.getItem('redline_boxes'); return savedBoxes ? JSON.parse(savedBoxes) : initialBoxes; });
   const [decks, setDecks] = useState(() => { const savedDecks = localStorage.getItem('redline_decks'); return savedDecks ? JSON.parse(savedDecks) : initialDecks; });
 
-  // ⭐️ ログイン状態の監視
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
@@ -128,7 +135,6 @@ function App() {
     }
   }, [boxes, decks, currentUser]);
 
-  // ⭐️ 究極のログイン関数：async/awaitを外して「クリックと同時に即開く」ことで、すべてのスマホ・Chromebookのブロックを回避します！
   const handleLogin = () => {
     signInWithPopup(auth, provider).catch((error) => {
       if (error.code !== 'auth/popup-closed-by-user') {
@@ -265,7 +271,6 @@ function App() {
   const formatTime = (seconds) => seconds ? `${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}` : '--:--';
   const formatDate = (timestamp) => { if (!timestamp) return ''; const d = new Date(timestamp); return `${d.getMonth() + 1}/${d.getDate()}`; };
 
-  // ⭐️ Reflection への自動連携機能（学習完了時）
   useEffect(() => {
     if (isCompleted && !hasRecorded && currentDeckId) {
       setDecks(prev => prev.map(d => {
@@ -274,7 +279,6 @@ function App() {
       }));
       setHasRecorded(true); 
 
-      // ⭐️ ここが魔法の自動書き込み！
       if (currentUser) {
         const durationMinutes = Math.max(1, Math.round(studyTime / 60)); 
         const today = new Date();
@@ -285,10 +289,10 @@ function App() {
           uid: currentUser.uid,
           date: dateStr,
           minutes: durationMinutes,
-          categories: ['Vocabulary'], // Reflectionで「単語」として集計される
+          categories: ['Vocabulary'],
           content: `アプリ学習: ${deckName}`,
           reflection: `自動記録: ${formatTime(studyTime)} で暗記完了！`,
-          quality: 100, // 集中度は100%
+          quality: 100,
           timestamp: Date.now()
         }).catch(e => console.error("Auto-sync failed:", e));
       }
@@ -635,13 +639,8 @@ function App() {
     return (
       <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={handleClick} onTouchStart={handleTouchStart}>
         <div className="top-right-actions">
-          {/* ⭐️ シームレス回遊：ブログとReflectionへのリンクを追加 */}
-          <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>
-            🌐 Blog
-          </button>
-          <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#9b59b6', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>
-            📊 Log
-          </button>
+          <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
+          <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#9b59b6', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>📊 Log</button>
           <div style={{width: '2px', height: '24px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 5px'}}></div>
           <button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button>
           <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
@@ -704,17 +703,152 @@ function App() {
     );
   }
 
+  // ⭐️ 究極進化したプリント画面（A4完全対応・25問区切り・罫線統一）
   if (view === 'printPreview') {
+    const chunks = chunkArray(printCards, 25); // 25問ごとに分割
+
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>
-        <div className="print-controls no-print">
-          <button className="cancel-btn" onClick={() => setView('study')}>{t.backToStudyBtn}</button>
-          <button className="add-btn" onClick={shufflePrintCards} style={{backgroundColor: '#8e44ad'}}>{t.shuffleBtn}</button>
-          <button className="add-btn" onClick={() => window.print()} style={{backgroundColor: '#e74c3c'}}>{t.printPdfBtn}</button>
+        
+        {/* ボタン類（印刷時には消える） */}
+        <div className="print-controls no-print" style={{ display: 'flex', gap: '15px', marginBottom: '20px', justifyContent: 'center', width: '100%', padding: '20px', background: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
+          <button className="cancel-btn" onClick={() => setView('study')} style={{ margin: 0 }}>{t.backToStudyBtn}</button>
+          <button className="add-btn" onClick={shufflePrintCards} style={{ backgroundColor: '#8e44ad', margin: 0 }}>{t.shuffleBtn}</button>
+          <button className="add-btn" onClick={() => window.print()} style={{ backgroundColor: '#e74c3c', margin: 0 }}>{t.printPdfBtn}</button>
         </div>
-        <div className="print-preview-container print-area">
-          <div className="print-header"><div><h1 className="print-title">{activeDeck?.name} {t.printTestTitle}</h1></div><div className="print-info-box"><span>{t.printDate}</span><span>{t.printName}</span><span>{t.printScore}{printCards.length}</span></div></div>
-          <div className="print-questions">{printCards.map((c, i) => (<div key={i} className="print-q-row"><div className="print-q-num">({i + 1})</div><div className="print-q-ja">{(c.meaning || '').split('/')[0]}</div><div className="print-q-ans"></div></div>))}</div>
+
+        {/* ⭐️ 印刷用レイアウトを強制する魔法のCSS */}
+        <style>{`
+          @media print {
+            body { background: white !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
+            .no-print, .ep-landing-wrapper, .top-right-actions { display: none !important; }
+            .app-container { background: white !important; padding: 0 !important; }
+            /* ページ区切りと余白を完全にコントロール */
+            .print-page { 
+              page-break-after: always; 
+              margin: 0 !important; 
+              padding: 15mm !important; 
+              width: 100% !important; 
+              box-shadow: none !important; 
+            }
+            .print-page:last-child { page-break-after: auto; }
+          }
+          
+          /* 画面上のプレビューエリア */
+          .print-area-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding-bottom: 50px;
+          }
+
+          /* A4用紙のシミュレート */
+          .print-page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 0 30px 0;
+            padding: 20mm;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            color: #000;
+            position: relative;
+          }
+
+          .print-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+          }
+
+          .print-title-area h1 {
+            font-size: 24px;
+            margin: 0;
+            color: #000;
+          }
+          
+          .print-page-num {
+            font-size: 14px;
+            color: #555;
+            margin-left: 10px;
+          }
+
+          .print-info-fields {
+            display: flex;
+            gap: 25px;
+            font-size: 15px;
+            font-weight: bold;
+          }
+
+          .print-questions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 2列に綺麗に並べる */
+            column-gap: 50px;
+            row-gap: 25px; /* 行間を広げて書きやすく */
+          }
+
+          .print-q-row {
+            display: flex;
+            align-items: flex-end; /* 下揃えで罫線を綺麗に魅せる */
+            font-size: 15px;
+          }
+
+          .print-q-num {
+            width: 35px;
+            font-weight: bold;
+            flex-shrink: 0;
+          }
+
+          .print-q-ja {
+            width: 130px; /* ★ここが重要：日本語の幅を完全固定！ */
+            margin-right: 10px;
+            line-height: 1.3;
+            flex-shrink: 0;
+            word-wrap: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* 2行までに制限 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+
+          .print-q-ans {
+            flex-grow: 1; /* ★ここが重要：残りの幅をすべて罫線にする！ */
+            border-bottom: 1px solid #000;
+            height: 24px; /* 書き込みやすい高さ */
+          }
+        `}</style>
+
+        <div className="print-area-wrapper">
+          {chunks.map((chunk, pageIndex) => (
+            <div key={pageIndex} className="print-page">
+              <div className="print-header-top">
+                <div className="print-title-area">
+                  <h1>{activeDeck?.name} {t.printTestTitle} {chunks.length > 1 && <span className="print-page-num">({pageIndex + 1}/{chunks.length}ページ)</span>}</h1>
+                </div>
+                <div className="print-info-fields">
+                  <span>{t.printDate}</span>
+                  <span>{t.printName}</span>
+                  <span>{t.printScore}{chunk.length}</span>
+                </div>
+              </div>
+              <div className="print-questions-grid">
+                {chunk.map((c, i) => {
+                  const globalIndex = pageIndex * 25 + i + 1;
+                  return (
+                    <div key={i} className="print-q-row">
+                      <div className="print-q-num">({globalIndex})</div>
+                      <div className="print-q-ja">{(c.meaning || '').split('/')[0]}</div>
+                      <div className="print-q-ans"></div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
