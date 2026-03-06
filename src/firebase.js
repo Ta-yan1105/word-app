@@ -1,6 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
+// 👇 ここに、先ほど「コピーボタン」を押して取得したコードをそのまま貼り付けてください！
+// （以下の const firebaseConfig = { ... }; の部分をまるごと上書きします）
 const firebaseConfig = {
   apiKey: "AIzaSyBmcXqTlsLUd-yoz-thuZymltFyUiROYUE",
   authDomain: "my-word-app-5b588.firebaseapp.com",
@@ -13,3 +16,5 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const provider = new GoogleAuthProvider();
