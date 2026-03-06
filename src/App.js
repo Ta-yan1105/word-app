@@ -87,7 +87,7 @@ const parseCSV = (text) => {
   return rows;
 };
 
-// ⭐️ 配列を指定した数ごとに分割する魔法の関数
+// ⭐️ 配列を指定した数ごとに分割する関数
 const chunkArray = (array, size) => {
   const chunked = [];
   for (let i = 0; i < array.length; i += size) {
@@ -703,7 +703,7 @@ function App() {
     );
   }
 
-  // ⭐️ 究極進化したプリント画面（A4完全対応・25問区切り・罫線統一）
+  // ⭐️ 究極進化したプリント画面（2段組・罫線独立・ヘッダー制御）
   if (view === 'printPreview') {
     const chunks = chunkArray(printCards, 25); // 25問ごとに分割
 
@@ -723,7 +723,6 @@ function App() {
             body { background: white !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
             .no-print, .ep-landing-wrapper, .top-right-actions { display: none !important; }
             .app-container { background: white !important; padding: 0 !important; }
-            /* ページ区切りと余白を完全にコントロール */
             .print-page { 
               page-break-after: always; 
               margin: 0 !important; 
@@ -734,7 +733,6 @@ function App() {
             .print-page:last-child { page-break-after: auto; }
           }
           
-          /* 画面上のプレビューエリア */
           .print-area-wrapper {
             display: flex;
             flex-direction: column;
@@ -743,7 +741,6 @@ function App() {
             padding-bottom: 50px;
           }
 
-          /* A4用紙のシミュレート */
           .print-page {
             background: white;
             width: 210mm;
@@ -770,12 +767,6 @@ function App() {
             margin: 0;
             color: #000;
           }
-          
-          .print-page-num {
-            font-size: 14px;
-            color: #555;
-            margin-left: 10px;
-          }
 
           .print-info-fields {
             display: flex;
@@ -784,71 +775,121 @@ function App() {
             font-weight: bold;
           }
 
-          .print-questions-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* 2列に綺麗に並べる */
-            column-gap: 50px;
-            row-gap: 25px; /* 行間を広げて書きやすく */
+          /* ⭐️ 2段組（縦方向）の設定 */
+          .print-columns-container {
+            display: flex;
+            gap: 40px; /* 左右の列の隙間 */
+            width: 100%;
+          }
+          .print-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
           }
 
-          .print-q-row {
+          /* ⭐️ 1問ごとのレイアウト（上：日本語、下：罫線） */
+          .print-q-item {
             display: flex;
-            align-items: flex-end; /* 下揃えで罫線を綺麗に魅せる */
-            font-size: 15px;
+            flex-direction: column;
+            margin-bottom: 30px; /* 次の問題までの行間 */
+          }
+          
+          .print-q-top {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px; /* 日本語と解答欄（罫線）の間隔 */
           }
 
           .print-q-num {
             width: 35px;
             font-weight: bold;
             flex-shrink: 0;
+            font-size: 15px;
           }
 
           .print-q-ja {
-            width: 130px; /* ★ここが重要：日本語の幅を完全固定！ */
-            margin-right: 10px;
+            font-size: 15px;
             line-height: 1.3;
-            flex-shrink: 0;
-            word-wrap: break-word;
-            display: -webkit-box;
-            -webkit-line-clamp: 2; /* 2行までに制限 */
-            -webkit-box-orient: vertical;
-            overflow: hidden;
           }
 
+          /* 罫線が入る下段エリア */
+          .print-q-bottom {
+            padding-left: 35px; /* (1) などの番号の幅だけ右にズラす */
+            width: 100%;
+            box-sizing: border-box;
+          }
+
+          /* 罫線そのもの（列幅いっぱいまで引く） */
           .print-q-ans {
-            flex-grow: 1; /* ★ここが重要：残りの幅をすべて罫線にする！ */
+            width: 100%;
             border-bottom: 1px solid #000;
-            height: 24px; /* 書き込みやすい高さ */
           }
         `}</style>
 
         <div className="print-area-wrapper">
-          {chunks.map((chunk, pageIndex) => (
-            <div key={pageIndex} className="print-page">
-              <div className="print-header-top">
-                <div className="print-title-area">
-                  <h1>{activeDeck?.name} {t.printTestTitle} {chunks.length > 1 && <span className="print-page-num">({pageIndex + 1}/{chunks.length}ページ)</span>}</h1>
-                </div>
-                <div className="print-info-fields">
-                  <span>{t.printDate}</span>
-                  <span>{t.printName}</span>
-                  <span>{t.printScore}{chunk.length}</span>
-                </div>
-              </div>
-              <div className="print-questions-grid">
-                {chunk.map((c, i) => {
-                  const globalIndex = pageIndex * 25 + i + 1;
-                  return (
-                    <div key={i} className="print-q-row">
-                      <div className="print-q-num">({globalIndex})</div>
-                      <div className="print-q-ja">{(c.meaning || '').split('/')[0]}</div>
-                      <div className="print-q-ans"></div>
+          {chunks.map((chunk, pageIndex) => {
+            // ⭐️ 25問をさらに左列(1~13)と右列(14~25)に分割
+            const halfLength = Math.ceil(chunk.length / 2);
+            const leftColumnCards = chunk.slice(0, halfLength);
+            const rightColumnCards = chunk.slice(halfLength);
+
+            return (
+              <div key={pageIndex} className="print-page">
+                {/* ⭐️ 1ページ目だけヘッダーを表示 */}
+                {pageIndex === 0 && (
+                  <div className="print-header-top">
+                    <div className="print-title-area">
+                      <h1>{activeDeck?.name} {t.printTestTitle}</h1>
                     </div>
-                  );
-                })}
+                    <div className="print-info-fields">
+                      <span>{t.printDate}</span>
+                      <span>{t.printName}</span>
+                      {/* 得点はテスト全体の総問題数を表示 */}
+                      <span>{t.printScore}{printCards.length}</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="print-columns-container" style={{ marginTop: pageIndex > 0 ? '20px' : '0' }}>
+                  {/* 左側の列 */}
+                  <div className="print-column">
+                    {leftColumnCards.map((c, i) => {
+                      const globalIndex = pageIndex * 25 + i + 1;
+                      return (
+                        <div key={`left-${i}`} className="print-q-item">
+                          <div className="print-q-top">
+                            <span className="print-q-num">({globalIndex})</span>
+                            <span className="print-q-ja">{(c.meaning || '').split('/')[0]}</span>
+                          </div>
+                          <div className="print-q-bottom">
+                            <div className="print-q-ans"></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* 右側の列 */}
+                  <div className="print-column">
+                    {rightColumnCards.map((c, i) => {
+                      const globalIndex = pageIndex * 25 + halfLength + i + 1;
+                      return (
+                        <div key={`right-${i}`} className="print-q-item">
+                          <div className="print-q-top">
+                            <span className="print-q-num">({globalIndex})</span>
+                            <span className="print-q-ja">{(c.meaning || '').split('/')[0]}</span>
+                          </div>
+                          <div className="print-q-bottom">
+                            <div className="print-q-ans"></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
