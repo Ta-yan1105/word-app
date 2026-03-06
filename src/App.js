@@ -2,8 +2,10 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+// ⭐️ スマホ対応： signInWithRedirect と getRedirectResult を追加
+import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
+// ⭐️ 自動連携用： collection と addDoc を追加
+import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 
 const DICT = {
@@ -97,14 +99,23 @@ function App() {
   const [boxes, setBoxes] = useState(() => { const savedBoxes = localStorage.getItem('redline_boxes'); return savedBoxes ? JSON.parse(savedBoxes) : initialBoxes; });
   const [decks, setDecks] = useState(() => { const savedDecks = localStorage.getItem('redline_decks'); return savedDecks ? JSON.parse(savedDecks) : initialDecks; });
 
+  // ⭐️ リダイレクト結果の受け取りと監視
   useEffect(() => {
+    getRedirectResult(auth).catch(error => {
+      console.error("Login redirect error:", error);
+    });
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) { setBoxes(docSnap.data().boxes || []); setDecks(docSnap.data().decks || []); } 
-        else { setBoxes(initialBoxes); setDecks(initialDecks); await setDoc(docRef, { boxes: initialBoxes, decks: initialDecks }); }
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) { setBoxes(docSnap.data().boxes || []); setDecks(docSnap.data().decks || []); } 
+          else { setBoxes(initialBoxes); setDecks(initialDecks); await setDoc(docRef, { boxes: initialBoxes, decks: initialDecks }); }
+        } catch (e) {
+          console.error("Firestore read/write error. Check Rules.", e);
+        }
       }
       setIsAuthLoading(false);
     });
@@ -115,12 +126,15 @@ function App() {
     localStorage.setItem('redline_boxes', JSON.stringify(boxes));
     localStorage.setItem('redline_decks', JSON.stringify(decks));
     if (currentUser && boxes.length > 0) {
-      const timer = setTimeout(() => { setDoc(doc(db, "users", currentUser.uid), { boxes, decks }, { merge: true }); }, 1000); 
+      const timer = setTimeout(() => { 
+        setDoc(doc(db, "users", currentUser.uid), { boxes, decks }, { merge: true }).catch(e => console.log("Save error", e)); 
+      }, 1000); 
       return () => clearTimeout(timer);
     }
   }, [boxes, decks, currentUser]);
 
-  const handleLogin = () => { signInWithPopup(auth, provider).catch(error => alert("ログインエラー: " + error.message)); };
+  // ⭐️ リダイレクト方式に変更（ポップアップブロック回避）
+  const handleLogin = () => { signInWithRedirect(auth, provider); };
   const handleLogout = () => { signOut(auth).then(() => { setBoxes([]); setDecks([]); }); };
 
   const touchStartX = useRef(null); const touchStartY = useRef(null); const touchEndX = useRef(null); const touchEndY = useRef(null);
@@ -249,6 +263,7 @@ function App() {
   const formatTime = (seconds) => seconds ? `${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}` : '--:--';
   const formatDate = (timestamp) => { if (!timestamp) return ''; const d = new Date(timestamp); return `${d.getMonth() + 1}/${d.getDate()}`; };
 
+  // ⭐️ Reflection への自動連携機能（学習完了時）
   useEffect(() => {
     if (isCompleted && !hasRecorded && currentDeckId) {
       setDecks(prev => prev.map(d => {
@@ -256,8 +271,27 @@ function App() {
         return d;
       }));
       setHasRecorded(true); 
+
+      // ⭐️ ここが魔法の自動書き込み！
+      if (currentUser) {
+        const durationMinutes = Math.max(1, Math.round(studyTime / 60)); 
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const deckName = decks.find(d => d.id === currentDeckId)?.name || "単語帳";
+
+        addDoc(collection(db, 'logs'), {
+          uid: currentUser.uid,
+          date: dateStr,
+          minutes: durationMinutes,
+          categories: ['Vocabulary'], // Reflectionで「単語」として集計される
+          content: `アプリ学習: ${deckName}`,
+          reflection: `自動記録: ${formatTime(studyTime)} で暗記完了！`,
+          quality: 100, // 集中度は100%
+          timestamp: Date.now()
+        }).catch(e => console.error("Auto-sync failed:", e));
+      }
     }
-  }, [isCompleted, currentDeckId, studyTime]);
+  }, [isCompleted, currentDeckId, studyTime, currentUser, decks]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -516,9 +550,6 @@ function App() {
   const handleClick = () => { unlockAudio(); };
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
-  // =========================================================================
-  // ⭐️ 共有サブレンダリング関数
-  // =========================================================================
   const renderMiniCard = (c, isMemorizedList, index = null) => {
     return (
       <div key={c.word} className={`mini-card ${draggedCardWord === c.word ? 'dragging-mini' : ''}`} draggable="true"
@@ -557,12 +588,8 @@ function App() {
     );
   };
 
-  // =========================================================================
-  // ⭐️ 画面レンダリング分岐
-  // =========================================================================
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
 
-  // 📖 取扱説明書（マニュアル）画面：ログイン前後どちらからでもアクセス可能！
   if (view === 'manual') {
     return (
       <div className="app-container gentle-bg desk-view">
@@ -586,15 +613,11 @@ function App() {
     );
   }
 
-  // 🚪 ログイン前の画面
   if (!currentUser) {
     return (
       <div className="login-screen-bg">
         <div className="login-top-right">
-          {/* ⭐️ 言語切り替えの真横にマニュアルボタン！ */}
-          <button className="manual-link-btn" onClick={() => setView('manual')}>
-            {t.manualLink}
-          </button>
+          <button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button>
           <button className="login-lang-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
         </div>
         <div className="login-hero-section">
@@ -606,15 +629,19 @@ function App() {
     );
   }
 
-  // 🏠 1層目（ホーム画面 / ログイン後）
   if (view === 'boxes') {
     return (
       <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={handleClick} onTouchStart={handleTouchStart}>
         <div className="top-right-actions">
-          {/* ⭐️ ここにも言語切り替えの真横にマニュアルボタン！ */}
-          <button className="manual-link-btn" onClick={() => setView('manual')}>
-            {t.manualLink}
+          {/* ⭐️ シームレス回遊：ブログとReflectionへのリンクを追加 */}
+          <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>
+            🌐 Blog
           </button>
+          <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#9b59b6', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>
+            📊 Log
+          </button>
+          <div style={{width: '2px', height: '24px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 5px'}}></div>
+          <button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button>
           <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
           <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout}</button>
         </div>
@@ -649,7 +676,6 @@ function App() {
     );
   }
 
-  // 📝 テスト画面
   if (view === 'test') {
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>
@@ -658,7 +684,12 @@ function App() {
             <div className="test-result">
               <h2 style={{fontSize: '32px', color: '#27ae60'}}>{t.testFinished}</h2>
               <p style={{fontSize: '24px', fontWeight: 'bold'}}>{t.score} {score} / {testQuestions.length}</p>
-              <div className="test-actions"><button className="add-btn" onClick={() => startTest()}>{t.tryAgainBtn}</button><button className="cancel-btn" onClick={() => setView('study')}>{t.backToStudyBtn}</button></div>
+              <div className="test-actions">
+                <button className="add-btn" onClick={() => startTest()}>{t.tryAgainBtn}</button>
+                <button className="cancel-btn" onClick={() => setView('study')}>{t.backToStudyBtn}</button>
+                {/* ⭐️ テスト結果画面にもReflectionへのリンクを！ */}
+                <button className="add-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#9b59b6'}}>📊 学習記録(Log)を見る</button>
+              </div>
             </div>
           ) : (
             <div className="test-quiz-area">
@@ -673,7 +704,6 @@ function App() {
     );
   }
 
-  // 🖨️ プリント画面
   if (view === 'printPreview') {
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>
