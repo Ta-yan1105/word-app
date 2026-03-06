@@ -472,9 +472,10 @@ function App() {
     return { label: t.statusWarning, className: 'status-warning', needsReview: false };
   };
 
+  // ⭐️ 修正版CSVテンプレート（無駄な行を削除）
   const downloadTemplate = () => {
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); 
-    const content = '英単語,日本語訳,英語例文,例文和訳\napple,りんご,"I have an **apple**.","私は**りんご**を持っています。"\nsolution,解決策,"We need a good **solution**.","私たちは良い**解決策**が必要です。"\n';
+    const content = '英単語,日本語訳,英語例文,例文和訳\n"例: apple",りんご,"I have an **apple**.","私は**りんご**を持っています。"\n';
     const blob = new Blob([bom, content], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = url; a.download = 'import_template.csv'; a.click(); window.URL.revokeObjectURL(url);
@@ -683,16 +684,16 @@ function App() {
     );
   };
 
-  // ⭐️ 表面の描画（さらにゆったりとした行間で美しく）
-  const renderCardFront = (card) => {
+  // ⭐️ 表面の描画（テキストの左寄せ＆ブロックの中央配置を完璧に実現）
+  const renderCardFront = (card, isFullscreen) => {
     if (qType === 'word') {
       return (
         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
           {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
           {qLang === 'en' ? (
-            <h1 className="word-text" style={{ margin: 0 }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
+            <h1 className="word-text" style={{ margin: 0, fontSize: isFullscreen ? 'clamp(48px, 8vw, 80px)' : '' }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
           ) : (
-            <div className="core-meaning-large" style={{ textAlign: 'center', margin: 0 }}>{cleanText((card.meaning || '').split('/')[0])}</div>
+            <div className="core-meaning-large" style={{ textAlign: 'center', margin: 0, fontSize: isFullscreen ? 'clamp(32px, 5vw, 56px)' : '' }}>{cleanText((card.meaning || '').split('/')[0])}</div>
           )}
         </div>
       );
@@ -702,16 +703,15 @@ function App() {
           {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
           {qLang === 'en' ? (
             <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-              <div style={{fontSize:'clamp(20px, 4vw, 28px)', lineHeight:'1.8', fontWeight:'bold', fontFamily:'"Times New Roman", Times, serif', width: '100%'}}>
+              <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: isFullscreen ? 'clamp(36px, 5vw, 56px)' : 'clamp(20px, 4vw, 28px)', lineHeight:'1.8', fontWeight:'bold', fontFamily:'"Times New Roman", Times, serif', width: '100%'}}>
                 {renderBlankExample(card.example)}
-              </div>
+              </p>
             </div>
           ) : (
             <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-              {/* ⭐️ 行間(lineHeight)を 1.5 から 1.8 に拡張し、読みやすさを最大化 */}
-              <div style={{fontSize:'clamp(18px, 4vw, 22px)', lineHeight:'1.8', fontWeight:'bold', color:'#334155', width: '100%'}}>
+              <p className="example-ja" style={{textAlign: 'left', margin: 0, fontSize: isFullscreen ? 'clamp(32px, 5vw, 48px)' : 'clamp(18px, 4vw, 22px)', lineHeight:'1.8', fontWeight:'bold', color:'#334155', width: '100%'}}>
                 {cleanTranslation(card.translation)}
-              </div>
+              </p>
             </div>
           )}
         </div>
@@ -719,8 +719,8 @@ function App() {
     }
   };
 
-  // ⭐️ 裏面の描画
-  const renderCardBack = (card) => {
+  // ⭐️ 裏面の描画（単語表示をスマートに1行化）
+  const renderCardBack = (card, isFullscreen) => {
     if (qType === 'word') {
       return (
         <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
@@ -728,21 +728,22 @@ function App() {
           
           {qLang === 'en' ? (
             <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}>
-              <div className="core-meaning-large" style={{ textAlign: 'center' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{cleanText(m)}</div>)}</div>
+              <div className="core-meaning-large" style={{ textAlign: 'center', fontSize: isFullscreen ? 'clamp(32px, 5vw, 56px)' : '' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{cleanText(m)}</div>)}</div>
             </div>
           ) : (
-            <h1 className="word-text" style={{fontSize:'48px', margin: 0}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
+            <h1 className="word-text" style={{fontSize: isFullscreen ? 'clamp(48px, 8vw, 80px)' : '48px', margin: 0}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
           )}
 
           {showExOnBack && (
             <div className="example-section" style={{ borderTop: 'none', paddingTop: 0, marginTop: '20px', textAlign: 'center' }}>
-              <p className="example-en" style={{ marginBottom: '8px' }}>{renderHighlightedText(card.example || '')}</p>
-              <p className="example-ja" style={{ margin: 0 }}>{renderHighlightedText(card.translation || '')}</p>
+              <p className="example-en" style={{ marginBottom: '8px', fontSize: isFullscreen ? 'clamp(20px, 3vw, 32px)' : '' }}>{renderHighlightedText(card.example || '')}</p>
+              <p className="example-ja" style={{ margin: 0, fontSize: isFullscreen ? 'clamp(18px, 3vw, 28px)' : '' }}>{renderHighlightedText(card.translation || '')}</p>
             </div>
           )}
         </div>
       );
     } else {
+      // 例文モードの裏面（単語表示を1行（row）でスマートに配置）
       return (
         <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', padding:'20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxSizing: 'border-box'}}>
            {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
@@ -750,24 +751,24 @@ function App() {
            <div className="example-section" style={{ margin: 0, padding: 0, border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
               {qLang === 'en' ? (
                 <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-                  {/* ⭐️ 裏面の日本語も行間 1.8 でゆったりと */}
-                  <p className="example-ja" style={{fontSize:'clamp(18px, 4vw, 24px)', color: '#1e293b', fontWeight: 'bold', margin: 0, lineHeight: 1.8}}>
+                  <p className="example-ja" style={{textAlign: 'left', fontSize: isFullscreen ? 'clamp(32px, 5vw, 48px)' : 'clamp(18px, 4vw, 24px)', color: '#1e293b', fontWeight: 'bold', margin: 0, lineHeight: 1.8}}>
                     {renderHighlightedText(card.translation || '')}
                   </p>
                 </div>
               ) : (
                 <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-                  <p className="example-en" style={{fontSize:'clamp(20px, 4vw, 26px)', fontWeight: '900', color: '#1e293b', margin: 0, lineHeight: 1.5, fontFamily: '"Times New Roman", Times, serif'}}>
+                  <p className="example-en" style={{textAlign: 'left', fontSize: isFullscreen ? 'clamp(36px, 5vw, 56px)' : 'clamp(20px, 4vw, 26px)', fontWeight: '900', color: '#1e293b', margin: 0, lineHeight: 1.5, fontFamily: '"Times New Roman", Times, serif'}}>
                     {renderHighlightedText(card.example || '')}
                   </p>
                 </div>
               )}
            </div>
 
+           {/* ⭐️ 単語表示を縦並びから「横並び(row)」にスリム化 */}
            {showWordOnExMode && (
-             <div style={{ display:'flex', flexDirection: 'column', alignItems:'center', justifyContent:'center', gap:'4px', opacity: 0.7, marginTop: '25px' }}>
-                <div style={{fontSize:'18px', fontWeight:'bold', color:'#333', cursor: 'pointer'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
-                <div style={{fontSize:'15px', color:'#64748b', fontWeight:'normal'}}>
+             <div style={{ display:'flex', flexDirection: 'row', alignItems:'center', justifyContent:'center', gap:'15px', opacity: 0.7, marginTop: isFullscreen ? '30px' : '20px' }}>
+                <div style={{fontSize: isFullscreen ? '28px' : '18px', fontWeight:'bold', color:'#333', cursor: 'pointer'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
+                <div style={{fontSize: isFullscreen ? '22px' : '15px', color:'#64748b', fontWeight:'normal'}}>
                   {cleanText((card.meaning || '').split('/')[0])}
                 </div>
              </div>
@@ -820,7 +821,7 @@ function App() {
 
   if (view === 'boxes') {
     return (
-      <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={handleClick} onTouchStart={handleTouchStart}>
+      <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         <div className="top-right-actions">
           <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
           <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#9b59b6', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>📊 Log</button>
@@ -862,7 +863,7 @@ function App() {
 
   if (view === 'test') {
     return (
-      <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>
+      <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         <div className="test-container">
           {showTestResult ? (
             <div className="test-result">
@@ -893,7 +894,7 @@ function App() {
     const todayStr = new Date().toLocaleDateString();
 
     return (
-      <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>
+      <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         <div className="print-controls no-print" style={{ display: 'flex', gap: '15px', marginBottom: '20px', justifyContent: 'center', width: '100%', padding: '20px', background: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
           <button className="cancel-btn" onClick={() => setView('study')} style={{ margin: 0 }}>{t.backToStudyBtn}</button>
           <button className="add-btn" onClick={shufflePrintCards} style={{ backgroundColor: '#8e44ad', margin: 0 }}>{t.shuffleBtn}</button>
@@ -1011,7 +1012,7 @@ function App() {
     );
   }
 
-  // ⭐️ PC表示時の「カード完全中央配置」と「1列スマートリスト」のCSS
+  // ⭐️ PC表示時の「カード完全中央配置」と「究極にコンパクトな全画面ステルスUI」のCSS
   const injectLayoutStyles = (
     <style>{`
       @media(min-width: 1024px) {
@@ -1023,80 +1024,90 @@ function App() {
         .study-dashboard {
           display: flex !important;
           flex-direction: row !important;
-          justify-content: space-between !important;
+          justify-content: center !important;
           align-items: flex-start !important;
           width: 100% !important;
           max-width: 1600px !important;
           margin: 0 auto !important;
-          gap: 20px !important;
+          gap: 30px !important;
         }
-        /* ⭐️ 左右のパネルを280pxに固定し、センターパネルをど真ん中に配置 */
-        .left-panel {
-          flex: 0 0 280px !important; 
-          max-width: 280px !important;
-        }
-        .center-panel {
-          flex: 1 !important;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .right-panel {
-          flex: 0 0 280px !important;
-          max-width: 280px !important;
-        }
+        /* ⭐️ 左右のパネルを細く固定し、センターを完全なド真ん中に配置 */
+        .left-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
+        .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 900px !important; margin: 0 auto !important; }
+        .right-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
         
-        /* ⭐️ リストをスッキリとした1列表示に */
-        .mini-card-list {
-          display: grid;
-          grid-template-columns: 1fr !important;
-          gap: 10px;
-          align-content: start;
-        }
+        .mini-card-list { display: grid; grid-template-columns: 1fr !important; gap: 10px; align-content: start; }
       }
 
-      .panel-top-action {
-        width: 100%;
-        box-sizing: border-box;
-      }
-      .panel-top-action button {
-        white-space: normal !important; 
-        word-break: keep-all !important;
-        overflow-wrap: anywhere !important;
-        line-height: 1.4 !important;
-        height: auto !important;
-        min-height: 44px !important;
-        box-sizing: border-box !important;
-        width: 100%;
-        max-width: 100%;
-      }
+      .panel-top-action { width: 100%; box-sizing: border-box; }
+      .panel-top-action button { white-space: normal !important; word-break: keep-all !important; overflow-wrap: anywhere !important; line-height: 1.4 !important; height: auto !important; min-height: 44px !important; box-sizing: border-box !important; width: 100%; max-width: 100%; }
+      .bulk-file-actions { width: 100%; box-sizing: border-box; }
+      .bulk-file-actions button, .bulk-file-actions label { box-sizing: border-box; width: 100%; max-width: 100%; }
 
-      .bulk-file-actions {
-        width: 100%;
-        box-sizing: border-box;
-      }
-      .bulk-file-actions button, .bulk-file-actions label {
-        box-sizing: border-box;
-        width: 100%;
-        max-width: 100%;
-      }
-
-      .setting-badge-btn {
-        background: white; border: 2px solid #e2e8f0; border-radius: 50px; padding: 6px 12px;
-        font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: all 0.2s;
-        display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        white-space: nowrap;
-      }
+      .setting-badge-btn { background: white; border: 2px solid #e2e8f0; border-radius: 50px; padding: 6px 12px; font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); white-space: nowrap; }
       .setting-badge-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
       .setting-badge-btn.active { background: #e0e7ff; border-color: #818cf8; color: #4338ca; }
       
-      .toggle-tab-btn {
-        background: transparent; border: none; padding: 6px 16px; font-size: 13px; font-weight: 900; 
-        color: #94a3b8; border-radius: 50px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+      .toggle-tab-btn { background: transparent; border: none; padding: 6px 16px; font-size: 13px; font-weight: 900; color: #94a3b8; border-radius: 50px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+      .toggle-tab-btn.active { background: white; color: #4338ca; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+      /* ⭐️ 全画面（全集中）モード時の絶対的カード配置とUI被り防止 */
+      .fullscreen-active {
+         position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
+         background: #f1f5f9 !important; z-index: 9999 !important;
+         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
+         max-width: none !important;
+         padding: 0 !important;
+         box-sizing: border-box !important;
       }
-      .toggle-tab-btn.active {
-        background: white; color: #4338ca; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      
+      /* ⭐️ 無駄な縦幅を消し、スマートなカードサイズを維持 */
+      .fullscreen-active .card-animation-wrapper {
+         width: 80vw !important; 
+         max-width: 1000px !important; 
+         height: auto !important;
+         min-height: 40vh !important; /* 潰れすぎ防止 */
+         max-height: 60vh !important; /* 伸びすぎ防止 */
+         margin: 0 auto !important; 
       }
+      
+      /* 上部のステルス設定パネル */
+      .fullscreen-stealth-top {
+         position: absolute !important; top: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
+         opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
+         background: white !important; padding: 10px 20px !important; border-radius: 50px !important;
+         box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; margin: 0 !important; width: auto !important;
+      }
+      .fullscreen-active:hover .fullscreen-stealth-top, .fullscreen-stealth-top:hover, .fullscreen-stealth-top:active { opacity: 1; }
+
+      /* ⭐️ 極限までスリム化した下部のステルス操作パネル */
+      .fullscreen-stealth-bottom {
+         position: absolute !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
+         opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
+         background: white !important; padding: 10px 25px !important; border-radius: 20px !important;
+         box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; 
+         width: 90% !important; max-width: 700px !important;
+         display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: space-between;
+      }
+      @media(min-width: 768px) {
+        .fullscreen-stealth-bottom {
+          flex-direction: row !important; 
+        }
+        .fullscreen-stealth-bottom .autoplay-controls {
+          width: auto !important;
+          flex: 1 !important;
+          margin-left: 30px !important;
+        }
+        .fullscreen-stealth-bottom .controls {
+          flex: 0 0 auto !important;
+        }
+        /* スライダー周りの余白も極限まで削る */
+        .fullscreen-stealth-bottom .speed-slider-container { margin-top: 5px !important; }
+      }
+      .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
+      
+      .fullscreen-active .controls { margin: 0 !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; gap: 10px !important; }
+      .fullscreen-active .autoplay-controls { margin: 0 !important; border: none !important; padding: 0 !important; min-width: 250px; }
     `}</style>
   );
 
@@ -1258,83 +1269,109 @@ function App() {
                   <button onClick={resetMemorized} className="add-btn" style={{marginTop: '20px', padding: '15px 30px', fontSize: '18px'}}>{t.resetBtn}</button>
                 </div>
               ) : studyCards.length > 0 && !isBulkMode ? (
-                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '800px' }}>
+                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                   
-                  {/* ⭐️ 設定ボタン群の「完璧な」並び替え（左：設定、中央：ON/OFF、右：枚数） */}
-                  {!isFullscreen && (
-                    <div className="card-header-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', width: '100%', gap: '10px' }}>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '15px', width: '100%' }}>
-                        
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">
-                            {qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}
-                          </button>
-                          <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
-                            <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>🔤 単語</button>
-                            <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>📝 例文</button>
-                          </div>
+                  {/* ⭐️ 神のカスタマイズUIエリア */}
+                  <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: isFullscreen ? 0 : '20px', width: '100%', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '15px', width: '100%' }}>
+                      
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">
+                          {qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}
+                        </button>
+                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
+                          <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>🔤 単語</button>
+                          <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>📝 例文</button>
                         </div>
-                        
-                        {/* ⭐️ ON/OFFボタンを中央に移動 */}
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          {qType === 'word' ? (
-                            <button onClick={() => setShowExOnBack(!showExOnBack)} className={`setting-badge-btn ${showExOnBack ? 'active' : ''}`} title="裏面の例文表示">
-                              例文 {showExOnBack ? 'ON' : 'OFF'}
-                            </button>
-                          ) : (
-                            <button onClick={() => setShowWordOnExMode(!showWordOnExMode)} className={`setting-badge-btn ${showWordOnExMode ? 'active' : ''}`} title="裏面の単語表示">
-                              単語 {showWordOnExMode ? 'ON' : 'OFF'}
-                            </button>
-                          )}
-                        </div>
-
-                        {/* ⭐️ カウンターを右側に移動 */}
-                        <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px' }}>
-                          {currentIndex + 1} / {studyCards.length}
-                        </div>
-
                       </div>
+                      
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        {qType === 'word' ? (
+                          <button onClick={() => setShowExOnBack(!showExOnBack)} className={`setting-badge-btn ${showExOnBack ? 'active' : ''}`} title="裏面の例文表示">
+                            例文 {showExOnBack ? 'ON' : 'OFF'}
+                          </button>
+                        ) : (
+                          <button onClick={() => setShowWordOnExMode(!showWordOnExMode)} className={`setting-badge-btn ${showWordOnExMode ? 'active' : ''}`} title="裏面の単語表示">
+                            単語 {showWordOnExMode ? 'ON' : 'OFF'}
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px' }}>
+                        {currentIndex + 1} / {studyCards.length}
+                      </div>
+
                     </div>
-                  )}
+                  </div>
 
                   <div className="card-animation-wrapper" key={currentIndex}>
                     <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
                       <div className="card-inner">
                         <div className="card-front">
                           <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)}>✔</button>
-                          {renderCardFront(studyCards[currentIndex])}
+                          {renderCardFront(studyCards[currentIndex], isFullscreen)}
                         </div>
                         <div className="card-back">
-                          {renderCardBack(studyCards[currentIndex])}
+                          {renderCardBack(studyCards[currentIndex], isFullscreen)}
                         </div>
                       </div>
                     </div>
                   </div>
-                  {!isFullscreen && (
-                    <div className="controls">
-                      <button onClick={handlePrevCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>◀</button>
-                      <button onClick={deleteCard} className="delete-btn">{t.discardBtn}</button>
-                      <button onClick={handleNextCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>▶</button>
+                  
+                  {/* ⭐️ 全画面（全集中）モード専用の極限スリムなステルス操作パネル */}
+                  {isFullscreen ? (
+                    <div className="fullscreen-stealth-bottom">
+                      <div className="controls" style={{ margin: 0, boxShadow: 'none', background: 'transparent', padding: 0 }}>
+                        <button onClick={handlePrevCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>◀</button>
+                        <button onClick={deleteCard} className="delete-btn">{t.discardBtn}</button>
+                        <button onClick={handleNextCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>▶</button>
+                      </div>
+                      <div className="autoplay-controls" style={{ margin: 0, border: 'none', padding: 0 }}>
+                        <div className="autoplay-actions-row">
+                          <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
+                          <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
+                          <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
+                        </div>
+                        <div className="speed-slider-container" style={{marginTop: '5px'}}>
+                          <div style={{fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
+                          <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
+                            <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
+                            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '10px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '1px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
+                              <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
+                            </div>
+                            <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'left' }}>🐢 {t.slow}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      <div className="controls">
+                        <button onClick={handlePrevCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>◀</button>
+                        <button onClick={deleteCard} className="delete-btn">{t.discardBtn}</button>
+                        <button onClick={handleNextCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>▶</button>
+                      </div>
+                      <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8'}}>
+                        <div className="autoplay-actions-row">
+                          <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
+                          <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
+                          <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
+                        </div>
+                        <div className="speed-slider-container" style={{marginTop: '15px'}}>
+                          <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
+                          <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
+                            <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
+                            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
+                              <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
+                            </div>
+                            <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>🐢 {t.slow}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </>
                   )}
-                  <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8'}}>
-                    <div className="autoplay-actions-row">
-                      <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
-                      <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
-                      <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
-                    </div>
-                    <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                      <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
-                      <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
-                        <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
-                        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-                          <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
-                        </div>
-                        <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>🐢 {t.slow}</span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               ) : null}
             </div>
