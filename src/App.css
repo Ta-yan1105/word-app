@@ -25,9 +25,64 @@ html, body {
   overflow-x: hidden; 
 }
 
+/* ⭐️ 1層目の右上アクション群（言語切り替え ＆ マニュアル） */
+.top-right-actions {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  z-index: 1000;
+}
+
+.lang-toggle-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(5px);
+}
+.lang-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+/* ⭐️ 究極の「使い方」ボタン（控えめで燃える！） */
+.manual-link-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  padding: 0;
+  text-shadow: 0 -1px 2px #fff, 0 -2px 5px #ff0, 0 -4px 10px #ff8000, 0 -8px 20px #f00;
+  animation: burn-mini 1.5s ease-in-out infinite alternate;
+  opacity: 0.9;
+  transition: transform 0.2s, opacity 0.2s;
+  font-style: italic;
+  white-space: nowrap;
+}
+.manual-link-btn:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+@keyframes burn-mini {
+  0% { text-shadow: 0 -1px 2px #fff, 0 -2px 5px #ff0, 0 -4px 10px #ff8000; }
+  100% { text-shadow: 0 -2px 3px #fff, 0 -3px 6px #ff0, 0 -5px 12px #ff8000, 0 -10px 25px #f00; }
+}
+
+
+/* ⭐️ タイトルを少し下げる（padding-topを増加） */
 .hero-section { 
   text-align: center; 
-  padding: 40px 20px 50px; 
+  padding: 60px 20px 50px; 
   width: 100%; 
   box-sizing: border-box; 
   background: linear-gradient(135deg, #1e272e 0%, #2c3e50 100%);
@@ -36,6 +91,7 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
 .burning-text {
@@ -76,6 +132,7 @@ html, body {
   padding: 10px 15px; border-radius: 8px; box-sizing: border-box; order: 3;
 }
 .creation-header-row input { flex-grow: 1; min-width: 0; padding: 12px; border: none; border-radius: 6px; font-size: 15px; box-sizing: border-box; background: #f8f9fa; }
+
 
 .study-deck-title {
   font-size: clamp(28px, 6vw, 48px); font-weight: 900; margin: 0; letter-spacing: 2px; font-style: italic;
@@ -333,6 +390,19 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
 .fullscreen-active .example-ja { color: #7f8c8d; font-size: clamp(22px, 3.5vw, 36px); }
 .fullscreen-active .autoplay-controls { background: #fff; border-color: #e1e4e8; margin-top: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
 
+/* マニュアル画面用のスタイル */
+.manual-container { max-width: 800px; width: 100%; margin: 0 auto; padding: 20px; box-sizing: border-box; }
+.manual-content { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); color: #333; line-height: 1.6; }
+.manual-title { font-size: 32px; font-weight: 900; color: #c0392b; text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px; line-height: 1.3;}
+.manual-section { margin-bottom: 30px; }
+.manual-h2 { font-size: 22px; color: #2c3e50; border-left: 5px solid #3498db; padding-left: 10px; margin-bottom: 15px; }
+.manual-h3 { font-size: 18px; color: #34495e; margin-bottom: 10px; margin-top: 20px; }
+.manual-p { font-size: 15px; margin-bottom: 10px; }
+.manual-list { list-style-type: disc; padding-left: 20px; font-size: 15px; margin-bottom: 10px; }
+.manual-list li { margin-bottom: 8px; }
+.highlight-text { font-weight: bold; color: #e74c3c; }
+
+
 @media (max-width: 900px) {
   .decks-split-layout { flex-direction: column; width: 100%; box-sizing: border-box; margin: 0; }
   .decks-unmemorized-area, .decks-memorized-area { width: 100%; box-sizing: border-box; margin: 0; }
@@ -345,7 +415,13 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
 }
 
 @media (max-width: 600px) {
-  .hero-section { padding: 30px 15px 40px; }
+  .top-right-actions { top: 10px; right: 10px; gap: 10px; }
+  .lang-toggle-btn { padding: 4px 8px; font-size: 11px; }
+  
+  /* スマホ時のマニュアルボタンは少し左に寄せる */
+  .manual-link-btn { font-size: 11px; left: 20px; } 
+
+  .hero-section { padding: 50px 15px 40px; }
   .creation-header-row { flex-wrap: wrap; }
   .inner-view-wrapper { padding: 0 15px; }
   .decks-split-layout { gap: 15px; }
@@ -354,7 +430,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
   .decks-grid { grid-template-columns: repeat(3, 1fr); padding: 10px 10px; gap: 12px; width: 100%; box-sizing: border-box; }
   
   .box-label { font-size: 11px; padding: 2px 4px; }
-  .box-top-actions { gap: 8px; margin-bottom: 6px; padding: 4px 8px; height: 32px; border-radius: 12px; }
+  .box-top-actions { gap: 4px; margin-bottom: 8px; padding: 4px 6px; height: 32px; border-radius: 12px; }
   .box-instruction { font-size: 10px; }
   .box-icon-btn { font-size: 11px; width: 22px; height: 22px; }
   
@@ -373,4 +449,8 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
 
   .autoplay-actions-row { gap: 5px; }
   .autoplay-toggle-btn, .repeat-btn, .fullscreen-btn { font-size: 12px; padding: 10px 5px; }
+
+  .manual-content { padding: 20px; }
+  .manual-title { font-size: 24px; }
+  .manual-h2 { font-size: 18px; }
 }
