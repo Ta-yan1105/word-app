@@ -2,9 +2,8 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-// ⭐️ スマホ対応： signInWithRedirect と getRedirectResult を追加
-import { signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "firebase/auth";
-// ⭐️ 自動連携用： collection と addDoc を追加
+// ⭐️ スマホ・Chromebook対応： signInWithPopup に戻し、即座に開く方式を採用
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 
@@ -99,12 +98,8 @@ function App() {
   const [boxes, setBoxes] = useState(() => { const savedBoxes = localStorage.getItem('redline_boxes'); return savedBoxes ? JSON.parse(savedBoxes) : initialBoxes; });
   const [decks, setDecks] = useState(() => { const savedDecks = localStorage.getItem('redline_decks'); return savedDecks ? JSON.parse(savedDecks) : initialDecks; });
 
-  // ⭐️ リダイレクト結果の受け取りと監視
+  // ⭐️ ログイン状態の監視
   useEffect(() => {
-    getRedirectResult(auth).catch(error => {
-      console.error("Login redirect error:", error);
-    });
-
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
@@ -133,8 +128,15 @@ function App() {
     }
   }, [boxes, decks, currentUser]);
 
-  // ⭐️ リダイレクト方式に変更（ポップアップブロック回避）
-  const handleLogin = () => { signInWithRedirect(auth, provider); };
+  // ⭐️ 究極のログイン関数：async/awaitを外して「クリックと同時に即開く」ことで、すべてのスマホ・Chromebookのブロックを回避します！
+  const handleLogin = () => {
+    signInWithPopup(auth, provider).catch((error) => {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error("Popup Login Error:", error);
+      }
+    });
+  };
+  
   const handleLogout = () => { signOut(auth).then(() => { setBoxes([]); setDecks([]); }); };
 
   const touchStartX = useRef(null); const touchStartY = useRef(null); const touchEndX = useRef(null); const touchEndY = useRef(null);
@@ -687,8 +689,6 @@ function App() {
               <div className="test-actions">
                 <button className="add-btn" onClick={() => startTest()}>{t.tryAgainBtn}</button>
                 <button className="cancel-btn" onClick={() => setView('study')}>{t.backToStudyBtn}</button>
-                {/* ⭐️ テスト結果画面にもReflectionへのリンクを！ */}
-                <button className="add-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#9b59b6'}}>📊 学習記録(Log)を見る</button>
               </div>
             </div>
           ) : (
