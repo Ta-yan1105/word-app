@@ -16,19 +16,20 @@ const DICT = {
     cardsCount: "枚", bestTime: "最速", statusPerfect: "🏆 暗記済", statusNew: "🆕 未学習", statusFresh: "✅ 学習中",
     statusReview: "🔥 復習推奨", statusWarning: "💤 放置気味", stampMem: "💮 暗記済", learningPanel: "📖 学習中",
     addManualBtn: "✏️ 手動で単語を1枚追加", addCsvBtn: "📂 CSVから単語を追加", backBtn: "◀ 戻る", audioOn: "🔊 音声: オン", audioOff: "🔇 音声: オフ",
-    testBtn: "📝 テスト", printBtn: "🖨️ プリント", csvHint: "スプレッドシートやChatGPTで作成したCSVデータを読み込みます。",
-    downloadTemplate: "📥 テンプレート(CSV)をダウンロード", uploadCsv: "📂 CSVファイルを選択して追加", loading: "読み込み中...",
-    chatGptNote: "💡 ChatGPTへの指示例コピペ用：\n「以下の英単語リストをアプリ用にCSV化して。\n【条件】1.列は「英単語, 日本語訳, 英語例文, 例文和訳」の4列。\n2.例文と和訳内の対象単語を ** で囲む。3.コードブロックで出力。\n【リスト】（ここに単語を貼る）」",
+    testBtn: "📝 テスト", printBtn: "🖨️ 単語プリント", printExampleBtn: "📝 例文プリント", bulkDeleteBtn: "🗑️ 複数選択して一括削除",
+    cancelBulkDelete: "キャンセル", executeBulkDelete: "選択分を削除",
+    csvHint: "スプレッドシートやChatGPTで作成したCSVデータを読み込みます。",
+    chatGptNote: "💡 ChatGPTへの指示コピペ用：\n「以下の英単語リストを学習アプリ用のCSVデータに変換してください。\n【絶対ルール】\n1. A列に英単語、B列に日本語訳、C列に英語例文、D列に例文和訳の4列構成にすること。1行目はヘッダーにすること。\n2. すべての値をダブルクォーテーション(\"\")で囲むこと。\n3. 英語例文と例文和訳の中にある「対象の単語・訳」は ** で囲むこと（例: I have an **apple**.）。\n4. 挨拶や解説文は一切出力せず、CSV形式のコードブロックのみを返すこと。\n【リスト】（ここに単語を貼る）」",
     closeBtn: "閉じる", allMemorizedMsg: "👏 全ての単語を覚えました！", resetBtn: "🔄 覚えた状態をリセットしてもう1回", discardBtn: "捨てる",
     autoPlayStart: "▶️ 自動めくり", autoPlayStop: "⏸ 停止", repeatBtn: "🔄 もう1回", fullScreenEnter: "全集中 🔥", fullScreenExit: "解除 ↘️",
     intervalLabel: "表示間隔", sec: "秒", godspeed: "⚡️ 神速", fast: "速", slow: "遅", memorizedPanel: "✅ 暗記済", dragHereMsg: "左の単語をここにドラッグで移動！",
     markUnmem: "学習中に戻す", markMem: "覚えた！", editCardTitle: "カードを編集", newCardTitle: "新しいカードを作成", wordReq: "英単語 (必須)", meanReq: "意味 (必須)",
     exHint: "英語例文 (**で囲むと黄色い線)", trHint: "例文和訳 (**で囲むと黄色い線)", cancelBtn: "キャンセル", saveBtn: "保存する",
-    confirmDeleteCard: "このカードを削除しますか？", confirmDeleteDeck: "束を削除しますか？", confirmDeleteBox: "箱と中の束をすべて削除しますか？", confirmMemorizeAll: "この束をすべて「暗記済み」として完了しますか？",
+    confirmDeleteDeck: "束を削除しますか？", confirmDeleteBox: "箱と中の束をすべて削除しますか？", confirmMemorizeAll: "この束をすべて「暗記済み」として完了しますか？",
     promptBoxRename: "箱の新しい名前を入力してください:", promptDeckRename: "束の新しい名前を入力してください:", alertReq: "「英単語」と「意味」は必ず入力してください！", alertCsvError: "ファイルの読み込み中にエラーが発生しました。",
     testNeeds4: "テストには最低4枚のカードが必要です！", testFinished: "テスト終了！", score: "スコア:", tryAgainBtn: "🔄 もう一度テストする", backToStudyBtn: "◀ 学習に戻る",
     question: "問題", testHint: "この単語の正しい意味はどれ？", quitBtn: "中断して戻る", noPrintCards: "印刷するカードがありません。", shuffleBtn: "🔄 問題をシャッフル",
-    printTestTitle: "- 単語テスト", printDate: "日付：　　年　　月　　日", printName: "氏名：____________________________", printScore: "得点：　　 / ",
+    printTestTitle: "- 単語テスト", printTestExampleTitle: "- 例文テスト", printDate: "出力日:", printName: "氏名：__________________________", printScore: "得点：　　 / ",
     m_h1: "公式 取扱説明書", m_s1: "1. はじめに（基本構造）", m_p1: "このアプリは、現実の単語帳と同じように直感的に操作できます。",
     m_l1_1: "📦 箱（Box）：一番外側の入れ物です。「中学英語」「英検」など大きなカテゴリを作ります。", m_l1_2: "🔖 束（Deck）：箱の中に入る単語カードの束です。「基本動詞 50語」など、学習しやすい単位で作ります。", m_l1_3: "📇 単語カード：実際のフラッシュカードです。束を開くと学習が始まります。",
     m_s2: "2. 単語カードの作り方", m_p2: "学習画面（束を開いた状態）の左側メニューから追加できます。", m_s2_1: "✏️ 手動で1枚ずつ追加", m_p2_1: "「手動で単語を1枚追加」ボタンを押すと、その場でカードを作成できます。",
@@ -48,7 +49,9 @@ const DICT = {
     cardsCount: "cards", bestTime: "Best", statusPerfect: "🏆 Memorized", statusNew: "🆕 New", statusFresh: "✅ Learning",
     statusReview: "🔥 Review", statusWarning: "💤 Neglected", stampMem: "💮 DONE", learningPanel: "📖 Learning",
     addManualBtn: "✏️ Add 1 Card Manually", addCsvBtn: "📂 Import from CSV", backBtn: "◀ Back", audioOn: "🔊 Audio: ON", audioOff: "🔇 Audio: OFF",
-    testBtn: "📝 Test", printBtn: "🖨️ Print", csvHint: "Import CSV data created in Spreadsheets or ChatGPT.",
+    testBtn: "📝 Test", printBtn: "🖨️ Print Words", printExampleBtn: "📝 Print Examples", bulkDeleteBtn: "🗑️ Bulk Delete",
+    cancelBulkDelete: "Cancel", executeBulkDelete: "Delete Selected",
+    csvHint: "Import CSV data created in Spreadsheets or ChatGPT.",
     downloadTemplate: "📥 Download CSV Template", uploadCsv: "📂 Select CSV File", loading: "Loading...",
     chatGptNote: "💡 Prompt for ChatGPT:\n'Create a CSV for flashcards with 4 columns: Word, Meaning, Example, Translation. Wrap the target word in ** to highlight it. Output in code block.'",
     closeBtn: "Close", allMemorizedMsg: "👏 You've memorized all words!", resetBtn: "🔄 Reset and try again", discardBtn: "Discard",
@@ -56,11 +59,11 @@ const DICT = {
     intervalLabel: "Interval", sec: "sec", godspeed: "⚡️ Godspeed", fast: "Fast", slow: "Slow", memorizedPanel: "✅ Memorized", dragHereMsg: "Drag words here from the left!",
     markUnmem: "Move to Learning", markMem: "Memorized!", editCardTitle: "Edit Card", newCardTitle: "Create New Card", wordReq: "Word (Required)", meanReq: "Meaning (Required)",
     exHint: "Example (Wrap in ** to highlight)", trHint: "Translation (Wrap in ** to highlight)", cancelBtn: "Cancel", saveBtn: "Save",
-    confirmDeleteCard: "Delete this card?", confirmDeleteDeck: "Delete this deck?", confirmDeleteBox: "Delete this box and all its decks?", confirmMemorizeAll: "Mark all cards in this deck as memorized?",
+    confirmDeleteDeck: "Delete this deck?", confirmDeleteBox: "Delete this box and all its decks?", confirmMemorizeAll: "Mark all cards in this deck as memorized?",
     promptBoxRename: "Enter new name for the box:", promptDeckRename: "Enter new name for the deck:", alertReq: "'Word' and 'Meaning' are required!", alertCsvError: "Error occurred while reading the file.",
     testNeeds4: "At least 4 cards are required for a test!", testFinished: "Test Finished!", score: "Score:", tryAgainBtn: "🔄 Try Again", backToStudyBtn: "◀ Back to Study",
     question: "Question", testHint: "Which is the correct meaning?", quitBtn: "Quit", noPrintCards: "No cards to print.", shuffleBtn: "🔄 Shuffle",
-    printTestTitle: "- Vocabulary Test", printDate: "Date: ____/____/____", printName: "Name: _________________________", printScore: "Score:      / ",
+    printTestTitle: "- Vocabulary Test", printTestExampleTitle: "- Example Test", printDate: "Date: ", printName: "Name: _________________________", printScore: "Score:      / ",
     m_h1: "Official User Manual", m_s1: "1. Introduction (Basic Structure)", m_p1: "This app works just like real physical flashcards.",
     m_l1_1: "📦 Box: The outermost container (e.g., 'Basic Level', 'TOEFL').", m_l1_2: "🔖 Deck: A bundle of cards inside a box (e.g., 'Basic Verbs 50').", m_l1_3: "📇 Card: The actual flashcard. Open a deck to start learning.",
     m_s2: "2. How to create cards", m_p2: "You can add cards from the left menu in the study view.", m_s2_1: "✏️ Add Manually", m_p2_1: "Click 'Add 1 Card Manually' to create a card on the spot.",
@@ -87,13 +90,37 @@ const parseCSV = (text) => {
   return rows;
 };
 
-// ⭐️ 配列を指定した数ごとに分割する関数
 const chunkArray = (array, size) => {
   const chunked = [];
   for (let i = 0; i < array.length; i += size) {
     chunked.push(array.slice(i, i + size));
   }
   return chunked;
+};
+
+// ⭐️ 改行コードを完全に粉砕するクリーニング関数
+const cleanText = (text) => {
+  if (!text) return '';
+  return String(text).replace(/[\r\n]+/g, '').trim();
+};
+
+const cleanTranslation = (text) => {
+  if (!text) return '';
+  return cleanText(text).split(/\*\*(.*?)\*\*/g).join('');
+};
+
+// ⭐️ 例文の穴埋めを「CSSの完璧な直線」で生成
+const renderBlankExample = (text) => {
+  if (!text) return <span className="print-blank-line"></span>;
+  const cleanedText = cleanText(text);
+  if (!cleanedText.includes('**')) return <>{cleanedText} <span className="print-blank-line"></span></>;
+  
+  return cleanedText.split(/\*\*(.*?)\*\*/g).map((part, i) => {
+    if (i % 2 === 1) {
+      return <span key={i} className="print-blank-line"></span>;
+    }
+    return <span key={i}>{part}</span>;
+  });
 };
 
 function App() {
@@ -158,9 +185,14 @@ function App() {
   const [newCardData, setNewCardData] = useState({ word: '', meaning: '', example: '', translation: '' });
   const [loading, setLoading] = useState(false);
   const [testQuestions, setTestQuestions] = useState([]); const [currentTestIndex, setCurrentTestIndex] = useState(0);
-  const [score, setScore] = useState(0); const [showTestResult, setShowTestResult] = useState(false); const [printCards, setPrintCards] = useState([]);
+  const [score, setScore] = useState(0); const [showTestResult, setShowTestResult] = useState(false); 
+  const [printCards, setPrintCards] = useState([]);
+  const [printMode, setPrintMode] = useState('word');
   const [draggedDeckId, setDraggedDeckId] = useState(null); const [ghostPos, setGhostPos] = useState(null); const touchDragTimer = useRef(null);
   const [draggedCardWord, setDraggedCardWord] = useState(null); const [openingBoxId, setOpeningBoxId] = useState(null);
+  
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [selectedForDelete, setSelectedForDelete] = useState(new Set());
 
   const activeDeck = decks.find(d => d.id === currentDeckId);
   const allCards = activeDeck ? activeDeck.cards : [];
@@ -189,19 +221,40 @@ function App() {
   
   const deleteCard = () => {
     stopAutoPlayIfActive();
-    if (window.confirm(t.confirmDeleteCard)) {
-      const wordToDelete = studyCards[currentIndex]?.word;
-      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
-      if (currentIndex >= studyCards.length - 1 && studyCards.length > 1) { setCurrentIndex(studyCards.length - 2); }
-      setIsFlipped(false); setHasRecorded(false);
-    }
+    const wordToDelete = studyCards[currentIndex]?.word;
+    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
+    if (currentIndex >= studyCards.length - 1 && studyCards.length > 1) { setCurrentIndex(studyCards.length - 2); }
+    setIsFlipped(false); setHasRecorded(false);
   };
 
   const deleteSpecificCard = (e, wordToDelete) => {
     e.stopPropagation(); stopAutoPlayIfActive();
-    if (window.confirm(`Delete "${wordToDelete}" ?`)) { 
-      setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
+    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
+  };
+
+  const toggleDeleteSelection = (word) => {
+    setSelectedForDelete(prev => {
+      const next = new Set(prev);
+      if (next.has(word)) next.delete(word); else next.add(word);
+      return next;
+    });
+  };
+
+  const executeBulkDelete = () => {
+    if (selectedForDelete.size === 0) {
+      setIsDeleteMode(false);
+      return;
     }
+    setDecks(prev => prev.map(d => {
+      if (d.id === currentDeckId) {
+        return { ...d, cards: d.cards.filter(c => !selectedForDelete.has(c.word)) };
+      }
+      return d;
+    }));
+    setSelectedForDelete(new Set());
+    setIsDeleteMode(false);
+    setCurrentIndex(0);
+    setIsFlipped(false);
   };
 
   useEffect(() => {
@@ -400,9 +453,10 @@ function App() {
     return { label: t.statusWarning, className: 'status-warning', needsReview: false };
   };
 
+  // ⭐️ 確実に視認できるデザインのボタンをインラインで生成
   const downloadTemplate = () => {
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); 
-    const content = '英単語,日本語訳,英語例文(**で囲むと黄色マーカー),例文和訳(**で囲むと黄色マーカー)\napple,りんご,"I have an **apple**.","私は**りんご**を持っています。"\nsolution,解決策,"We need a good **solution**.","私たちは良い**解決策**が必要です。"\n';
+    const content = '英単語,日本語訳,英語例文,例文和訳\napple,りんご,"I have an **apple**.","私は**りんご**を持っています。"\nsolution,解決策,"We need a good **solution**.","私たちは良い**解決策**が必要です。"\n';
     const blob = new Blob([bom, content], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = url; a.download = 'import_template.csv'; a.click(); window.URL.revokeObjectURL(url);
@@ -426,7 +480,7 @@ function App() {
       const newCards = [];
       for (const row of rows) {
         const targetWord = row[0] ? String(row[0]).trim() : ''; if (!targetWord) continue;
-        newCards.push({ word: targetWord, meaning: row[1] ? String(row[1]).trim() : '', example: row[2] ? String(row[2]).trim() : '', translation: row[3] ? String(row[3]).trim() : '', isMemorized: false });
+        newCards.push({ word: targetWord, meaning: row[1] ? cleanText(row[1]) : '', example: row[2] ? cleanText(row[2]) : '', translation: row[3] ? cleanText(row[3]) : '', isMemorized: false });
       }
       setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...(d.cards || []), ...newCards] } : d));
     } catch(e) { alert(t.alertCsvError); } finally { setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false); }
@@ -449,9 +503,11 @@ function App() {
     if (currentTestIndex < testQuestions.length - 1) { setCurrentTestIndex(prev => prev + 1); } else { setShowTestResult(true); }
   };
 
-  const openPrintPreview = () => {
+  const openPrintPreview = (mode) => {
     if (allCards.length === 0) { alert(t.noPrintCards); return; }
-    setPrintCards([...allCards].sort(() => Math.random() - 0.5)); setView('printPreview');
+    setPrintMode(mode);
+    setPrintCards([...allCards].sort(() => Math.random() - 0.5)); 
+    setView('printPreview');
   };
 
   const shufflePrintCards = () => { setPrintCards([...printCards].sort(() => Math.random() - 0.5)); };
@@ -475,6 +531,7 @@ function App() {
   const openDeck = (id) => { 
     if (draggedDeckId) return; unlockAudio();
     setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); 
+    setIsDeleteMode(false); setSelectedForDelete(new Set());
     const targetDeck = decks.find(d => d.id === id); const targetCards = targetDeck ? targetDeck.cards.filter(c => !c.isMemorized) : [];
     if (targetCards.length > 0) { setTimeout(() => playAudio(targetCards[0].word), 150); }
   };
@@ -483,6 +540,7 @@ function App() {
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
     setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, lastStudied: Date.now() } : d));
     setIsAutoPlaying(false); setCurrentDeckId(null); setView('decks');
+    setIsDeleteMode(false); setSelectedForDelete(new Set());
   }, [currentDeckId]);
 
   const deleteDeck = (e, id) => { e.stopPropagation(); if (window.confirm(t.confirmDeleteDeck)) setDecks(decks.filter(d => d.id !== id)); };
@@ -557,16 +615,30 @@ function App() {
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
   const renderMiniCard = (c, isMemorizedList, index = null) => {
+    const isSelected = selectedForDelete.has(c.word);
     return (
-      <div key={c.word} className={`mini-card ${draggedCardWord === c.word ? 'dragging-mini' : ''}`} draggable="true"
-        onDragStart={(e) => { setDraggedCardWord(c.word); e.dataTransfer.effectAllowed = "move"; }} onDragEnd={() => setDraggedCardWord(null)} title="Drag & Drop">
+      <div key={c.word} 
+        className={`mini-card ${draggedCardWord === c.word ? 'dragging-mini' : ''} ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
+        style={isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}}
+        draggable={!isDeleteMode && "true"}
+        onClick={() => { if (isDeleteMode) toggleDeleteSelection(c.word); }}
+        onDragStart={(e) => { if(isDeleteMode) return; setDraggedCardWord(c.word); e.dataTransfer.effectAllowed = "move"; }} 
+        onDragEnd={() => setDraggedCardWord(null)} title="Drag & Drop">
         <div className="mini-card-header">
-          <span className="mini-word">{index !== null && <span className="mini-index">{index}.</span>}{c.word}</span>
-          <div className="mini-icons">
-            <button className="mini-icon-btn" onClick={(e) => toggleMemorize(e, c.word, !isMemorizedList)} title={isMemorizedList ? t.markUnmem : t.markMem}>{isMemorizedList ? '↩️' : '✅'}</button>
-            <button className="mini-icon-btn" onClick={() => { stopAutoPlayIfActive(); setEditingCard({ originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '' }); }}>✏️</button>
-            <button className="mini-icon-btn delete-mini" onClick={(e) => deleteSpecificCard(e, c.word)}>✖</button>
-          </div>
+          <span className="mini-word">
+            {isDeleteMode && (
+              <input type="checkbox" checked={isSelected} readOnly style={{marginRight: '8px', pointerEvents: 'none'}} />
+            )}
+            {!isDeleteMode && index !== null && <span className="mini-index">{index}.</span>}
+            {c.word}
+          </span>
+          {!isDeleteMode && (
+            <div className="mini-icons">
+              <button className="mini-icon-btn" onClick={(e) => toggleMemorize(e, c.word, !isMemorizedList)} title={isMemorizedList ? t.markUnmem : t.markMem}>{isMemorizedList ? '↩️' : '✅'}</button>
+              <button className="mini-icon-btn" onClick={() => { stopAutoPlayIfActive(); setEditingCard({ originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '' }); }}>✏️</button>
+              <button className="mini-icon-btn delete-mini" onClick={(e) => deleteSpecificCard(e, c.word)}>✖</button>
+            </div>
+          )}
         </div>
         <div className="mini-meaning">{c.meaning}</div>
       </div>
@@ -703,190 +775,143 @@ function App() {
     );
   }
 
-  // ⭐️ 究極進化したプリント画面（2段組・罫線独立・ヘッダー制御）
+  // ⭐️ 究極進化したプリント画面（ヘッダー1行化・問題数UP・罫線直線化）
   if (view === 'printPreview') {
-    const chunks = chunkArray(printCards, 25); // 25問ごとに分割
+    // ⭐️ 例文テストの1ページあたり問題数を14問にアップ
+    const chunkSize = printMode === 'example' ? 14 : 25;
+    const chunks = chunkArray(printCards, chunkSize);
+    const title = printMode === 'example' ? t.printTestExampleTitle : t.printTestTitle;
+    const todayStr = new Date().toLocaleDateString();
 
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>
         
-        {/* ボタン類（印刷時には消える） */}
+        {/* ボタン類 */}
         <div className="print-controls no-print" style={{ display: 'flex', gap: '15px', marginBottom: '20px', justifyContent: 'center', width: '100%', padding: '20px', background: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
           <button className="cancel-btn" onClick={() => setView('study')} style={{ margin: 0 }}>{t.backToStudyBtn}</button>
           <button className="add-btn" onClick={shufflePrintCards} style={{ backgroundColor: '#8e44ad', margin: 0 }}>{t.shuffleBtn}</button>
           <button className="add-btn" onClick={() => window.print()} style={{ backgroundColor: '#e74c3c', margin: 0 }}>{t.printPdfBtn}</button>
         </div>
 
-        {/* ⭐️ 印刷用レイアウトを強制する魔法のCSS */}
         <style>{`
           @media print {
+            @page { size: A4; margin: 0; }
             body { background: white !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
-            .no-print, .ep-landing-wrapper, .top-right-actions { display: none !important; }
-            .app-container { background: white !important; padding: 0 !important; }
+            .no-print, .ep-landing-wrapper, .top-right-actions, .study-controls-top { display: none !important; }
+            .app-container { background: white !important; padding: 0 !important; overflow: visible !important; height: auto !important; }
+            .print-area-wrapper { padding: 0 !important; margin: 0 !important; display: block !important; }
             .print-page { 
-              page-break-after: always; 
-              margin: 0 !important; 
-              padding: 15mm !important; 
-              width: 100% !important; 
-              box-shadow: none !important; 
+              page-break-after: always; margin: 0 !important; padding: 12mm 15mm !important; 
+              width: 210mm !important; height: 297mm !important; box-shadow: none !important; 
+              box-sizing: border-box; overflow: hidden; 
             }
             .print-page:last-child { page-break-after: auto; }
           }
           
-          .print-area-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            padding-bottom: 50px;
-          }
+          .print-area-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; padding-bottom: 50px; background: #f1f5f9; }
+          .print-page { background: white; width: 210mm; height: 297mm; margin: 0 0 30px 0; padding: 12mm 15mm; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box; color: #000; overflow: hidden; position: relative; }
 
-          .print-page {
-            background: white;
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0 0 30px 0;
-            padding: 20mm;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-            color: #000;
-            position: relative;
-          }
+          /* ⭐️ 完全1行化された美しくコンパクトなヘッダー */
+          .print-header-compact { position: relative; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+          .print-date-compact { position: absolute; top: -12px; right: 0; font-size: 10px; color: #555; font-weight: bold; }
+          .print-title-compact { font-size: 22px; font-weight: 900; margin: 0; white-space: nowrap; max-width: 45%; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
+          .print-name-compact { font-size: 16px; font-weight: bold; flex-grow: 1; padding-bottom: 2px; }
+          .print-score-compact { font-size: 16px; font-weight: bold; white-space: nowrap; padding-bottom: 2px; }
+          .print-score-large-compact { font-size: 26px; font-weight: 900; margin-left: 5px; }
 
-          .print-header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-          }
+          /* 単語テスト用：2段組 */
+          .print-columns-container { display: flex; gap: 40px; width: 100%; height: calc(100% - 60px); }
+          .print-column { flex: 1; display: flex; flex-direction: column; }
+          .print-column-single { display: flex; flex-direction: column; width: 100%; height: calc(100% - 60px); }
 
-          .print-title-area h1 {
-            font-size: 24px;
-            margin: 0;
-            color: #000;
-          }
+          /* 1ページに絶対に収まるように行間を微調整 */
+          .print-q-item { display: flex; flex-direction: column; margin-bottom: 18px; page-break-inside: avoid; break-inside: avoid; } 
+          .print-q-top { display: flex; align-items: flex-start; margin-bottom: 4px; }
+          .print-q-num { width: 35px; font-weight: bold; flex-shrink: 0; font-size: 14px; }
+          .print-q-ja { font-size: 14px; line-height: 1.2; word-break: keep-all; overflow-wrap: anywhere; }
+          .print-q-bottom { padding-left: 35px; width: 100%; box-sizing: border-box; }
+          .print-q-ans { width: 100%; border-bottom: 1px solid #000; height: 18px; }
 
-          .print-info-fields {
-            display: flex;
-            gap: 25px;
-            font-size: 15px;
-            font-weight: bold;
-          }
-
-          /* ⭐️ 2段組（縦方向）の設定 */
-          .print-columns-container {
-            display: flex;
-            gap: 40px; /* 左右の列の隙間 */
-            width: 100%;
-          }
-          .print-column {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-          }
-
-          /* ⭐️ 1問ごとのレイアウト（上：日本語、下：罫線） */
-          .print-q-item {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 30px; /* 次の問題までの行間 */
-          }
+          /* 例文テスト専用デザイン */
+          .print-q-item-example { display: flex; flex-direction: column; margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; }
+          .print-q-example-en { font-size: 16px; line-height: 1.6; padding-left: 5px; font-family: "Times New Roman", Times, serif; margin-top: 2px; }
           
-          .print-q-top {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 12px; /* 日本語と解答欄（罫線）の間隔 */
-          }
-
-          .print-q-num {
-            width: 35px;
-            font-weight: bold;
-            flex-shrink: 0;
-            font-size: 15px;
-          }
-
-          .print-q-ja {
-            font-size: 15px;
-            line-height: 1.3;
-          }
-
-          /* 罫線が入る下段エリア */
-          .print-q-bottom {
-            padding-left: 35px; /* (1) などの番号の幅だけ右にズラす */
-            width: 100%;
-            box-sizing: border-box;
-          }
-
-          /* 罫線そのもの（列幅いっぱいまで引く） */
-          .print-q-ans {
-            width: 100%;
-            border-bottom: 1px solid #000;
+          /* ⭐️ 魔法の固定幅罫線（CSS描画で絶対に潰れない） */
+          .print-blank-line {
+            display: inline-block;
+            width: 160px;
+            border-bottom: 1.5px solid #000;
+            margin: 0 10px;
+            vertical-align: text-bottom;
           }
         `}</style>
 
         <div className="print-area-wrapper">
           {chunks.map((chunk, pageIndex) => {
-            // ⭐️ 25問をさらに左列(1~13)と右列(14~25)に分割
-            const halfLength = Math.ceil(chunk.length / 2);
-            const leftColumnCards = chunk.slice(0, halfLength);
-            const rightColumnCards = chunk.slice(halfLength);
-
             return (
               <div key={pageIndex} className="print-page">
-                {/* ⭐️ 1ページ目だけヘッダーを表示 */}
+                {/* ⭐️ 1行に圧縮されたヘッダー（1ページ目のみ） */}
                 {pageIndex === 0 && (
-                  <div className="print-header-top">
-                    <div className="print-title-area">
-                      <h1>{activeDeck?.name} {t.printTestTitle}</h1>
-                    </div>
-                    <div className="print-info-fields">
-                      <span>{t.printDate}</span>
-                      <span>{t.printName}</span>
-                      {/* 得点はテスト全体の総問題数を表示 */}
-                      <span>{t.printScore}{printCards.length}</span>
+                  <div className="print-header-compact">
+                    <div className="print-date-compact">{t.printDate} {todayStr}</div>
+                    <h1 className="print-title-compact" title={`${activeDeck?.name} ${title}`}>{activeDeck?.name} {title}</h1>
+                    <div className="print-name-compact">{t.printName}</div>
+                    <div className="print-score-compact">
+                      {t.printScore.split('：')[0]}：<span className="print-score-large-compact">　　 / {printCards.length}</span>
                     </div>
                   </div>
                 )}
                 
-                <div className="print-columns-container" style={{ marginTop: pageIndex > 0 ? '20px' : '0' }}>
-                  {/* 左側の列 */}
-                  <div className="print-column">
-                    {leftColumnCards.map((c, i) => {
-                      const globalIndex = pageIndex * 25 + i + 1;
+                {printMode === 'example' ? (
+                  <div className="print-column-single" style={{ marginTop: pageIndex > 0 ? '10px' : '0' }}>
+                    {chunk.map((c, i) => {
+                      const globalIndex = pageIndex * chunkSize + i + 1;
                       return (
-                        <div key={`left-${i}`} className="print-q-item">
+                        <div key={`ex-${i}`} className="print-q-item-example">
                           <div className="print-q-top">
                             <span className="print-q-num">({globalIndex})</span>
-                            <span className="print-q-ja">{(c.meaning || '').split('/')[0]}</span>
+                            <span className="print-q-ja">{cleanTranslation(c.translation) || cleanText((c.meaning || '').split('/')[0])}</span>
                           </div>
                           <div className="print-q-bottom">
-                            <div className="print-q-ans"></div>
+                            {/* ⭐️ 完璧な罫線を埋め込む */}
+                            <div className="print-q-example-en">{renderBlankExample(c.example)}</div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
-
-                  {/* 右側の列 */}
-                  <div className="print-column">
-                    {rightColumnCards.map((c, i) => {
-                      const globalIndex = pageIndex * 25 + halfLength + i + 1;
-                      return (
-                        <div key={`right-${i}`} className="print-q-item">
-                          <div className="print-q-top">
-                            <span className="print-q-num">({globalIndex})</span>
-                            <span className="print-q-ja">{(c.meaning || '').split('/')[0]}</span>
+                ) : (
+                  <div className="print-columns-container" style={{ marginTop: pageIndex > 0 ? '10px' : '0' }}>
+                    <div className="print-column">
+                      {chunk.slice(0, Math.ceil(chunk.length / 2)).map((c, i) => {
+                        const globalIndex = pageIndex * chunkSize + i + 1;
+                        return (
+                          <div key={`left-${i}`} className="print-q-item">
+                            <div className="print-q-top">
+                              <span className="print-q-num">({globalIndex})</span>
+                              <span className="print-q-ja">{cleanText((c.meaning || '').split('/')[0])}</span>
+                            </div>
+                            <div className="print-q-bottom"><div className="print-q-ans"></div></div>
                           </div>
-                          <div className="print-q-bottom">
-                            <div className="print-q-ans"></div>
+                        );
+                      })}
+                    </div>
+                    <div className="print-column">
+                      {chunk.slice(Math.ceil(chunk.length / 2)).map((c, i) => {
+                        const globalIndex = pageIndex * chunkSize + Math.ceil(chunk.length / 2) + i + 1;
+                        return (
+                          <div key={`right-${i}`} className="print-q-item">
+                            <div className="print-q-top">
+                              <span className="print-q-num">({globalIndex})</span>
+                              <span className="print-q-ja">{cleanText((c.meaning || '').split('/')[0])}</span>
+                            </div>
+                            <div className="print-q-bottom"><div className="print-q-ans"></div></div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
@@ -952,10 +977,24 @@ function App() {
             {!isFullscreen && (
               <div className="side-panel left-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCardWord) { toggleMemorize(null, draggedCardWord, false); setDraggedCardWord(null); } }}>
                 <h3 className="panel-title">{t.learningPanel} ({studyCards.length})</h3>
+                
                 <div className="panel-top-action" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#27ae60'}}>{t.addManualBtn}</button>
-                  <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#e67e22'}}>{t.addCsvBtn}</button>
+                  {!isDeleteMode ? (
+                    <>
+                      <div style={{display: 'flex', gap: '8px'}}>
+                        <button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', backgroundColor: '#27ae60'}}>{t.addManualBtn}</button>
+                        <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', backgroundColor: '#e67e22'}}>{t.addCsvBtn}</button>
+                      </div>
+                      <button onClick={() => setIsDeleteMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '8px 0', fontSize: '12px', backgroundColor: '#95a5a6'}}>{t.bulkDeleteBtn}</button>
+                    </>
+                  ) : (
+                    <div style={{display: 'flex', gap: '8px'}}>
+                      <button onClick={() => {setIsDeleteMode(false); setSelectedForDelete(new Set());}} className="cancel-btn" style={{flex: 1, padding: '10px 0', fontSize: '12px'}}>{t.cancelBulkDelete}</button>
+                      <button onClick={executeBulkDelete} className="add-btn" style={{flex: 1, padding: '10px 0', fontSize: '12px', backgroundColor: '#e74c3c'}}>{t.executeBulkDelete} ({selectedForDelete.size})</button>
+                    </div>
+                  )}
                 </div>
+
                 <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}</div>
               </div>
             )}
@@ -972,18 +1011,26 @@ function App() {
                   <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
                     <h2 className="study-deck-title" style={{ margin: 0 }}>{activeDeck?.name}</h2>
                     {allCards.length >= 4 && (
-                      <div style={{ display: 'flex', gap: '10px' }}><button className="test-start-btn" onClick={startTest}>{t.testBtn}</button><button className="test-start-btn print-btn" onClick={openPrintPreview}>{t.printBtn}</button></div>
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <button className="test-start-btn" onClick={startTest}>{t.testBtn}</button>
+                        <button className="test-start-btn print-btn" onClick={() => openPrintPreview('word')}>{t.printBtn}</button>
+                        <button className="test-start-btn print-btn" onClick={() => openPrintPreview('example')} style={{backgroundColor: '#3498db'}}>{t.printExampleBtn}</button>
+                      </div>
                     )}
                   </div>
                 </>
               )}
+              {/* ⭐️ 文字が絶対に消えないインラインスタイル版CSVボタン */}
               {!isFullscreen && isBulkMode && (
                 <div className="bulk-input-section" style={{ marginTop: '0px' }}>
                   <p className="bulk-hint" style={{fontSize:'16px', color:'#333'}}>{t.csvHint}</p>
-                  <div className="bulk-file-actions">
-                    <button onClick={downloadTemplate} className="add-btn bulk-template-btn">{t.downloadTemplate}</button>
-                    <label className="add-btn bulk-upload-btn" style={{backgroundColor: '#27ae60'}}>
-                      {loading ? t.loading : t.uploadCsv}<input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
+                  <div className="bulk-file-actions" style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '20px' }}>
+                    <button onClick={downloadTemplate} style={{ backgroundColor: '#f39c12', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                      {t.downloadTemplate}
+                    </button>
+                    <label style={{ backgroundColor: '#27ae60', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                      {loading ? t.loading : t.uploadCsv}
+                      <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
                     </label>
                   </div>
                   <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{t.chatGptNote}</p>
@@ -995,8 +1042,8 @@ function App() {
                   <h2 style={{color: '#27ae60'}}>{t.allMemorizedMsg}</h2>
                   <button onClick={resetMemorized} className="add-btn" style={{marginTop: '20px', padding: '15px 30px', fontSize: '18px'}}>{t.resetBtn}</button>
                 </div>
-              ) : studyCards.length > 0 ? (
-                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ display: isBulkMode ? 'none' : 'flex' }}>
+              ) : studyCards.length > 0 && !isBulkMode ? (
+                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`}>
                   {!isFullscreen && <p className="card-counter">{currentIndex + 1} / {studyCards.length}</p>}
                   <div className="card-animation-wrapper" key={currentIndex}>
                     <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
