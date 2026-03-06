@@ -517,7 +517,7 @@ function App() {
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
   // =========================================================================
-  // ⭐️ 共有サブレンダリング関数（エラー回避のために適切な位置へ移動）
+  // ⭐️ 共有サブレンダリング関数
   // =========================================================================
   const renderMiniCard = (c, isMemorizedList, index = null) => {
     return (
@@ -557,27 +557,12 @@ function App() {
     );
   };
 
-
   // =========================================================================
-  // ⭐️ メインレンダリング
+  // ⭐️ 画面レンダリング分岐
   // =========================================================================
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
 
-  if (!currentUser) {
-    return (
-      <div className="login-screen-bg">
-        <div className="login-top-right">
-          <button className="login-lang-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
-        </div>
-        <div className="login-hero-section">
-          <h1 className="login-burning-text">{t.appTitle}</h1>
-          <h2 className="login-burning-subtitle">{t.appSubtitle}</h2>
-          <button className="login-google-btn" onClick={handleLogin}>{t.loginWithGoogle}</button>
-        </div>
-      </div>
-    );
-  }
-
+  // 📖 取扱説明書（マニュアル）画面：ログイン前後どちらからでもアクセス可能！
   if (view === 'manual') {
     return (
       <div className="app-container gentle-bg desk-view">
@@ -601,10 +586,35 @@ function App() {
     );
   }
 
+  // 🚪 ログイン前の画面
+  if (!currentUser) {
+    return (
+      <div className="login-screen-bg">
+        <div className="login-top-right">
+          {/* ⭐️ 言語切り替えの真横にマニュアルボタン！ */}
+          <button className="manual-link-btn" onClick={() => setView('manual')}>
+            {t.manualLink}
+          </button>
+          <button className="login-lang-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
+        </div>
+        <div className="login-hero-section">
+          <h1 className="login-burning-text">{t.appTitle}</h1>
+          <h2 className="login-burning-subtitle">{t.appSubtitle}</h2>
+          <button className="login-google-btn" onClick={handleLogin}>{t.loginWithGoogle}</button>
+        </div>
+      </div>
+    );
+  }
+
+  // 🏠 1層目（ホーム画面 / ログイン後）
   if (view === 'boxes') {
     return (
       <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={handleClick} onTouchStart={handleTouchStart}>
         <div className="top-right-actions">
+          {/* ⭐️ ここにも言語切り替えの真横にマニュアルボタン！ */}
+          <button className="manual-link-btn" onClick={() => setView('manual')}>
+            {t.manualLink}
+          </button>
           <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
           <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout}</button>
         </div>
@@ -615,9 +625,6 @@ function App() {
             <span className="creation-label" title="Box" style={{color: '#fff'}}>📦</span>
             <input type="text" placeholder={t.boxPlaceholder} value={newBoxName} onChange={(e) => setNewBoxName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewBox()} />
             <button onClick={createNewBox} className="add-btn mini-btn">{t.createBtn}</button>
-          </div>
-          <div className="manual-link-container-bottom">
-            <button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button>
           </div>
         </div>
         <div className="boxes-grid">
@@ -642,6 +649,7 @@ function App() {
     );
   }
 
+  // 📝 テスト画面
   if (view === 'test') {
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>
@@ -665,6 +673,7 @@ function App() {
     );
   }
 
+  // 🖨️ プリント画面
   if (view === 'printPreview') {
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>

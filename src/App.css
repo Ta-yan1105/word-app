@@ -49,6 +49,9 @@ html, body {
   top: 20px;
   right: 20px;
   z-index: 1000;
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
 
 .login-lang-btn {
@@ -165,6 +168,7 @@ html, body {
   background: #e74c3c !important;
 }
 
+/* ⭐️ 究極の「使い方」ボタン（右上のバーに綺麗に並ぶ） */
 .manual-link-btn {
   background: transparent;
   border: none;
@@ -472,6 +476,7 @@ html, body {
 .delete-btn { background-color: transparent; color: #e74c3c; border: 1px solid #e74c3c; padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
 .delete-btn:hover { background-color: #ffebee; }
 
+/* ⭐️ 修正したボタン部分 */
 .autoplay-controls { background: #fff; padding: 15px 25px; border-radius: 16px; display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 500px; box-sizing: border-box; box-shadow: 0 2px 10px rgba(0,0,0,0.02); border: 1px solid #e1e4e8; }
 .autoplay-actions-row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: nowrap; width: 100%; }
 .autoplay-toggle-btn { padding: 10px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; transition: all 0.3s; background: #3498db; color: #fff; box-shadow: 0 4px 6px rgba(52,152,219,0.3); flex: 1; white-space: nowrap; text-align: center; }
@@ -484,8 +489,8 @@ html, body {
 .speed-slider { flex-grow: 1; width: 100%; max-width: none; accent-color: #3498db; cursor: pointer; }
 
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 15px; }
-.modal-input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; width: 100%; font-family: inherit; }
+.modal-content { background: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 15px; color: #333; }
+.modal-input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; box-sizing: border-box; width: 100%; font-family: inherit; color: #333; }
 textarea.modal-input { resize: vertical; min-height: 60px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
 
@@ -511,7 +516,6 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
 .manual-list li { margin-bottom: 8px; }
 .highlight-text { font-weight: bold; color: #e74c3c; }
 
-
 @media (max-width: 900px) {
   .decks-split-layout { flex-direction: column; width: 100%; box-sizing: border-box; margin: 0; }
   .decks-unmemorized-area, .decks-memorized-area { width: 100%; box-sizing: border-box; margin: 0; }
@@ -524,11 +528,10 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
 }
 
 @media (max-width: 600px) {
-  .top-right-actions { top: 10px; right: 10px; gap: 10px; flex-wrap: wrap; justify-content: flex-end;}
+  .top-right-actions, .login-top-right { top: 10px; right: 10px; gap: 10px; flex-wrap: wrap; justify-content: flex-end;}
   .lang-toggle-btn { padding: 4px 8px; font-size: 11px; }
-  .login-lang-btn { top: 10px; right: 10px; padding: 4px 8px; font-size: 11px; }
-  
-  .manual-link-container-bottom { padding: 0; }
+  .login-lang-btn { padding: 4px 8px; font-size: 11px; }
+  .manual-link-btn { font-size: 11px; left: auto; }
 
   .hero-section { padding: 50px 15px 40px; }
   .creation-header-row { flex-wrap: wrap; }
