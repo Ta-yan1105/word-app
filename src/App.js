@@ -15,15 +15,15 @@ const DICT = {
     noUnmem: "未修の束はありません。", memTitle: "🏆 暗記済の束", memHint: "※ここに束をドロップすると一発で暗記済みに！", noMem: "まだ暗記済みの束はありません。",
     cardsCount: "枚", bestTime: "最速", statusPerfect: "🏆 暗記済", statusNew: "🆕 未学習", statusFresh: "✅ 学習中",
     statusReview: "🔥 復習推奨", statusWarning: "💤 放置気味", stampMem: "💮 暗記済", learningPanel: "📖 学習中",
-    addManualBtn: "✏️ 手動で単語を1枚追加", addCsvBtn: "📂 CSVから単語を追加", backBtn: "◀ 戻る", audioOn: "🔊 音声: オン", audioOff: "🔇 音声: オフ",
-    testBtn: "📝 テスト", printBtn: "🖨️ 単語プリント", printExampleBtn: "📝 例文プリント", bulkDeleteBtn: "🗑️ 複数選択して一括削除",
+    addManualBtn: "✏️ 手動で追加", addCsvBtn: "📂 CSVで追加", backBtn: "◀ 戻る", audioOn: "🔊 音声: オン", audioOff: "🔇 音声: オフ",
+    testBtn: "📝 テスト", printBtn: "🖨️ 単語プリント", printExampleBtn: "📝 例文プリント", bulkDeleteBtn: "🗑️ 一括削除",
     cancelBulkDelete: "キャンセル", executeBulkDelete: "選択分を削除",
     csvHint: "スプレッドシートやChatGPTで作成したCSVデータを読み込みます。",
     chatGptNote: "💡 ChatGPTへの指示コピペ用：\n「以下の英単語リストを学習アプリ用のCSVデータに変換してください。\n【絶対ルール】\n1. A列に英単語、B列に日本語訳、C列に英語例文、D列に例文和訳の4列構成にすること。1行目はヘッダーにすること。\n2. すべての値をダブルクォーテーション(\"\")で囲むこと。\n3. 英語例文と例文和訳の中にある「対象の単語・訳」は ** で囲むこと（例: I have an **apple**.）。\n4. 挨拶や解説文は一切出力せず、CSV形式のコードブロックのみを返すこと。\n【リスト】（ここに単語を貼る）」",
     closeBtn: "閉じる", allMemorizedMsg: "👏 全ての単語を覚えました！", resetBtn: "🔄 覚えた状態をリセットしてもう1回", discardBtn: "捨てる",
     autoPlayStart: "▶️ 自動めくり", autoPlayStop: "⏸ 停止", repeatBtn: "🔄 もう1回", fullScreenEnter: "全集中 🔥", fullScreenExit: "解除 ↘️",
     intervalLabel: "表示間隔", sec: "秒", godspeed: "⚡️ 神速", fast: "速", slow: "遅", memorizedPanel: "✅ 暗記済", dragHereMsg: "左の単語をここにドラッグで移動！",
-    markUnmem: "学習中に戻す", markMem: "覚えた！", editCardTitle: "カードを編集", newCardTitle: "新しいカードを作成", wordReq: "英単語 (必須)", meanReq: "意味 (必須)",
+    markUnmem: "学習中に戻す", markMem: "覚えた！", editCardTitle: "カードを編集", newCardTitle: "新しいカードを作成", wordReq: "英単語 (必須)", meanReq: "意味 (必須)", posLabel: "品詞 (任意)",
     exHint: "英語例文 (**で囲むと黄色い線)", trHint: "例文和訳 (**で囲むと黄色い線)", cancelBtn: "キャンセル", saveBtn: "保存する",
     confirmDeleteDeck: "束を削除しますか？", confirmDeleteBox: "箱と中の束をすべて削除しますか？", confirmMemorizeAll: "この束をすべて「暗記済み」として完了しますか？",
     promptBoxRename: "箱の新しい名前を入力してください:", promptDeckRename: "束の新しい名前を入力してください:", alertReq: "「英単語」と「意味」は必ず入力してください！", alertCsvError: "ファイルの読み込み中にエラーが発生しました。",
@@ -32,8 +32,8 @@ const DICT = {
     printTestTitle: "- 単語テスト", printTestExampleTitle: "- 例文テスト", printDate: "出力日:", printName: "氏名：__________________________", printScore: "得点：　　 / ",
     m_h1: "公式 取扱説明書", m_s1: "1. はじめに（基本構造）", m_p1: "このアプリは、現実の単語帳と同じように直感的に操作できます。",
     m_l1_1: "📦 箱（Box）：一番外側の入れ物です。「中学英語」「英検」など大きなカテゴリを作ります。", m_l1_2: "🔖 束（Deck）：箱の中に入る単語カードの束です。「基本動詞 50語」など、学習しやすい単位で作ります。", m_l1_3: "📇 単語カード：実際のフラッシュカードです。束を開くと学習が始まります。",
-    m_s2: "2. 単語カードの作り方", m_p2: "学習画面（束を開いた状態）の左側メニューから追加できます。", m_s2_1: "✏️ 手動で1枚ずつ追加", m_p2_1: "「手動で単語を1枚追加」ボタンを押すと、その場でカードを作成できます。",
-    m_s2_2: "📂 CSVから一括で追加", m_p2_2: "Excelやスプレッドシートで作ったデータを一気に読み込めます。ChatGPTに「以下の単語をCSV化して」と指示してコピペするのが一番簡単です！", m_p2_3: "※例文の中で黄色くマーカーを引きたい部分は **apple** のように **（アスタリスク2つ）で囲んでください。",
+    m_s2: "2. 単語カードの作り方", m_p2: "学習画面（束を開いた状態）の左側メニューから追加できます。", m_s2_1: "✏️ 手動で1枚ずつ追加", m_p2_1: "「手動で単語を1枚追加」ボタンを押すと、その場でカードを作成できます。この時、タブから「名詞」「動詞」などの品詞を登録しておくと、学習時に日本語の横に品詞バッジが表示されます。",
+    m_s2_2: "📂 CSVから一括で追加", m_p2_2: "Excelやスプレッドシートで作ったデータを一気に読み込めます。ChatGPTに「以下の単語をCSV化して」と指示してコピペするのが一番簡単です！（※品詞は後から編集画面で追加できます）", m_p2_3: "※例文の中で黄色くマーカーを引きたい部分は **apple** のように **（アスタリスク2つ）で囲んでください。",
     m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボードの [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
     m_s4: "4. 自動めくり機能 ＆ 表示間隔（スピード）", m_p4: "画面下の「▶️ 自動めくり」を押すと、設定した秒数ごとに自動でカードがめくられ、音声が流れます。", m_l4_1: "🐢 遅（4.0秒）：じっくり意味を確認したい時に。", m_l4_2: "🐇 標準（2.0秒）：テンポよく進めたい時に。", m_l4_3: "👼 神速（0.0秒）：脳に直接刷り込む超高速フラッシュモード！",
     m_s5: "5. 暗記の管理（ドラッグ＆ドロップ）", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、左側のリストから右側の「✅ 暗記済」エリアへドラッグ＆ドロップして移動させましょう！", m_p5_1: "束（デッキ）を丸ごと「暗記済」エリアにドラッグして、一気に完了させることも可能です。",
@@ -48,7 +48,7 @@ const DICT = {
     noUnmem: "No learning decks.", memTitle: "🏆 Memorized Decks", memHint: "* Drop decks here to mark as memorized!", noMem: "No memorized decks yet.",
     cardsCount: "cards", bestTime: "Best", statusPerfect: "🏆 Memorized", statusNew: "🆕 New", statusFresh: "✅ Learning",
     statusReview: "🔥 Review", statusWarning: "💤 Neglected", stampMem: "💮 DONE", learningPanel: "📖 Learning",
-    addManualBtn: "✏️ Add 1 Card Manually", addCsvBtn: "📂 Import from CSV", backBtn: "◀ Back", audioOn: "🔊 Audio: ON", audioOff: "🔇 Audio: OFF",
+    addManualBtn: "✏️ Add Manually", addCsvBtn: "📂 Add via CSV", backBtn: "◀ Back", audioOn: "🔊 Audio: ON", audioOff: "🔇 Audio: OFF",
     testBtn: "📝 Test", printBtn: "🖨️ Print Words", printExampleBtn: "📝 Print Examples", bulkDeleteBtn: "🗑️ Bulk Delete",
     cancelBulkDelete: "Cancel", executeBulkDelete: "Delete Selected",
     csvHint: "Import CSV data created in Spreadsheets or ChatGPT.",
@@ -57,7 +57,7 @@ const DICT = {
     closeBtn: "Close", allMemorizedMsg: "👏 You've memorized all words!", resetBtn: "🔄 Reset and try again", discardBtn: "Discard",
     autoPlayStart: "▶️ Auto Play", autoPlayStop: "⏸ Stop", repeatBtn: "🔄 Repeat", fullScreenEnter: "Focus 🔥", fullScreenExit: "Exit ↘️",
     intervalLabel: "Interval", sec: "sec", godspeed: "⚡️ Godspeed", fast: "Fast", slow: "Slow", memorizedPanel: "✅ Memorized", dragHereMsg: "Drag words here from the left!",
-    markUnmem: "Move to Learning", markMem: "Memorized!", editCardTitle: "Edit Card", newCardTitle: "Create New Card", wordReq: "Word (Required)", meanReq: "Meaning (Required)",
+    markUnmem: "Move to Learning", markMem: "Memorized!", editCardTitle: "Edit Card", newCardTitle: "Create New Card", wordReq: "Word (Required)", meanReq: "Meaning (Required)", posLabel: "Part of Speech (Optional)",
     exHint: "Example (Wrap in ** to highlight)", trHint: "Translation (Wrap in ** to highlight)", cancelBtn: "Cancel", saveBtn: "Save",
     confirmDeleteDeck: "Delete this deck?", confirmDeleteBox: "Delete this box and all its decks?", confirmMemorizeAll: "Mark all cards in this deck as memorized?",
     promptBoxRename: "Enter new name for the box:", promptDeckRename: "Enter new name for the deck:", alertReq: "'Word' and 'Meaning' are required!", alertCsvError: "Error occurred while reading the file.",
@@ -77,7 +77,7 @@ const DICT = {
 };
 
 const initialBoxes = [ { id: 1, nameKey: 'box1Name', name: '中学レベル' }, { id: 2, nameKey: 'box2Name', name: '資格・オリジナル箱' } ];
-const initialDecks = [ { id: 1, boxId: 1, nameKey: 'deck1Name', name: '基本の動詞', lastStudied: null, lastRecordTime: null, cards: [ { word: 'shine', meaning: '輝く / 光る', example: 'The stars **shine** brightly.', translation: '星が明るく**輝く**。', isMemorized: false }, { word: 'have', meaning: '持っている / 食べる', example: 'I **have** a book.', translation: '私は本を**持っています**。', isMemorized: false }, { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false }, { word: 'attack', meaning: '攻撃する', example: 'The dog will not **attack** you.', translation: 'その犬はあなたを**攻撃し**ません。', isMemorized: false } ] } ];
+const initialDecks = [ { id: 1, boxId: 1, nameKey: 'deck1Name', name: '基本の動詞', lastStudied: null, lastRecordTime: null, cards: [ { word: 'shine', meaning: '輝く / 光る', example: 'The stars **shine** brightly.', translation: '星が明るく**輝く**。', isMemorized: false, pos: '動詞' }, { word: 'have', meaning: '持っている / 食べる', example: 'I **have** a book.', translation: '私は本を**持っています**。', isMemorized: false, pos: '動詞' }, { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false, pos: '動詞' }, { word: 'attack', meaning: '攻撃する', example: 'The dog will not **attack** you.', translation: 'その犬はあなたを**攻撃し**ません。', isMemorized: false, pos: '動詞' } ] } ];
 
 const parseCSV = (text) => {
   text = text.replace(/^\uFEFF/, ''); const rows = []; let row = []; let currentVal = ''; let inQuotes = false;
@@ -98,7 +98,6 @@ const chunkArray = (array, size) => {
   return chunked;
 };
 
-// ⭐️ 改行コードを完全に粉砕するクリーニング関数
 const cleanText = (text) => {
   if (!text) return '';
   return String(text).replace(/[\r\n]+/g, '').trim();
@@ -109,7 +108,6 @@ const cleanTranslation = (text) => {
   return cleanText(text).split(/\*\*(.*?)\*\*/g).join('');
 };
 
-// ⭐️ 例文の穴埋めを「CSSの完璧な直線」で生成
 const renderBlankExample = (text) => {
   if (!text) return <span className="print-blank-line"></span>;
   const cleanedText = cleanText(text);
@@ -176,14 +174,16 @@ function App() {
   const [pullDownY, setPullDownY] = useState(0); const [isStoring, setIsStoring] = useState(false);
   const [view, setView] = useState('boxes'); 
   const [currentBoxId, setCurrentBoxId] = useState(null); const [currentDeckId, setCurrentDeckId] = useState(null);
-  const [newBoxName, setNewBoxName] = useState(''); const [newDeckNameInside, setNewDeckNameInside] = useState('');
   const [studyTime, setStudyTime] = useState(0); const [hasRecorded, setHasRecorded] = useState(false); 
   const [isAutoPlaying, setIsAutoPlaying] = useState(false); const [displaySeconds, setDisplaySeconds] = useState(2.0); const [isMuted, setIsMuted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0); const [isFlipped, setIsFlipped] = useState(false);
   const [isBulkMode, setIsBulkMode] = useState(false); const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  const [newBoxName, setNewBoxName] = useState(''); const [newDeckNameInside, setNewDeckNameInside] = useState('');
   const [editingCard, setEditingCard] = useState(null); const [addingCard, setAddingCard] = useState(false);
-  const [newCardData, setNewCardData] = useState({ word: '', meaning: '', example: '', translation: '' });
+  const [newCardData, setNewCardData] = useState({ word: '', meaning: '', example: '', translation: '', pos: '' });
   const [loading, setLoading] = useState(false);
+  
   const [testQuestions, setTestQuestions] = useState([]); const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [score, setScore] = useState(0); const [showTestResult, setShowTestResult] = useState(false); 
   const [printCards, setPrintCards] = useState([]);
@@ -193,6 +193,13 @@ function App() {
   
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedForDelete, setSelectedForDelete] = useState(new Set());
+
+  const [qLang, setQLang] = useState('en'); 
+  const [qType, setQType] = useState('word'); 
+  const [showExOnBack, setShowExOnBack] = useState(true); 
+  const [showWordOnExMode, setShowWordOnExMode] = useState(true); 
+
+  const playedRef = useRef({ index: -1, flipped: false, lang: '', type: '' });
 
   const activeDeck = decks.find(d => d.id === currentDeckId);
   const allCards = activeDeck ? activeDeck.cards : [];
@@ -241,14 +248,9 @@ function App() {
   };
 
   const executeBulkDelete = () => {
-    if (selectedForDelete.size === 0) {
-      setIsDeleteMode(false);
-      return;
-    }
+    if (selectedForDelete.size === 0) { setIsDeleteMode(false); return; }
     setDecks(prev => prev.map(d => {
-      if (d.id === currentDeckId) {
-        return { ...d, cards: d.cards.filter(c => !selectedForDelete.has(c.word)) };
-      }
+      if (d.id === currentDeckId) { return { ...d, cards: d.cards.filter(c => !selectedForDelete.has(c.word)) }; }
       return d;
     }));
     setSelectedForDelete(new Set());
@@ -299,19 +301,36 @@ function App() {
     } catch (e) { fallbackTTS(cleanWord, rate); }
   }, [displaySeconds, isMuted, fallbackTTS]);
 
+  useEffect(() => {
+    if (studyCards.length === 0 || isCompleted || view !== 'study' || isBulkMode) return;
+    const currentCard = studyCards[currentIndex];
+    if (!currentCard) return;
+
+    let shouldPlay = false;
+    if (qLang === 'en' && !isFlipped) shouldPlay = true;
+    if (qLang === 'ja' && isFlipped) shouldPlay = true;
+
+    if (shouldPlay) {
+      if (playedRef.current.index !== currentIndex || playedRef.current.flipped !== isFlipped || playedRef.current.lang !== qLang || playedRef.current.type !== qType) {
+        playAudio(currentCard.word);
+        playedRef.current = { index: currentIndex, flipped: isFlipped, lang: qLang, type: qType };
+      }
+    }
+  }, [currentIndex, isFlipped, qLang, qType, studyCards, isCompleted, view, isBulkMode, playAudio]);
+
   const handleNextCard = useCallback((e) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false);
-    const nextIdx = (currentIndex + 1) % studyCards.length; setCurrentIndex(nextIdx); playAudio(studyCards[nextIdx]?.word); 
-  }, [currentIndex, studyCards, playAudio]);
+    const nextIdx = (currentIndex + 1) % studyCards.length; setCurrentIndex(nextIdx); 
+  }, [currentIndex, studyCards]);
 
   const handlePrevCard = useCallback((e) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false);
-    const prevIdx = (currentIndex - 1 + studyCards.length) % studyCards.length; setCurrentIndex(prevIdx); playAudio(studyCards[prevIdx]?.word); 
-  }, [currentIndex, studyCards, playAudio]);
+    const prevIdx = (currentIndex - 1 + studyCards.length) % studyCards.length; setCurrentIndex(prevIdx); 
+  }, [currentIndex, studyCards]);
 
   const handleRepeat = () => { 
     stopAutoPlayIfActive(); setCurrentIndex(0); setIsFlipped(false); setStudyTime(0); setHasRecorded(false); 
-    if (studyCards.length > 0) playAudio(studyCards[0].word); 
+    playedRef.current = { index: -1, flipped: false, lang: '', type: '' }; 
   };
 
   useEffect(() => {
@@ -354,7 +373,7 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
       if (view !== 'study' || isBulkMode) return;
       unlockAudio();
       if (e.code === 'Space') { e.preventDefault(); stopAutoPlayIfActive(); setIsFlipped(prev => !prev); } 
@@ -379,13 +398,13 @@ function App() {
           elapsedRef.current = 0; 
           if (!isFlipped && displaySeconds !== 0) { setIsFlipped(true); } 
           else if (currentIndex < studyCards.length - 1) {
-            const nextIdx = currentIndex + 1; setCurrentIndex(nextIdx); playAudio(studyCards[nextIdx]?.word); setIsFlipped(false);
+            const nextIdx = currentIndex + 1; setCurrentIndex(nextIdx); setIsFlipped(false);
           } else { setIsAutoPlaying(false); }
         }
       }, 50); 
     } else { elapsedRef.current = 0; }
     return () => { if (autoPlayTimer) clearInterval(autoPlayTimer); };
-  }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, playAudio]);
+  }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted]);
 
   const toggleMemorize = (e, wordToMark, isMemorized) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
@@ -410,17 +429,17 @@ function App() {
   const saveNewCard = () => {
     if (!newCardData.word.trim() || !newCardData.meaning.trim()) { alert(t.alertReq); return; }
     setDecks(prev => prev.map(d => {
-      if (d.id === currentDeckId) { return { ...d, cards: [...d.cards, { word: newCardData.word.trim(), meaning: newCardData.meaning.trim(), example: newCardData.example.trim(), translation: newCardData.translation.trim(), isMemorized: false }] }; }
+      if (d.id === currentDeckId) { return { ...d, cards: [...d.cards, { word: newCardData.word.trim(), meaning: newCardData.meaning.trim(), example: newCardData.example.trim(), translation: newCardData.translation.trim(), pos: newCardData.pos, isMemorized: false }] }; }
       return d;
     }));
-    setAddingCard(false); setNewCardData({ word: '', meaning: '', example: '', translation: '' }); 
+    setAddingCard(false); setNewCardData({ word: '', meaning: '', example: '', translation: '', pos: '' }); 
   };
 
   const saveEditedCard = () => {
     if (!editingCard) return;
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      return { ...d, cards: d.cards.map(c => c.word === editingCard.originalWord ? { ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation } : c) };
+      return { ...d, cards: d.cards.map(c => c.word === editingCard.originalWord ? { ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation, pos: editingCard.pos } : c) };
     }));
     setEditingCard(null); 
   };
@@ -453,7 +472,6 @@ function App() {
     return { label: t.statusWarning, className: 'status-warning', needsReview: false };
   };
 
-  // ⭐️ 確実に視認できるデザインのボタンをインラインで生成
   const downloadTemplate = () => {
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); 
     const content = '英単語,日本語訳,英語例文,例文和訳\napple,りんご,"I have an **apple**.","私は**りんご**を持っています。"\nsolution,解決策,"We need a good **solution**.","私たちは良い**解決策**が必要です。"\n';
@@ -480,7 +498,7 @@ function App() {
       const newCards = [];
       for (const row of rows) {
         const targetWord = row[0] ? String(row[0]).trim() : ''; if (!targetWord) continue;
-        newCards.push({ word: targetWord, meaning: row[1] ? cleanText(row[1]) : '', example: row[2] ? cleanText(row[2]) : '', translation: row[3] ? cleanText(row[3]) : '', isMemorized: false });
+        newCards.push({ word: targetWord, meaning: row[1] ? cleanText(row[1]) : '', example: row[2] ? cleanText(row[2]) : '', translation: row[3] ? cleanText(row[3]) : '', pos: '', isMemorized: false });
       }
       setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...(d.cards || []), ...newCards] } : d));
     } catch(e) { alert(t.alertCsvError); } finally { setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false); }
@@ -532,8 +550,7 @@ function App() {
     if (draggedDeckId) return; unlockAudio();
     setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); 
     setIsDeleteMode(false); setSelectedForDelete(new Set());
-    const targetDeck = decks.find(d => d.id === id); const targetCards = targetDeck ? targetDeck.cards.filter(c => !c.isMemorized) : [];
-    if (targetCards.length > 0) { setTimeout(() => playAudio(targetCards[0].word), 150); }
+    playedRef.current = { index: -1, flipped: false, lang: '', type: '' }; 
   };
   
   const closeDeck = useCallback(() => {
@@ -635,7 +652,7 @@ function App() {
           {!isDeleteMode && (
             <div className="mini-icons">
               <button className="mini-icon-btn" onClick={(e) => toggleMemorize(e, c.word, !isMemorizedList)} title={isMemorizedList ? t.markUnmem : t.markMem}>{isMemorizedList ? '↩️' : '✅'}</button>
-              <button className="mini-icon-btn" onClick={() => { stopAutoPlayIfActive(); setEditingCard({ originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '' }); }}>✏️</button>
+              <button className="mini-icon-btn" onClick={() => { stopAutoPlayIfActive(); setEditingCard({ originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '', pos: c.pos || '' }); }}>✏️</button>
               <button className="mini-icon-btn delete-mini" onClick={(e) => deleteSpecificCard(e, c.word)}>✖</button>
             </div>
           )}
@@ -664,6 +681,100 @@ function App() {
         <div className="rubber-band"></div>
       </div>
     );
+  };
+
+  // ⭐️ 表面の描画（さらにゆったりとした行間で美しく）
+  const renderCardFront = (card) => {
+    if (qType === 'word') {
+      return (
+        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
+          {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
+          {qLang === 'en' ? (
+            <h1 className="word-text" style={{ margin: 0 }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
+          ) : (
+            <div className="core-meaning-large" style={{ textAlign: 'center', margin: 0 }}>{cleanText((card.meaning || '').split('/')[0])}</div>
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
+          {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
+          {qLang === 'en' ? (
+            <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
+              <div style={{fontSize:'clamp(20px, 4vw, 28px)', lineHeight:'1.8', fontWeight:'bold', fontFamily:'"Times New Roman", Times, serif', width: '100%'}}>
+                {renderBlankExample(card.example)}
+              </div>
+            </div>
+          ) : (
+            <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
+              {/* ⭐️ 行間(lineHeight)を 1.5 から 1.8 に拡張し、読みやすさを最大化 */}
+              <div style={{fontSize:'clamp(18px, 4vw, 22px)', lineHeight:'1.8', fontWeight:'bold', color:'#334155', width: '100%'}}>
+                {cleanTranslation(card.translation)}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+  };
+
+  // ⭐️ 裏面の描画
+  const renderCardBack = (card) => {
+    if (qType === 'word') {
+      return (
+        <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
+          {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
+          
+          {qLang === 'en' ? (
+            <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}>
+              <div className="core-meaning-large" style={{ textAlign: 'center' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{cleanText(m)}</div>)}</div>
+            </div>
+          ) : (
+            <h1 className="word-text" style={{fontSize:'48px', margin: 0}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
+          )}
+
+          {showExOnBack && (
+            <div className="example-section" style={{ borderTop: 'none', paddingTop: 0, marginTop: '20px', textAlign: 'center' }}>
+              <p className="example-en" style={{ marginBottom: '8px' }}>{renderHighlightedText(card.example || '')}</p>
+              <p className="example-ja" style={{ margin: 0 }}>{renderHighlightedText(card.translation || '')}</p>
+            </div>
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', padding:'20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxSizing: 'border-box'}}>
+           {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
+           
+           <div className="example-section" style={{ margin: 0, padding: 0, border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
+              {qLang === 'en' ? (
+                <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
+                  {/* ⭐️ 裏面の日本語も行間 1.8 でゆったりと */}
+                  <p className="example-ja" style={{fontSize:'clamp(18px, 4vw, 24px)', color: '#1e293b', fontWeight: 'bold', margin: 0, lineHeight: 1.8}}>
+                    {renderHighlightedText(card.translation || '')}
+                  </p>
+                </div>
+              ) : (
+                <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
+                  <p className="example-en" style={{fontSize:'clamp(20px, 4vw, 26px)', fontWeight: '900', color: '#1e293b', margin: 0, lineHeight: 1.5, fontFamily: '"Times New Roman", Times, serif'}}>
+                    {renderHighlightedText(card.example || '')}
+                  </p>
+                </div>
+              )}
+           </div>
+
+           {showWordOnExMode && (
+             <div style={{ display:'flex', flexDirection: 'column', alignItems:'center', justifyContent:'center', gap:'4px', opacity: 0.7, marginTop: '25px' }}>
+                <div style={{fontSize:'18px', fontWeight:'bold', color:'#333', cursor: 'pointer'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
+                <div style={{fontSize:'15px', color:'#64748b', fontWeight:'normal'}}>
+                  {cleanText((card.meaning || '').split('/')[0])}
+                </div>
+             </div>
+           )}
+        </div>
+      );
+    }
   };
 
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
@@ -775,9 +886,7 @@ function App() {
     );
   }
 
-  // ⭐️ 究極進化したプリント画面（ヘッダー1行化・問題数UP・罫線直線化）
   if (view === 'printPreview') {
-    // ⭐️ 例文テストの1ページあたり問題数を14問にアップ
     const chunkSize = printMode === 'example' ? 14 : 25;
     const chunks = chunkArray(printCards, chunkSize);
     const title = printMode === 'example' ? t.printTestExampleTitle : t.printTestTitle;
@@ -785,8 +894,6 @@ function App() {
 
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart}>
-        
-        {/* ボタン類 */}
         <div className="print-controls no-print" style={{ display: 'flex', gap: '15px', marginBottom: '20px', justifyContent: 'center', width: '100%', padding: '20px', background: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
           <button className="cancel-btn" onClick={() => setView('study')} style={{ margin: 0 }}>{t.backToStudyBtn}</button>
           <button className="add-btn" onClick={shufflePrintCards} style={{ backgroundColor: '#8e44ad', margin: 0 }}>{t.shuffleBtn}</button>
@@ -800,18 +907,13 @@ function App() {
             .no-print, .ep-landing-wrapper, .top-right-actions, .study-controls-top { display: none !important; }
             .app-container { background: white !important; padding: 0 !important; overflow: visible !important; height: auto !important; }
             .print-area-wrapper { padding: 0 !important; margin: 0 !important; display: block !important; }
-            .print-page { 
-              page-break-after: always; margin: 0 !important; padding: 12mm 15mm !important; 
-              width: 210mm !important; height: 297mm !important; box-shadow: none !important; 
-              box-sizing: border-box; overflow: hidden; 
-            }
+            .print-page { page-break-after: always; margin: 0 !important; padding: 12mm 15mm !important; width: 210mm !important; height: 297mm !important; box-shadow: none !important; box-sizing: border-box; overflow: hidden; }
             .print-page:last-child { page-break-after: auto; }
           }
           
           .print-area-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; padding-bottom: 50px; background: #f1f5f9; }
           .print-page { background: white; width: 210mm; height: 297mm; margin: 0 0 30px 0; padding: 12mm 15mm; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box; color: #000; overflow: hidden; position: relative; }
 
-          /* ⭐️ 完全1行化された美しくコンパクトなヘッダー */
           .print-header-compact { position: relative; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
           .print-date-compact { position: absolute; top: -12px; right: 0; font-size: 10px; color: #555; font-weight: bold; }
           .print-title-compact { font-size: 22px; font-weight: 900; margin: 0; white-space: nowrap; max-width: 45%; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
@@ -819,12 +921,10 @@ function App() {
           .print-score-compact { font-size: 16px; font-weight: bold; white-space: nowrap; padding-bottom: 2px; }
           .print-score-large-compact { font-size: 26px; font-weight: 900; margin-left: 5px; }
 
-          /* 単語テスト用：2段組 */
           .print-columns-container { display: flex; gap: 40px; width: 100%; height: calc(100% - 60px); }
           .print-column { flex: 1; display: flex; flex-direction: column; }
           .print-column-single { display: flex; flex-direction: column; width: 100%; height: calc(100% - 60px); }
 
-          /* 1ページに絶対に収まるように行間を微調整 */
           .print-q-item { display: flex; flex-direction: column; margin-bottom: 18px; page-break-inside: avoid; break-inside: avoid; } 
           .print-q-top { display: flex; align-items: flex-start; margin-bottom: 4px; }
           .print-q-num { width: 35px; font-weight: bold; flex-shrink: 0; font-size: 14px; }
@@ -832,25 +932,17 @@ function App() {
           .print-q-bottom { padding-left: 35px; width: 100%; box-sizing: border-box; }
           .print-q-ans { width: 100%; border-bottom: 1px solid #000; height: 18px; }
 
-          /* 例文テスト専用デザイン */
           .print-q-item-example { display: flex; flex-direction: column; margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; }
+          .print-q-ja-example { font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
           .print-q-example-en { font-size: 16px; line-height: 1.6; padding-left: 5px; font-family: "Times New Roman", Times, serif; margin-top: 2px; }
           
-          /* ⭐️ 魔法の固定幅罫線（CSS描画で絶対に潰れない） */
-          .print-blank-line {
-            display: inline-block;
-            width: 160px;
-            border-bottom: 1.5px solid #000;
-            margin: 0 10px;
-            vertical-align: text-bottom;
-          }
+          .print-blank-line { display: inline-block; width: 150px; border-bottom: 1.5px solid #000; margin: 0 10px; vertical-align: text-bottom; }
         `}</style>
 
         <div className="print-area-wrapper">
           {chunks.map((chunk, pageIndex) => {
             return (
               <div key={pageIndex} className="print-page">
-                {/* ⭐️ 1行に圧縮されたヘッダー（1ページ目のみ） */}
                 {pageIndex === 0 && (
                   <div className="print-header-compact">
                     <div className="print-date-compact">{t.printDate} {todayStr}</div>
@@ -870,10 +962,9 @@ function App() {
                         <div key={`ex-${i}`} className="print-q-item-example">
                           <div className="print-q-top">
                             <span className="print-q-num">({globalIndex})</span>
-                            <span className="print-q-ja">{cleanTranslation(c.translation) || cleanText((c.meaning || '').split('/')[0])}</span>
+                            <span className="print-q-ja-example">{cleanTranslation(c.translation) || cleanText((c.meaning || '').split('/')[0])}</span>
                           </div>
                           <div className="print-q-bottom">
-                            {/* ⭐️ 完璧な罫線を埋め込む */}
                             <div className="print-q-example-en">{renderBlankExample(c.example)}</div>
                           </div>
                         </div>
@@ -920,33 +1011,152 @@ function App() {
     );
   }
 
+  // ⭐️ PC表示時の「カード完全中央配置」と「1列スマートリスト」のCSS
+  const injectLayoutStyles = (
+    <style>{`
+      @media(min-width: 1024px) {
+        .app-container {
+          max-width: 100% !important;
+          padding-left: 2vw !important;
+          padding-right: 2vw !important;
+        }
+        .study-dashboard {
+          display: flex !important;
+          flex-direction: row !important;
+          justify-content: space-between !important;
+          align-items: flex-start !important;
+          width: 100% !important;
+          max-width: 1600px !important;
+          margin: 0 auto !important;
+          gap: 20px !important;
+        }
+        /* ⭐️ 左右のパネルを280pxに固定し、センターパネルをど真ん中に配置 */
+        .left-panel {
+          flex: 0 0 280px !important; 
+          max-width: 280px !important;
+        }
+        .center-panel {
+          flex: 1 !important;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .right-panel {
+          flex: 0 0 280px !important;
+          max-width: 280px !important;
+        }
+        
+        /* ⭐️ リストをスッキリとした1列表示に */
+        .mini-card-list {
+          display: grid;
+          grid-template-columns: 1fr !important;
+          gap: 10px;
+          align-content: start;
+        }
+      }
+
+      .panel-top-action {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .panel-top-action button {
+        white-space: normal !important; 
+        word-break: keep-all !important;
+        overflow-wrap: anywhere !important;
+        line-height: 1.4 !important;
+        height: auto !important;
+        min-height: 44px !important;
+        box-sizing: border-box !important;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .bulk-file-actions {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .bulk-file-actions button, .bulk-file-actions label {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .setting-badge-btn {
+        background: white; border: 2px solid #e2e8f0; border-radius: 50px; padding: 6px 12px;
+        font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        white-space: nowrap;
+      }
+      .setting-badge-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+      .setting-badge-btn.active { background: #e0e7ff; border-color: #818cf8; color: #4338ca; }
+      
+      .toggle-tab-btn {
+        background: transparent; border: none; padding: 6px 16px; font-size: 13px; font-weight: 900; 
+        color: #94a3b8; border-radius: 50px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+      }
+      .toggle-tab-btn.active {
+        background: white; color: #4338ca; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      }
+    `}</style>
+  );
+
   return (
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+      {injectLayoutStyles}
       {ghostPos && (<div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>{ghostPos.title}</div>)}
+      
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 style={{marginTop: 0, color: '#6d5b53'}}>{t.editCardTitle}</h3>
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.wordReq}</label><input className="modal-input" value={editingCard.word} onChange={(e) => setEditingCard({...editingCard, word: e.target.value})} />
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.meanReq}</label><input className="modal-input" value={editingCard.meaning} onChange={(e) => setEditingCard({...editingCard, meaning: e.target.value})} />
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.exHint}</label><textarea className="modal-input" value={editingCard.example} onChange={(e) => setEditingCard({...editingCard, example: e.target.value})} rows="2" />
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint}</label><textarea className="modal-input" value={editingCard.translation} onChange={(e) => setEditingCard({...editingCard, translation: e.target.value})} rows="2" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.wordReq}</label>
+            <input className="modal-input" value={editingCard.word} onChange={(e) => setEditingCard({...editingCard, word: e.target.value})} />
+            
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.posLabel}</label>
+            <select className="modal-input" style={{ appearance: 'auto', marginBottom: '15px' }} value={editingCard.pos || ''} onChange={(e) => setEditingCard({...editingCard, pos: e.target.value})}>
+              <option value="">-- 指定なし --</option>
+              <option value="名詞">名詞</option><option value="動詞">動詞</option><option value="形容詞">形容詞</option>
+              <option value="副詞">副詞</option><option value="代名詞">代名詞</option><option value="前置詞">前置詞</option>
+              <option value="接続詞">接続詞</option><option value="熟語">熟語</option><option value="その他">その他</option>
+            </select>
+
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.meanReq}</label>
+            <input className="modal-input" value={editingCard.meaning} onChange={(e) => setEditingCard({...editingCard, meaning: e.target.value})} />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.exHint}</label>
+            <textarea className="modal-input" value={editingCard.example} onChange={(e) => setEditingCard({...editingCard, example: e.target.value})} rows="2" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint}</label>
+            <textarea className="modal-input" value={editingCard.translation} onChange={(e) => setEditingCard({...editingCard, translation: e.target.value})} rows="2" />
             <div className="modal-actions"><button className="cancel-btn" onClick={() => setEditingCard(null)}>{t.cancelBtn}</button><button className="add-btn" onClick={saveEditedCard}>{t.saveBtn}</button></div>
           </div>
         </div>
       )}
+
       {addingCard && (
         <div className="modal-overlay" onClick={() => setAddingCard(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 style={{marginTop: 0, color: '#27ae60'}}>{t.newCardTitle}</h3>
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.wordReq}</label><input className="modal-input" value={newCardData.word} onChange={(e) => setNewCardData({...newCardData, word: e.target.value})} />
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.meanReq}</label><input className="modal-input" value={newCardData.meaning} onChange={(e) => setNewCardData({...newCardData, meaning: e.target.value})} />
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.exHint}</label><textarea className="modal-input" value={newCardData.example} onChange={(e) => setNewCardData({...newCardData, example: e.target.value})} rows="2" />
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint}</label><textarea className="modal-input" value={newCardData.translation} onChange={(e) => setNewCardData({...newCardData, translation: e.target.value})} rows="2" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.wordReq}</label>
+            <input className="modal-input" value={newCardData.word} onChange={(e) => setNewCardData({...newCardData, word: e.target.value})} />
+            
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.posLabel}</label>
+            <select className="modal-input" style={{ appearance: 'auto', marginBottom: '15px' }} value={newCardData.pos || ''} onChange={(e) => setNewCardData({...newCardData, pos: e.target.value})}>
+              <option value="">-- 指定なし --</option>
+              <option value="名詞">名詞</option><option value="動詞">動詞</option><option value="形容詞">形容詞</option>
+              <option value="副詞">副詞</option><option value="代名詞">代名詞</option><option value="前置詞">前置詞</option>
+              <option value="接続詞">接続詞</option><option value="熟語">熟語</option><option value="その他">その他</option>
+            </select>
+
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.meanReq}</label>
+            <input className="modal-input" value={newCardData.meaning} onChange={(e) => setNewCardData({...newCardData, meaning: e.target.value})} />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.exHint}</label>
+            <textarea className="modal-input" value={newCardData.example} onChange={(e) => setNewCardData({...newCardData, example: e.target.value})} rows="2" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint}</label>
+            <textarea className="modal-input" value={newCardData.translation} onChange={(e) => setNewCardData({...newCardData, translation: e.target.value})} rows="2" />
             <div className="modal-actions"><button className="cancel-btn" onClick={() => setAddingCard(false)}>{t.cancelBtn}</button><button className="add-btn" style={{backgroundColor: '#27ae60'}} onClick={saveNewCard}>{t.addBtn}</button></div>
           </div>
         </div>
       )}
+
       <div style={dynamicStyle}>
         {view === 'decks' && (() => {
           const boxDecks = decks.filter(d => d.boxId === currentBoxId);
@@ -981,16 +1191,16 @@ function App() {
                 <div className="panel-top-action" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {!isDeleteMode ? (
                     <>
-                      <div style={{display: 'flex', gap: '8px'}}>
-                        <button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', backgroundColor: '#27ae60'}}>{t.addManualBtn}</button>
-                        <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', backgroundColor: '#e67e22'}}>{t.addCsvBtn}</button>
+                      <div style={{display: 'flex', gap: '8px', width: '100%', boxSizing: 'border-box'}}>
+                        <button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '12px', backgroundColor: '#27ae60', margin: 0, boxSizing: 'border-box'}}>✏️ 手動で追加</button>
+                        <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '12px', backgroundColor: '#e67e22', margin: 0, boxSizing: 'border-box'}}>📂 CSVで追加</button>
                       </div>
-                      <button onClick={() => setIsDeleteMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '8px 0', fontSize: '12px', backgroundColor: '#95a5a6'}}>{t.bulkDeleteBtn}</button>
+                      <button onClick={() => setIsDeleteMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '8px 0', fontSize: '12px', backgroundColor: '#95a5a6', margin: 0, boxSizing: 'border-box'}}>🗑️ 一括削除</button>
                     </>
                   ) : (
-                    <div style={{display: 'flex', gap: '8px'}}>
-                      <button onClick={() => {setIsDeleteMode(false); setSelectedForDelete(new Set());}} className="cancel-btn" style={{flex: 1, padding: '10px 0', fontSize: '12px'}}>{t.cancelBulkDelete}</button>
-                      <button onClick={executeBulkDelete} className="add-btn" style={{flex: 1, padding: '10px 0', fontSize: '12px', backgroundColor: '#e74c3c'}}>{t.executeBulkDelete} ({selectedForDelete.size})</button>
+                    <div style={{display: 'flex', gap: '8px', width: '100%', boxSizing: 'border-box'}}>
+                      <button onClick={() => {setIsDeleteMode(false); setSelectedForDelete(new Set());}} className="cancel-btn" style={{flex: 1, padding: '10px 0', fontSize: '12px', margin: 0, boxSizing: 'border-box'}}>{t.cancelBulkDelete}</button>
+                      <button onClick={executeBulkDelete} className="add-btn" style={{flex: 1, padding: '10px 0', fontSize: '12px', backgroundColor: '#e74c3c', margin: 0, boxSizing: 'border-box'}}>{t.executeBulkDelete} ({selectedForDelete.size})</button>
                     </div>
                   )}
                 </div>
@@ -998,7 +1208,8 @@ function App() {
                 <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}</div>
               </div>
             )}
-            <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`}>
+            
+            <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%' }}>
               {!isFullscreen && (
                 <>
                   <div className="study-controls-top" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
@@ -1020,43 +1231,81 @@ function App() {
                   </div>
                 </>
               )}
-              {/* ⭐️ 文字が絶対に消えないインラインスタイル版CSVボタン */}
+              
               {!isFullscreen && isBulkMode && (
-                <div className="bulk-input-section" style={{ marginTop: '0px' }}>
+                <div className="bulk-input-section" style={{ marginTop: '0px', width: '100%', maxWidth: '600px' }}>
                   <p className="bulk-hint" style={{fontSize:'16px', color:'#333'}}>{t.csvHint}</p>
-                  <div className="bulk-file-actions" style={{ display: 'flex', gap: '15px', justifyContent: 'center', marginBottom: '20px' }}>
-                    <button onClick={downloadTemplate} style={{ backgroundColor: '#f39c12', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                      {t.downloadTemplate}
+                  
+                  <div className="bulk-file-actions" style={{ display: 'flex', flexDirection: 'column', gap: '15px', justifyContent: 'center', marginBottom: '20px', width: '100%' }}>
+                    <button onClick={downloadTemplate} style={{ backgroundColor: '#f39c12', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0 }}>
+                      📥 テンプレート(CSV)をダウンロードする
                     </button>
-                    <label style={{ backgroundColor: '#27ae60', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-                      {loading ? t.loading : t.uploadCsv}
+                    
+                    <label style={{ backgroundColor: '#27ae60', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0, textAlign: 'center' }}>
+                      {loading ? t.loading : '📂 CSVファイルをインポートする'}
                       <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
                     </label>
                   </div>
+
                   <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{t.chatGptNote}</p>
                   <div className="bulk-actions" style={{ marginTop: '15px' }}><button onClick={() => setIsBulkMode(false)} className="cancel-btn" disabled={loading}>{t.closeBtn}</button></div>
                 </div>
               )}
+              
               {allCards.length > 0 && studyCards.length === 0 ? (
                 <div className="empty-deck-msg" style={{marginTop: '60px'}}>
                   <h2 style={{color: '#27ae60'}}>{t.allMemorizedMsg}</h2>
                   <button onClick={resetMemorized} className="add-btn" style={{marginTop: '20px', padding: '15px 30px', fontSize: '18px'}}>{t.resetBtn}</button>
                 </div>
               ) : studyCards.length > 0 && !isBulkMode ? (
-                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`}>
-                  {!isFullscreen && <p className="card-counter">{currentIndex + 1} / {studyCards.length}</p>}
+                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '800px' }}>
+                  
+                  {/* ⭐️ 設定ボタン群の「完璧な」並び替え（左：設定、中央：ON/OFF、右：枚数） */}
+                  {!isFullscreen && (
+                    <div className="card-header-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', width: '100%', gap: '10px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '15px', width: '100%' }}>
+                        
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">
+                            {qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}
+                          </button>
+                          <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
+                            <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>🔤 単語</button>
+                            <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>📝 例文</button>
+                          </div>
+                        </div>
+                        
+                        {/* ⭐️ ON/OFFボタンを中央に移動 */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          {qType === 'word' ? (
+                            <button onClick={() => setShowExOnBack(!showExOnBack)} className={`setting-badge-btn ${showExOnBack ? 'active' : ''}`} title="裏面の例文表示">
+                              例文 {showExOnBack ? 'ON' : 'OFF'}
+                            </button>
+                          ) : (
+                            <button onClick={() => setShowWordOnExMode(!showWordOnExMode)} className={`setting-badge-btn ${showWordOnExMode ? 'active' : ''}`} title="裏面の単語表示">
+                              単語 {showWordOnExMode ? 'ON' : 'OFF'}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* ⭐️ カウンターを右側に移動 */}
+                        <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px' }}>
+                          {currentIndex + 1} / {studyCards.length}
+                        </div>
+
+                      </div>
+                    </div>
+                  )}
+
                   <div className="card-animation-wrapper" key={currentIndex}>
                     <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
                       <div className="card-inner">
                         <div className="card-front">
                           <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)}>✔</button>
-                          <h1 className="word-text" onClick={(e) => { e.stopPropagation(); playAudio(studyCards[currentIndex]?.word); }}>{studyCards[currentIndex]?.word || ''}</h1>
+                          {renderCardFront(studyCards[currentIndex])}
                         </div>
                         <div className="card-back">
-                          <div className="back-content">
-                            <div className="meaning-section"><div className="core-meaning-large">{String(studyCards[currentIndex]?.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{m.trim()}</div>)}</div></div>
-                            <div className="example-section"><p className="example-en">{renderHighlightedText(studyCards[currentIndex]?.example || '')}</p><p className="example-ja">{renderHighlightedText(studyCards[currentIndex]?.translation || '')}</p></div>
-                          </div>
+                          {renderCardBack(studyCards[currentIndex])}
                         </div>
                       </div>
                     </div>
