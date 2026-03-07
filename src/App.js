@@ -93,6 +93,7 @@ const parseCSV = (text) => {
 
 const chunkArray = (array, size) => {
   const chunked = [];
+  if (!Array.isArray(array)) return chunked;
   for (let i = 0; i < array.length; i += size) {
     chunked.push(array.slice(i, i + size));
   }
@@ -185,11 +186,24 @@ function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   
-  const [boxes, setBoxes] = useState(() => { const savedBoxes = localStorage.getItem('redline_boxes'); return savedBoxes ? JSON.parse(savedBoxes) : initialBoxes; });
-  const [decks, setDecks] = useState(() => { const savedDecks = localStorage.getItem('redline_decks'); return savedDecks ? JSON.parse(savedDecks) : initialDecks; });
+  const [boxes, setBoxes] = useState(() => { 
+    try {
+      const savedBoxes = localStorage.getItem('redline_boxes'); 
+      const parsed = savedBoxes ? JSON.parse(savedBoxes) : null;
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : initialBoxes;
+    } catch(e) { return initialBoxes; }
+  });
+  
+  const [decks, setDecks] = useState(() => { 
+    try {
+      const savedDecks = localStorage.getItem('redline_decks'); 
+      const parsed = savedDecks ? JSON.parse(savedDecks) : null;
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : initialDecks;
+    } catch(e) { return initialDecks; }
+  });
 
   useEffect(() => {
-    // WebView（アプリ内ブラウザ）の検知を強化（LINE, Instagram, Twitter, Googleアプリ, Yahooアプリ, 汎用iOS WebView等）
+    // WebView（アプリ内ブラウザ）の検知
     const ua = (navigator.userAgent || navigator.vendor || window.opera).toLowerCase();
     const isWebView = /line|instagram|fban|fbav|twitter|gsa|yahoouisearch|yabrowser/.test(ua) || 
                       (ua.includes('iphone') && !ua.includes('safari')) || 
@@ -209,8 +223,8 @@ function App() {
           if (docSnap.exists()) { 
             const fetchedBoxes = docSnap.data().boxes;
             const fetchedDecks = docSnap.data().decks;
-            setBoxes(fetchedBoxes && fetchedBoxes.length > 0 ? fetchedBoxes : initialBoxes); 
-            setDecks(fetchedDecks && fetchedDecks.length > 0 ? fetchedDecks : initialDecks); 
+            setBoxes(Array.isArray(fetchedBoxes) && fetchedBoxes.length > 0 ? fetchedBoxes : initialBoxes); 
+            setDecks(Array.isArray(fetchedDecks) && fetchedDecks.length > 0 ? fetchedDecks : initialDecks); 
           } else { 
             setBoxes(initialBoxes); 
             setDecks(initialDecks); 
@@ -218,8 +232,9 @@ function App() {
           }
         } catch (e) {
           console.error("Firestore read/write error. Check Rules.", e);
-          setBoxes(prev => prev && prev.length > 0 ? prev : initialBoxes);
-          setDecks(prev => prev && prev.length > 0 ? prev : initialDecks);
+          // 通信エラー等で読み込みに失敗した場合も、画面が真っ白にならないように初期箱をセット
+          setBoxes(prev => Array.isArray(prev) && prev.length > 0 ? prev : initialBoxes);
+          setDecks(prev => Array.isArray(prev) && prev.length > 0 ? prev : initialDecks);
         }
       }
       setIsAuthLoading(false);
@@ -228,9 +243,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('redline_boxes', JSON.stringify(boxes));
-    localStorage.setItem('redline_decks', JSON.stringify(decks));
-    if (currentUser && boxes.length > 0) {
+    try {
+      localStorage.setItem('redline_boxes', JSON.stringify(boxes));
+      localStorage.setItem('redline_decks', JSON.stringify(decks));
+    } catch (e) { console.warn("localStorage save error", e); }
+
+    if (currentUser && Array.isArray(boxes) && boxes.length > 0) {
       const timer = setTimeout(() => { 
         setDoc(doc(db, "users", currentUser.uid), { boxes, decks }, { merge: true }).catch(e => console.log("Save error", e)); 
       }, 1000); 
@@ -290,17 +308,17 @@ function App() {
 
   const playedRef = useRef({ index: -1, flipped: false, lang: '', type: '' });
 
-  const activeDeck = decks.find(d => d.id === currentDeckId);
-  const allCards = activeDeck ? activeDeck.cards : [];
+  const activeDeck = (Array.isArray(decks) ? decks : []).find(d => d.id === currentDeckId);
+  const allCards = activeDeck && Array.isArray(activeDeck.cards) ? activeDeck.cards : [];
   const studyCards = allCards.filter(c => !c.isMemorized);
   const memorizedCards = allCards.filter(c => c.isMemorized);
   const isCompleted = studyCards.length > 0 && currentIndex === studyCards.length - 1 && isFlipped;
 
   useEffect(() => {
-    setBoxes(prev => prev.map(b => b.nameKey ? { ...b, name: t[b.nameKey] } : b));
-    setDecks(prev => prev.map(d => {
+    setBoxes(prev => (Array.isArray(prev) ? prev : []).map(b => b.nameKey ? { ...b, name: t[b.nameKey] } : b));
+    setDecks(prev => (Array.isArray(prev) ? prev : []).map(d => {
       if (d.nameKey) {
-        const newCards = d.cards.map(c => {
+        const newCards = (Array.isArray(d.cards) ? d.cards : []).map(c => {
           if (c.word === 'shine') return { ...c, meaning: t.card1_mean, translation: t.card1_trans };
           if (c.word === 'have') return { ...c, meaning: t.card2_mean, translation: t.card2_trans };
           if (c.word === 'make') return { ...c, meaning: t.card3_mean, translation: t.card3_trans };
@@ -318,14 +336,14 @@ function App() {
   const deleteCard = () => {
     stopAutoPlayIfActive();
     const wordToDelete = studyCards[currentIndex]?.word;
-    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
+    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: (d.cards || []).filter(c => c.word !== wordToDelete) } : d));
     if (currentIndex >= studyCards.length - 1 && studyCards.length > 1) { setCurrentIndex(studyCards.length - 2); }
     setIsFlipped(false); setHasRecorded(false);
   };
 
   const deleteSpecificCard = (e, wordToDelete) => {
     e.stopPropagation(); stopAutoPlayIfActive();
-    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c.word !== wordToDelete) } : d));
+    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: (d.cards || []).filter(c => c.word !== wordToDelete) } : d));
   };
 
   const toggleDeleteSelection = (word) => {
@@ -339,7 +357,7 @@ function App() {
   const executeBulkDelete = () => {
     if (selectedForDelete.size === 0) { setIsDeleteMode(false); return; }
     setDecks(prev => prev.map(d => {
-      if (d.id === currentDeckId) { return { ...d, cards: d.cards.filter(c => !selectedForDelete.has(c.word)) }; }
+      if (d.id === currentDeckId) { return { ...d, cards: (d.cards || []).filter(c => !selectedForDelete.has(c.word)) }; }
       return d;
     }));
     setSelectedForDelete(new Set());
@@ -500,26 +518,26 @@ function App() {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      return { ...d, cards: d.cards.map(c => c.word === wordToMark ? { ...c, isMemorized: isMemorized } : c) };
+      return { ...d, cards: (d.cards || []).map(c => c.word === wordToMark ? { ...c, isMemorized: isMemorized } : c) };
     }));
   };
 
   const resetMemorized = () => {
-    setDecks(prev => prev.map(d => { if (d.id !== currentDeckId) return d; return { ...d, cards: d.cards.map(c => ({ ...c, isMemorized: false })) }; }));
+    setDecks(prev => prev.map(d => { if (d.id !== currentDeckId) return d; return { ...d, cards: (d.cards || []).map(c => ({ ...c, isMemorized: false })) }; }));
     handleRepeat();
   };
 
   const markDeckAsMemorized = (e, deckId) => {
     e.stopPropagation();
     if (window.confirm(t.confirmMemorizeAll)) {
-      setDecks(prev => prev.map(d => { if (d.id !== deckId) return d; return { ...d, lastStudied: Date.now(), cards: d.cards.map(c => ({ ...c, isMemorized: true })) }; }));
+      setDecks(prev => prev.map(d => { if (d.id !== deckId) return d; return { ...d, lastStudied: Date.now(), cards: (d.cards || []).map(c => ({ ...c, isMemorized: true })) }; }));
     }
   };
 
   const saveNewCard = () => {
     if (!newCardData.word.trim() || !newCardData.meaning.trim()) { alert(t.alertReq); return; }
     setDecks(prev => prev.map(d => {
-      if (d.id === currentDeckId) { return { ...d, cards: [...d.cards, { word: newCardData.word.trim(), meaning: newCardData.meaning.trim(), example: newCardData.example.trim(), translation: newCardData.translation.trim(), pos: newCardData.pos, isMemorized: false }] }; }
+      if (d.id === currentDeckId) { return { ...d, cards: [...(d.cards || []), { word: newCardData.word.trim(), meaning: newCardData.meaning.trim(), example: newCardData.example.trim(), translation: newCardData.translation.trim(), pos: newCardData.pos, isMemorized: false }] }; }
       return d;
     }));
     setAddingCard(false); setNewCardData({ word: '', meaning: '', example: '', translation: '', pos: '' }); 
@@ -529,7 +547,7 @@ function App() {
     if (!editingCard) return;
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      return { ...d, cards: d.cards.map(c => c.word === editingCard.originalWord ? { ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation, pos: editingCard.pos } : c) };
+      return { ...d, cards: (d.cards || []).map(c => c.word === editingCard.originalWord ? { ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation, pos: editingCard.pos } : c) };
     }));
     setEditingCard(null); 
   };
@@ -553,7 +571,8 @@ function App() {
   };
 
   const getEbbinghausStatus = (deck) => {
-    if (deck.cards.length > 0 && deck.cards.every(c => c.isMemorized)) { return { label: t.statusPerfect, className: 'status-perfect', needsReview: false }; }
+    const cards = Array.isArray(deck.cards) ? deck.cards : [];
+    if (cards.length > 0 && cards.every(c => c.isMemorized)) { return { label: t.statusPerfect, className: 'status-perfect', needsReview: false }; }
     const lastStudied = deck.lastStudied;
     if (!lastStudied) return { label: t.statusNew, className: 'status-new', needsReview: false };
     const hoursPassed = (Date.now() - lastStudied) / 3600000;
@@ -684,8 +703,8 @@ function App() {
       const newDecks = [...prev]; const index = newDecks.findIndex(d => d.id === draggedDeckId);
       if (index !== -1) {
         const d = newDecks[index];
-        if (targetArea === 'memorized') { newDecks[index] = { ...d, lastStudied: Date.now(), cards: d.cards.map(c => ({...c, isMemorized: true})) }; } 
-        else if (targetArea === 'unmemorized') { newDecks[index] = { ...d, cards: d.cards.map(c => ({...c, isMemorized: false})) }; }
+        if (targetArea === 'memorized') { newDecks[index] = { ...d, lastStudied: Date.now(), cards: (d.cards || []).map(c => ({...c, isMemorized: true})) }; } 
+        else if (targetArea === 'unmemorized') { newDecks[index] = { ...d, cards: (d.cards || []).map(c => ({...c, isMemorized: false})) }; }
       }
       return newDecks;
     });
@@ -704,8 +723,8 @@ function App() {
          setDecks(prev => {
             let newDecks = [...prev]; const index = newDecks.findIndex(d => d.id === draggedDeckId);
             if (index !== -1) {
-              if (targetMemArea) { newDecks[index] = { ...newDecks[index], lastStudied: Date.now(), cards: newDecks[index].cards.map(c => ({...c, isMemorized: true})) }; } 
-              else if (targetUnmemArea) { newDecks[index] = { ...newDecks[index], cards: newDecks[index].cards.map(c => ({...c, isMemorized: false})) }; }
+              if (targetMemArea) { newDecks[index] = { ...newDecks[index], lastStudied: Date.now(), cards: (newDecks[index].cards || []).map(c => ({...c, isMemorized: true})) }; } 
+              else if (targetUnmemArea) { newDecks[index] = { ...newDecks[index], cards: (newDecks[index].cards || []).map(c => ({...c, isMemorized: false})) }; }
             }
             return newDecks;
          });
@@ -773,7 +792,7 @@ function App() {
   };
 
   const renderDeckCard = (deck) => {
-    const status = getEbbinghausStatus(deck); const isDragging = draggedDeckId === deck.id; const isAllMemorized = deck.cards.length > 0 && deck.cards.every(c => c.isMemorized);
+    const status = getEbbinghausStatus(deck); const isDragging = draggedDeckId === deck.id; const isAllMemorized = (deck.cards || []).length > 0 && (deck.cards || []).every(c => c.isMemorized);
     return (
       <div key={deck.id} data-id={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''} ${isDragging ? 'dragging' : ''}`} 
         onClick={() => openDeck(deck.id)} draggable="true" onDragStart={(e) => onDragStart(e, deck.id)} onDragEnd={() => setDraggedDeckId(null)}
@@ -784,7 +803,7 @@ function App() {
           <button className="delete-deck-btn-corner" onClick={e => deleteDeck(e, deck.id)}>×</button>
           <div className="deck-info-bottom">
             <span className={`status-badge ${status.className}`}>{status.label}</span>
-            <div className="deck-stats-mini"><span>🗂 {deck.cards.length}{t.cardsCount}</span>{deck.lastStudied && <span>🗓 {formatDate(deck.lastStudied)}</span>}{deck.lastRecordTime !== null && <span>⏱ {t.bestTime} {formatTime(deck.lastRecordTime)}</span>}</div>
+            <div className="deck-stats-mini"><span>🗂 {(deck.cards || []).length}{t.cardsCount}</span>{deck.lastStudied && <span>🗓 {formatDate(deck.lastStudied)}</span>}{deck.lastRecordTime !== null && <span>⏱ {t.bestTime} {formatTime(deck.lastRecordTime)}</span>}</div>
           </div>
           {isAllMemorized && <div className="memorized-stamp">{t.stampMem}</div>}
         </div>
@@ -981,8 +1000,12 @@ function App() {
           </div>
         </div>
         <div className="boxes-grid">
-          {boxes.map(box => {
-            const hasReview = decks.filter(d => d.boxId === box.id).some(d => { if (d.cards.length > 0 && d.cards.every(c => c.isMemorized)) return false; return getEbbinghausStatus(d).needsReview; });
+          {(Array.isArray(boxes) ? boxes : []).map(box => {
+            const hasReview = (Array.isArray(decks) ? decks : []).filter(d => d.boxId === box.id).some(d => { 
+              const cards = Array.isArray(d.cards) ? d.cards : [];
+              if (cards.length > 0 && cards.every(c => c.isMemorized)) return false; 
+              return getEbbinghausStatus(d).needsReview; 
+            });
             const isOpening = openingBoxId === box.id;
             return (
               <div key={box.id} className={`storage-box-container ${hasReview ? 'polite-shake-once' : ''}`}>
