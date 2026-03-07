@@ -30,14 +30,15 @@ const DICT = {
     testNeeds4: "テストには最低4枚のカードが必要です！", testFinished: "テスト終了！", score: "スコア:", tryAgainBtn: "🔄 もう一度テストする", backToStudyBtn: "◀ 学習に戻る",
     question: "問題", testHint: "この単語の正しい意味はどれ？", quitBtn: "中断して戻る", noPrintCards: "印刷するカードがありません。", shuffleBtn: "🔄 問題をシャッフル",
     printTestTitle: "- 単語テスト", printTestExampleTitle: "- 例文テスト", printDate: "出力日:", printName: "氏名：__________________________", printScore: "得点：　　 / ",
+    
     m_h1: "公式 取扱説明書", m_s1: "1. はじめに（基本構造）", m_p1: "このアプリは、現実の単語帳と同じように直感的に操作できます。",
     m_l1_1: "📦 箱（Box）：一番外側の入れ物です。「中学英語」「英検」など大きなカテゴリを作ります。", m_l1_2: "🔖 束（Deck）：箱の中に入る単語カードの束です。「基本動詞 50語」など、学習しやすい単位で作ります。", m_l1_3: "📇 単語カード：実際のフラッシュカードです。束を開くと学習が始まります。",
     m_s2: "2. 単語カードの作り方", m_p2: "学習画面（束を開いた状態）の左側メニューから追加できます。", m_s2_1: "✏️ 手動で1枚ずつ追加", m_p2_1: "「手動で単語を1枚追加」ボタンを押すと、その場でカードを作成できます。この時、タブから「名詞」「動詞」などの品詞を登録しておくと、学習時に日本語の横に品詞バッジが表示されます。",
     m_s2_2: "📂 CSVから一括で追加", m_p2_2: "Excelやスプレッドシートで作ったデータを一気に読み込めます。ChatGPTに「以下の単語をCSV化して」と指示してコピペするのが一番簡単です！（※品詞は後から編集画面で追加できます）", m_p2_3: "※例文の中で黄色くマーカーを引きたい部分は **apple** のように **（アスタリスク2つ）で囲んでください。",
-    m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボードの [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
-    m_s4: "4. 自動めくり機能 ＆ 表示間隔（スピード）", m_p4: "画面下の「▶️ 自動めくり」を押すと、設定した秒数ごとに自動でカードがめくられ、音声が流れます。", m_l4_1: "🐢 遅（4.0秒）：じっくり意味を確認したい時に。", m_l4_2: "🐇 標準（2.0秒）：テンポよく進めたい時に。", m_l4_3: "👼 神速（0.0秒）：脳に直接刷り込む超高速フラッシュモード！",
+    m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。全画面アイコン（全集中🔥）を押すと、大迫力の巨大フォントで没入学習が可能です。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボードの [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
+    m_s4: "4. 自動めくり機能 ＆ 表示間隔（スピード）", m_p4: "画面下の「▶️ 自動めくり」を押すと、設定した秒数ごとに自動でカードがめくられ、音声が流れます。「表面のみ」をONにすると、意味を確認せず次々と高速フラッシュできます。", m_l4_1: "🐢 遅（4.0秒）：じっくり意味を確認したい時に。", m_l4_2: "🐇 標準（2.0秒）：テンポよく進めたい時に。", m_l4_3: "👼 神速（0.0秒）：脳に直接刷り込む超高速フラッシュモード！",
     m_s5: "5. 暗記の管理（ドラッグ＆ドロップ）", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、左側のリストから右側の「✅ 暗記済」エリアへドラッグ＆ドロップして移動させましょう！", m_p5_1: "束（デッキ）を丸ごと「暗記済」エリアにドラッグして、一気に完了させることも可能です。",
-    m_s6: "6. テスト ＆ 印刷機能", m_l6_1: "📝 テスト：アプリ内で4択の英単語クイズに挑戦できます。", m_l6_2: "🖨️ プリント：その束の単語をランダムに並べ替え、実際の授業で配れる「紙の小テスト」として印刷（またはPDF保存）できます。",
+    m_s6: "6. テスト ＆ 印刷機能 ＆ 注意事項", m_l6_1: "📝 テスト：4択クイズに挑戦できます。連続正解でド派手な演出が待っています！", m_l6_2: "🖨️ プリント：実際の授業で配れる「紙の小テスト」として印刷できます。例文プリントでは対象単語が自動で穴埋め（＿＿＿）になります。", m_l6_3: "⚠️ ログイン注意：LINEやInstagram等のアプリ内ブラウザからはログインエラーになります。標準ブラウザ（Safari/Chrome）で開いてください。",
     box1Name: "中学レベル", box2Name: "資格・オリジナル箱", deck1Name: "基本の動詞", card1_mean: "輝く / 光る", card1_trans: "星が明るく**輝く**。", card2_mean: "持っている / 食べる", card2_trans: "私は本を**持っています**。", card3_mean: "作る", card3_trans: "彼女は夕食を**作ります**。", card4_mean: "攻撃する", card4_trans: "その犬はあなたを**攻撃し**ません。"
   },
   en: {
@@ -64,15 +65,15 @@ const DICT = {
     testNeeds4: "At least 4 cards are required for a test!", testFinished: "Test Finished!", score: "Score:", tryAgainBtn: "🔄 Try Again", backToStudyBtn: "◀ Back to Study",
     question: "Question", testHint: "Which is the correct meaning?", quitBtn: "Quit", noPrintCards: "No cards to print.", shuffleBtn: "🔄 Shuffle",
     printTestTitle: "- Vocabulary Test", printTestExampleTitle: "- Example Test", printDate: "Date: ", printName: "Name: _________________________", printScore: "Score:      / ",
+    
     m_h1: "Official User Manual", m_s1: "1. Introduction (Basic Structure)", m_p1: "This app works just like real physical flashcards.",
     m_l1_1: "📦 Box: The outermost container (e.g., 'Basic Level', 'TOEFL').", m_l1_2: "🔖 Deck: A bundle of cards inside a box (e.g., 'Basic Verbs 50').", m_l1_3: "📇 Card: The actual flashcard. Open a deck to start learning.",
     m_s2: "2. How to create cards", m_p2: "You can add cards from the left menu in the study view.", m_s2_1: "✏️ Add Manually", m_p2_1: "Click 'Add 1 Card Manually' to create a card on the spot.",
     m_s2_2: "📂 Import from CSV", m_p2_2: "Import data from Excel/Spreadsheets. The easiest way is to ask ChatGPT to 'Create a CSV for flashcards' and paste it!", m_p2_3: "* Enclose the target word in ** (double asterisks) to highlight it in yellow.",
-    m_s3: "3. Learning Controls", m_p3: "Flip and learn like real paper cards.", m_l3_1: "Flip Card: Click the center of the card, or press [Space].", m_l3_2: "Next Card: '▶' button, or [Right Arrow] / [Enter].", m_l3_3: "Prev Card: '◀' button, or [Left Arrow].", m_l3_4: "Play Audio: Click the English word itself to hear native pronunciation.",
-    m_s4: "4. Auto Play & Speed", m_p4: "Click '▶️ Auto Play' to automatically flip cards and play audio.", m_l4_1: "🐢 Slow (4.0s): When you want to carefully check the meaning.", m_l4_2: "🐇 Normal (2.0s): For a good learning tempo.", m_l4_3: "👼 Godspeed (0.0s): Ultra-fast flash mode to burn into your brain!",
+    m_s3: "3. Learning Controls", m_p3: "Flip and learn like real paper cards. Click the 'Focus 🔥' button for an immersive, large-font full-screen mode.", m_l3_1: "Flip Card: Click the center of the card, or press [Space].", m_l3_2: "Next Card: '▶' button, or [Right Arrow] / [Enter].", m_l3_3: "Prev Card: '◀' button, or [Left Arrow].", m_l3_4: "Play Audio: Click the English word itself to hear native pronunciation.",
+    m_s4: "4. Auto Play & Speed", m_p4: "Click '▶️ Auto Play' to automatically flip cards. Turn on 'Front Only' to skip the back and flash through words quickly.", m_l4_1: "🐢 Slow (4.0s): When you want to carefully check the meaning.", m_l4_2: "🐇 Normal (2.0s): For a good learning tempo.", m_l4_3: "👼 Godspeed (0.0s): Ultra-fast flash mode to burn into your brain!",
     m_s5: "5. Memorization (Drag & Drop)", m_p5: "Click the '✔' button on the card, or Drag & Drop the word to the '✅ Memorized' area on the right!", m_p5_1: "You can also drag an entire deck to the 'Memorized' area to complete it instantly.",
-    m_s6: "6. Test & Print", m_l6_1: "📝 Test: Take a 4-choice quiz inside the app.", m_l6_2: "🖨️ Print: Shuffle words and print them as a paper quiz.",
-    box1Name: "Basic Level", box2Name: "Advanced / Custom", deck1Name: "Basic Verbs", card1_mean: "to emit light / glow", card1_trans: "The stars **glow** brightly.", card2_mean: "to possess / own", card2_trans: "I **own** a book.", card3_mean: "to create / produce", card3_trans: "She **prepares** dinner.", card4_mean: "to take aggressive action", card4_trans: "The dog will not **harm** you."
+    m_s6: "6. Test, Print & Notes", m_l6_1: "📝 Test: Take a fast-paced 4-choice quiz. Incorrect answers will highlight the correct choice.", m_l6_2: "🖨️ Print: Print a paper quiz. In Example Print mode, target words automatically become blanks (___).", m_l6_3: "⚠️ Login Note: Google login is blocked in in-app browsers like LINE/Instagram. Please open in a standard browser (Safari/Chrome)."
   }
 };
 
@@ -108,7 +109,7 @@ const cleanTranslation = (text) => {
   return cleanText(text).split(/\*\*(.*?)\*\*/g).join('');
 };
 
-// ⭐️ 句読点ぼっち改行防止（プリント用穴埋め）
+// プリント用穴埋め
 const renderBlankExample = (text) => {
   if (!text) return <span className="print-blank-line"></span>;
   const cleanedText = cleanText(text);
@@ -120,14 +121,13 @@ const renderBlankExample = (text) => {
   for (let i = 0; i < parts.length; i++) {
     if (i % 2 === 1) {
       const blank = <span key={`blank-${i}`} className="print-blank-line"></span>;
-      // 穴埋め直後が句読点ならnowrapで包む
       if (i + 1 < parts.length && /^[.,!?;:]/.test(parts[i + 1])) {
         const match = parts[i + 1].match(/^[.,!?;:]+/);
         const punc = match[0];
         const rest = parts[i + 1].substring(punc.length);
         elements.push(
-          <span key={`group-${i}`} style={{ whiteSpace: 'nowrap' }}>
-            {blank}{punc}
+          <span key={`group-${i}`} style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+            {blank}<span>{punc}</span>
           </span>
         );
         parts[i + 1] = rest;
@@ -143,7 +143,7 @@ const renderBlankExample = (text) => {
   return <>{elements}</>;
 };
 
-// ⭐️ 句読点ぼっち改行防止（アプリ画面用・単語表示）
+// アプリ画面用ハイライト（句読点ぼっち防止）
 const renderHighlightedText = (text) => {
   if (!text) return null;
   try {
@@ -152,14 +152,13 @@ const renderHighlightedText = (text) => {
     for (let i = 0; i < parts.length; i++) {
       if (i % 2 === 1) {
         const highlight = <span key={`highlight-${i}`} className="highlight-word">{parts[i]}</span>;
-        // ハイライト単語直後が句読点ならnowrapで包む
         if (i + 1 < parts.length && /^[.,!?;:]/.test(parts[i + 1])) {
           const match = parts[i + 1].match(/^[.,!?;:]+/);
           const punc = match[0];
           const rest = parts[i + 1].substring(punc.length);
           elements.push(
-            <span key={`group-${i}`} style={{ whiteSpace: 'nowrap' }}>
-              {highlight}{punc}
+            <span key={`group-${i}`} style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
+              {highlight}<span>{punc}</span>
             </span>
           );
           parts[i + 1] = rest;
@@ -184,7 +183,7 @@ function App() {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isInAppBrowser, setIsInAppBrowser] = useState(false); 
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   
   const [boxes, setBoxes] = useState(() => { const savedBoxes = localStorage.getItem('redline_boxes'); return savedBoxes ? JSON.parse(savedBoxes) : initialBoxes; });
   const [decks, setDecks] = useState(() => { const savedDecks = localStorage.getItem('redline_decks'); return savedDecks ? JSON.parse(savedDecks) : initialDecks; });
@@ -269,6 +268,10 @@ function App() {
   const [showExOnBack, setShowExOnBack] = useState(true); 
   const [showWordOnExMode, setShowWordOnExMode] = useState(true); 
   const [isFrontOnlyAuto, setIsFrontOnlyAuto] = useState(false); 
+
+  // ⭐️ 4択テスト用のステート
+  const [testEffect, setTestEffect] = useState(null); 
+  const [combo, setCombo] = useState(0);
 
   const playedRef = useRef({ index: -1, flipped: false, lang: '', type: '' });
 
@@ -576,6 +579,36 @@ function App() {
     } catch(e) { alert(t.alertCsvError); } finally { setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false); }
   };
 
+  const getPraiseWord = (currentCombo) => {
+    if (currentCombo <= 1) return "⭕️ Good!";
+    if (currentCombo === 2) return "⭕️ Great!!";
+    if (currentCombo === 3) return "⭕️ Excellent!!!";
+    if (currentCombo >= 4) return "⭕️ Unstoppable!!!!🔥";
+    return "⭕️ Good!";
+  };
+
+  const handleAnswer = (selectedOption) => {
+    const isCorrect = selectedOption === testQuestions[currentTestIndex].correct;
+    if (isCorrect) {
+      setScore(prev => prev + 1);
+      setCombo(prev => prev + 1);
+      setTestEffect('correct');
+    } else {
+      setCombo(0);
+      setTestEffect('wrong');
+    }
+    
+    const delay = isCorrect ? 800 : 1200;
+    setTimeout(() => {
+      setTestEffect(null);
+      if (currentTestIndex < testQuestions.length - 1) { 
+        setCurrentTestIndex(prev => prev + 1); 
+      } else { 
+        setShowTestResult(true); 
+      }
+    }, delay);
+  };
+
   const startTest = () => {
     if (allCards.length < 4) { alert(t.testNeeds4); return; }
     const shuffledCards = [...allCards].sort(() => Math.random() - 0.5);
@@ -584,13 +617,7 @@ function App() {
       const options = [card.meaning || '意味なし', ...wrongAnswers].sort(() => Math.random() - 0.5);
       return { word: card.word, correct: card.meaning || '意味なし', options: options };
     });
-    setTestQuestions(questions); setCurrentTestIndex(0); setScore(0); setShowTestResult(false); setView('test');
-  };
-
-  const handleAnswer = (selectedOption) => {
-    const isCorrect = selectedOption === testQuestions[currentTestIndex].correct;
-    if (isCorrect) setScore(prev => prev + 1);
-    if (currentTestIndex < testQuestions.length - 1) { setCurrentTestIndex(prev => prev + 1); } else { setShowTestResult(true); }
+    setTestQuestions(questions); setCurrentTestIndex(0); setScore(0); setShowTestResult(false); setTestEffect(null); setCombo(0); setView('test');
   };
 
   const openPrintPreview = (mode) => {
@@ -698,7 +725,7 @@ function App() {
   const handleClick = () => { unlockAudio(); };
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
-  // ⭐️ 描画関数の完全復元
+  // ⭐️ 描画関数群 ⭐️
   const renderMiniCard = (c, isMemorizedList, index = null) => {
     const isSelected = selectedForDelete.has(c.word);
     return (
@@ -754,7 +781,7 @@ function App() {
   const posBadgeStyle = {
     position: 'absolute',
     top: '15px',
-    left: '15px',
+    left: '15px', 
     padding: '4px 12px',
     border: '2px solid #cbd5e1',
     borderRadius: '8px',
@@ -767,10 +794,10 @@ function App() {
 
   const renderCardFront = (card, isFullscreen) => {
     if (!card) return null;
-    const fontSizeWord = isFullscreen ? 'clamp(48px, 8vw, 80px)' : '';
-    const fontSizeMean = isFullscreen ? 'clamp(32px, 5vw, 56px)' : '';
-    const fontSizeExEn = isFullscreen ? 'clamp(36px, 5vw, 56px)' : 'clamp(20px, 4vw, 28px)';
-    const fontSizeExJa = isFullscreen ? 'clamp(32px, 5vw, 48px)' : 'clamp(18px, 4vw, 22px)';
+    const fontSizeWord = isFullscreen ? 'clamp(56px, 12vw, 140px)' : '';
+    const fontSizeMean = isFullscreen ? 'clamp(40px, 8vw, 100px)' : '';
+    const fontSizeExEn = isFullscreen ? 'clamp(40px, 7vw, 90px)' : 'clamp(20px, 4vw, 28px)';
+    const fontSizeExJa = isFullscreen ? 'clamp(32px, 6vw, 70px)' : 'clamp(18px, 4vw, 22px)';
 
     const isJapanese = qLang === 'ja';
 
@@ -787,7 +814,6 @@ function App() {
         ) : (
           qLang === 'en' ? (
             <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-              {/* ⭐️ アプリ画面の例文では穴埋めにせず、ハイライトされた単語入りで表示する */}
               <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: fontSizeExEn, lineHeight: '1.8', fontWeight: 'bold', fontFamily: '"Times New Roman", Times, serif', width: '100%'}}>
                 {renderHighlightedText(card.example || '')}
               </p>
@@ -806,13 +832,13 @@ function App() {
 
   const renderCardBack = (card, isFullscreen) => {
     if (!card) return null; 
-    const fontSizeWord = isFullscreen ? 'clamp(48px, 8vw, 80px)' : '48px';
-    const fontSizeMean = isFullscreen ? 'clamp(32px, 5vw, 56px)' : '';
-    const fontSizeExEn = isFullscreen ? 'clamp(20px, 3vw, 32px)' : '';
-    const fontSizeExJa = isFullscreen ? 'clamp(18px, 3vw, 28px)' : '';
+    const fontSizeWord = isFullscreen ? 'clamp(56px, 12vw, 140px)' : '48px';
+    const fontSizeMean = isFullscreen ? 'clamp(40px, 8vw, 100px)' : '';
+    const fontSizeExEn = isFullscreen ? 'clamp(24px, 4vw, 48px)' : '';
+    const fontSizeExJa = isFullscreen ? 'clamp(20px, 3.5vw, 40px)' : '';
 
-    const exModeExJaFontSize = isFullscreen ? 'clamp(32px, 5vw, 48px)' : 'clamp(18px, 4vw, 24px)';
-    const exModeExEnFontSize = isFullscreen ? 'clamp(36px, 5vw, 56px)' : 'clamp(20px, 4vw, 26px)';
+    const exModeExJaFontSize = isFullscreen ? 'clamp(36px, 6vw, 80px)' : 'clamp(18px, 4vw, 24px)';
+    const exModeExEnFontSize = isFullscreen ? 'clamp(40px, 7vw, 90px)' : 'clamp(20px, 4vw, 26px)';
 
     const isJapanese = qLang === 'en'; 
 
@@ -832,7 +858,6 @@ function App() {
 
             {showExOnBack && (
               <div className="example-section" style={{ borderTop: 'none', paddingTop: 0, marginTop: '20px', textAlign: 'center' }}>
-                {/* ⭐️ 裏面の英文も単語ハイライト表示に統一 */}
                 <p className="example-en" style={{ marginBottom: '8px', fontSize: fontSizeExEn, fontWeight: 'bold' }}>{renderHighlightedText(card.example || '')}</p>
                 <p className="example-ja" style={{ margin: 0, fontSize: fontSizeExJa, fontWeight: 'bold' }}>{renderHighlightedText(card.translation || '')}</p>
               </div>
@@ -858,8 +883,8 @@ function App() {
 
              {showWordOnExMode && (
                <div style={{ display:'flex', flexDirection: 'row', alignItems:'center', justifyContent:'center', gap:'15px', opacity: 0.7, marginTop: isFullscreen ? '40px' : '25px' }}>
-                  <div className="word-text" style={{fontSize: isFullscreen ? '28px' : '18px', fontWeight:'bold', margin: 0, cursor: 'pointer', color:'#333'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
-                  <div className="core-meaning-large" style={{fontSize: isFullscreen ? '22px' : '15px', color:'#64748b', fontWeight:'bold', margin: 0}}>
+                  <div className="word-text" style={{fontSize: isFullscreen ? 'clamp(32px, 5vw, 56px)' : '18px', fontWeight:'bold', margin: 0, cursor: 'pointer', color:'#333'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
+                  <div className="core-meaning-large" style={{fontSize: isFullscreen ? 'clamp(24px, 4vw, 40px)' : '15px', color:'#64748b', fontWeight:'bold', margin: 0}}>
                     {cleanText((card.meaning || '').split('/')[0])}
                   </div>
                </div>
@@ -870,7 +895,7 @@ function App() {
     );
   };
 
-  // --- 早期リターン（条件分岐による画面描画） ---
+  // --- JSXレンダリング ---
 
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
 
@@ -912,7 +937,7 @@ function App() {
               <div className="manual-section"><h2 className="manual-h2">{t.m_s3}</h2><p className="manual-p">{t.m_p3}</p><ul className="manual-list"><li>{t.m_l3_1}</li><li>{t.m_l3_2}</li><li>{t.m_l3_3}</li><li>{t.m_l3_4}</li></ul></div>
               <div className="manual-section"><h2 className="manual-h2">{t.m_s4}</h2><p className="manual-p">{t.m_p4}</p><ul className="manual-list"><li>{t.m_l4_1}</li><li>{t.m_l4_2}</li><li>{t.m_l4_3}</li></ul></div>
               <div className="manual-section"><h2 className="manual-h2">{t.m_s5}</h2><p className="manual-p">{t.m_p5}</p><p className="manual-p">{t.m_p5_1}</p></div>
-              <div className="manual-section"><h2 className="manual-h2">{t.m_s6}</h2><ul className="manual-list"><li>{t.m_l6_1}</li><li>{t.m_l6_2}</li></ul></div>
+              <div className="manual-section"><h2 className="manual-h2">{t.m_s6}</h2><ul className="manual-list"><li>{t.m_l6_1}</li><li>{t.m_l6_2}</li><li>{t.m_l6_3}</li></ul></div>
               <div style={{marginTop: '50px', textAlign: 'center', color: '#95a5a6', fontSize: '12px'}}>{t.appTitle}</div>
           </div>
         </div>
@@ -965,7 +990,79 @@ function App() {
   if (view === 'test') {
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-        <div className="test-container">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes superCorrect {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+          }
+          @keyframes superWrong {
+            0% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+          }
+          @keyframes correctOutline {
+            0% { box-shadow: 0 0 0px transparent; }
+            50% { box-shadow: 0 0 15px rgba(39, 174, 96, 0.6); }
+            100% { box-shadow: 0 0 5px rgba(39, 174, 96, 0.4); }
+          }
+          .test-effect-overlay {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1000;
+            text-align: center;
+            width: 100%;
+          }
+          .effect-correct-super { animation: superCorrect 0.8s ease-out forwards; }
+          .effect-wrong-super { animation: superWrong 1.2s ease-out forwards; }
+          .effect-text-main {
+            font-size: clamp(50px, 8vw, 100px);
+            font-weight: 900;
+            text-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            margin-bottom: 5px;
+          }
+          .effect-text-sub {
+            font-size: clamp(20px, 4vw, 36px);
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+          }
+          .effect-correct-super .effect-text-main, .effect-correct-super .effect-text-sub { color: #27ae60; }
+          .effect-wrong-super .effect-text-main { color: #e74c3c; }
+          .test-btn-show-correct {
+            box-shadow: 0 0 0 4px #27ae60 inset, 0 4px 15px rgba(39, 174, 96, 0.4) !important;
+            background-color: #eafff0 !important;
+            color: #27ae60 !important;
+            font-weight: 900 !important;
+            transform: scale(1.02) !important;
+            transition: all 0.2s ease !important;
+            animation: correctOutline 0.8s ease-out forwards !important;
+            z-index: 10;
+            position: relative;
+          }
+          .test-btn-dimmed {
+            opacity: 0.3 !important;
+            transition: opacity 0.2s ease !important;
+          }
+        `}} />
+        <div className="test-container" style={{ position: 'relative' }}>
+          
+          {testEffect === 'correct' && (
+            <div className="test-effect-overlay effect-correct-super">
+              <div className="effect-text-main">{getPraiseWord(combo)}</div>
+              {combo > 1 && <div className="effect-text-sub">{combo}連続正解！</div>}
+            </div>
+          )}
+          {testEffect === 'wrong' && (
+            <div className="test-effect-overlay effect-wrong-super">
+              <div className="effect-text-main">❌ Miss...</div>
+            </div>
+          )}
+
           {showTestResult ? (
             <div className="test-result">
               <h2 style={{fontSize: '32px', color: '#27ae60'}}>{t.testFinished}</h2>
@@ -979,7 +1076,34 @@ function App() {
             <div className="test-quiz-area">
               <p className="test-counter">{t.question} {currentTestIndex + 1} / {testQuestions.length}</p>
               <h1 className="test-word">{testQuestions[currentTestIndex]?.word}</h1><p className="test-hint">{t.testHint}</p>
-              <div className="test-options">{testQuestions[currentTestIndex]?.options.map((option, idx) => (<button key={idx} className="test-option-btn" onClick={() => handleAnswer(option)}>{option}</button>))}</div>
+              <div className="test-options">
+                {testQuestions[currentTestIndex]?.options.map((option, idx) => {
+                  let btnClass = "test-option-btn";
+                  if (testEffect === 'wrong') {
+                     if (option === testQuestions[currentTestIndex].correct) {
+                        btnClass += " test-btn-show-correct"; 
+                     } else {
+                        btnClass += " test-btn-dimmed"; 
+                     }
+                  } else if (testEffect === 'correct') {
+                     if (option === testQuestions[currentTestIndex].correct) {
+                        btnClass += " test-btn-show-correct"; 
+                     } else {
+                        btnClass += " test-btn-dimmed";
+                     }
+                  }
+                  return (
+                    <button 
+                      key={idx} 
+                      className={btnClass} 
+                      onClick={() => handleAnswer(option)}
+                      disabled={!!testEffect}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
+              </div>
               <button className="cancel-btn" style={{marginTop: '30px'}} onClick={() => setView('study')}>{t.quitBtn}</button>
             </div>
           )}
@@ -1002,7 +1126,7 @@ function App() {
           <button className="add-btn" onClick={() => window.print()} style={{ backgroundColor: '#e74c3c', margin: 0 }}>{t.printPdfBtn}</button>
         </div>
 
-        <style>{`
+        <style dangerouslySetInnerHTML={{ __html: `
           @media print {
             @page { size: A4; margin: 0; }
             body { background: white !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
@@ -1039,7 +1163,7 @@ function App() {
           .print-q-example-en { font-size: 16px; line-height: 1.6; padding-left: 5px; font-family: "Times New Roman", Times, serif; margin-top: 2px; }
           
           .print-blank-line { display: inline-block; width: 150px; border-bottom: 1.5px solid #000; margin: 0 10px; vertical-align: text-bottom; }
-        `}</style>
+        `}} />
 
         <div className="print-area-wrapper">
           {chunks.map((chunk, pageIndex) => {
@@ -1067,7 +1191,6 @@ function App() {
                             <span className="print-q-ja-example">{cleanTranslation(c.translation) || cleanText((c.meaning || '').split('/')[0])}</span>
                           </div>
                           <div className="print-q-bottom">
-                            {/* プリント画面だけは穴埋め表示 */}
                             <div className="print-q-example-en">{renderBlankExample(c.example)}</div>
                           </div>
                         </div>
@@ -1114,99 +1237,89 @@ function App() {
     );
   }
 
-  // ⭐️ PC表示時の「カード完全中央配置」と「全画面ステルスUI」の究極CSS
-  const injectLayoutStyles = (
-    <style>{`
-      @media(min-width: 1024px) {
-        .app-container {
-          max-width: 100% !important;
-          padding-left: 2vw !important;
-          padding-right: 2vw !important;
-        }
-        .study-dashboard {
-          display: flex !important;
-          flex-direction: row !important;
-          justify-content: center !important;
-          align-items: flex-start !important;
-          width: 100% !important;
-          max-width: 1600px !important;
-          margin: 0 auto !important;
-          gap: 30px !important;
-        }
-        /* ⭐️ 左右のパネルを250pxに完全に固定し、センターを真ん中に持ってくる */
-        .left-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
-        .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 900px !important; margin: 0 auto !important; }
-        .right-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
-        
-        .mini-card-list { display: grid; grid-template-columns: 1fr !important; gap: 10px; align-content: start; }
-      }
-
-      /* ボタンはみ出し防止魔法 */
-      .panel-top-action { width: 100%; box-sizing: border-box; }
-      .panel-top-action button { white-space: normal !important; word-break: keep-all !important; overflow-wrap: anywhere !important; line-height: 1.4 !important; height: auto !important; min-height: 44px !important; box-sizing: border-box !important; width: 100%; max-width: 100%; }
-      .bulk-file-actions { width: 100%; box-sizing: border-box; }
-      .bulk-file-actions button, .bulk-file-actions label { box-sizing: border-box; width: 100%; max-width: 100%; }
-
-      .setting-badge-btn { background: white; border: 2px solid #e2e8f0; border-radius: 50px; padding: 6px 12px; font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); white-space: nowrap; }
-      .setting-badge-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
-      .setting-badge-btn.active { background: #e0e7ff; border-color: #818cf8; color: #4338ca; }
-      
-      .toggle-tab-btn { background: transparent; border: none; padding: 6px 16px; font-size: 13px; font-weight: 900; color: #94a3b8; border-radius: 50px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-      .toggle-tab-btn.active { background: white; color: #4338ca; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-      /* ⭐️ 全画面（全集中）モード時の絶対的カード配置とUI被り防止 */
-      .fullscreen-active {
-         position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
-         background: #f1f5f9 !important; z-index: 9999 !important;
-         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
-         max-width: none !important;
-         padding: 80px 0 100px 0 !important; 
-         box-sizing: border-box !important;
-      }
-      
-      /* ⭐️ カードの無駄な縦長を排除し、中身にフィットさせる */
-      .fullscreen-active .card-animation-wrapper {
-         width: 85vw !important; 
-         max-width: 1100px !important; 
-         height: auto !important;
-         min-height: 40vh !important;
-         margin: 0 auto !important; 
-      }
-      
-      /* 上部のステルス設定パネル */
-      .fullscreen-stealth-top {
-         position: absolute !important; top: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
-         opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
-         background: white !important; padding: 10px 20px !important; border-radius: 50px !important;
-         box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; margin: 0 !important; width: auto !important;
-      }
-      .fullscreen-active:hover .fullscreen-stealth-top, .fullscreen-stealth-top:hover, .fullscreen-stealth-top:active { opacity: 1; }
-
-      /* ⭐️ 極限までスリム化した下部のステルス操作パネル */
-      .fullscreen-stealth-bottom {
-         position: absolute !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
-         opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
-         background: white !important; padding: 10px 25px !important; border-radius: 20px !important;
-         box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; 
-         width: 90% !important; max-width: 700px !important;
-         display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: space-between;
-      }
-      @media(min-width: 768px) {
-        .fullscreen-stealth-bottom { flex-direction: row !important; }
-        .fullscreen-stealth-bottom .autoplay-controls { width: auto !important; flex: 1 !important; margin-left: 30px !important; }
-        .fullscreen-stealth-bottom .controls { flex: 0 0 auto !important; }
-        .fullscreen-stealth-bottom .speed-slider-container { margin-top: 5px !important; }
-      }
-      .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
-      
-      .fullscreen-active .controls { margin: 0 !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; gap: 10px !important; }
-      .fullscreen-active .autoplay-controls { margin: 0 !important; border: none !important; padding: 0 !important; min-width: 250px; }
-    `}</style>
-  );
-
   return (
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      {injectLayoutStyles}
+      
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media(min-width: 1024px) {
+          .app-container {
+            max-width: 100% !important;
+            padding-left: 2vw !important;
+            padding-right: 2vw !important;
+          }
+          .study-dashboard {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+            max-width: 1600px !important;
+            margin: 0 auto !important;
+            gap: 30px !important;
+          }
+          .left-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
+          .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 900px !important; margin: 0 auto !important; }
+          .right-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
+          .mini-card-list { display: grid; grid-template-columns: 1fr !important; gap: 10px; align-content: start; }
+        }
+
+        .panel-top-action { width: 100%; box-sizing: border-box; }
+        .panel-top-action button { white-space: normal !important; word-break: keep-all !important; overflow-wrap: anywhere !important; line-height: 1.4 !important; height: auto !important; min-height: 44px !important; box-sizing: border-box !important; width: 100%; max-width: 100%; }
+        .bulk-file-actions { width: 100%; box-sizing: border-box; }
+        .bulk-file-actions button, .bulk-file-actions label { box-sizing: border-box; width: 100%; max-width: 100%; }
+
+        .setting-badge-btn { background: white; border: 2px solid #e2e8f0; border-radius: 50px; padding: 6px 12px; font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); white-space: nowrap; }
+        .setting-badge-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .setting-badge-btn.active { background: #e0e7ff; border-color: #818cf8; color: #4338ca; }
+        
+        .toggle-tab-btn { background: transparent; border: none; padding: 6px 16px; font-size: 13px; font-weight: 900; color: #94a3b8; border-radius: 50px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .toggle-tab-btn.active { background: white; color: #4338ca; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        .fullscreen-active {
+           position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
+           background: #f1f5f9 !important; z-index: 9999 !important;
+           display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
+           max-width: none !important;
+           padding: 80px 0 100px 0 !important; 
+           box-sizing: border-box !important;
+        }
+        
+        .fullscreen-active .card-animation-wrapper {
+           width: 85vw !important; 
+           max-width: 1100px !important; 
+           height: auto !important;
+           min-height: 40vh !important;
+           margin: 0 auto !important; 
+        }
+        
+        .fullscreen-stealth-top {
+           position: absolute !important; top: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
+           opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
+           background: white !important; padding: 10px 20px !important; border-radius: 50px !important;
+           box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; margin: 0 !important; width: auto !important;
+        }
+        .fullscreen-active:hover .fullscreen-stealth-top, .fullscreen-stealth-top:hover, .fullscreen-stealth-top:active { opacity: 1; }
+
+        .fullscreen-stealth-bottom {
+           position: absolute !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
+           opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
+           background: white !important; padding: 10px 25px !important; border-radius: 20px !important;
+           box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; 
+           width: 90% !important; max-width: 700px !important;
+           display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: space-between;
+        }
+        @media(min-width: 768px) {
+          .fullscreen-stealth-bottom { flex-direction: row !important; }
+          .fullscreen-stealth-bottom .autoplay-controls { width: auto !important; flex: 1 !important; margin-left: 30px !important; }
+          .fullscreen-stealth-bottom .controls { flex: 0 0 auto !important; }
+          .fullscreen-stealth-bottom .speed-slider-container { margin-top: 5px !important; }
+        }
+        .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
+        
+        .fullscreen-active .controls { margin: 0 !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; gap: 10px !important; }
+        .fullscreen-active .autoplay-controls { margin: 0 !important; border: none !important; padding: 0 !important; min-width: 250px; }
+      `}} />
+      
       {ghostPos && (<div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>{ghostPos.title}</div>)}
       
       {editingCard && (
@@ -1261,12 +1374,12 @@ function App() {
         </div>
       )}
 
-      <div style={dynamicStyle}>
-        {view === 'decks' && (() => {
-          const boxDecks = decks.filter(d => d.boxId === currentBoxId);
-          const unmemorizedDecks = boxDecks.filter(d => !(d.cards.length > 0 && d.cards.every(c => c.isMemorized)));
-          const memorizedDecks = boxDecks.filter(d => d.cards.length > 0 && d.cards.every(c => c.isMemorized));
-          return (
+      {view === 'decks' && (() => {
+        const boxDecks = decks.filter(d => d.boxId === currentBoxId);
+        const unmemorizedDecks = boxDecks.filter(d => !(d.cards.length > 0 && d.cards.every(c => c.isMemorized)));
+        const memorizedDecks = boxDecks.filter(d => d.cards.length > 0 && d.cards.every(c => c.isMemorized));
+        return (
+          <div style={dynamicStyle}>
             <div className="inner-view-wrapper">
               <div className="study-header"><button className="back-to-desk-btn" onClick={() => setView('boxes')}>{t.backToHome}</button><h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2><div style={{width: '80px'}}></div></div>
               <div className="integrated-creation-area">
@@ -1283,10 +1396,12 @@ function App() {
                 </div>
               </div>
             </div>
-          );
-        })()}
+          </div>
+        );
+      })()}
 
-        {view === 'study' && (
+      {view === 'study' && (
+        <div style={dynamicStyle}>
           <div className="study-dashboard">
             {!isFullscreen && (
               <div className="side-panel left-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCardWord) { toggleMemorize(null, draggedCardWord, false); setDraggedCardWord(null); } }}>
@@ -1364,13 +1479,12 @@ function App() {
               ) : studyCards.length > 0 && !isBulkMode ? (
                 <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                   
-                  {/* ⭐️ 神のカスタマイズUIエリア */}
                   <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: isFullscreen ? 0 : '20px', width: '100%', gap: '10px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '15px', width: '100%' }}>
                       
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">
-                          {qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}
+                          {qLang === 'en' ? '🇺🇸 英→日' : '🇯 ঐতি 日→英'}
                         </button>
                         <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
                           <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>🔤 単語</button>
@@ -1388,7 +1502,6 @@ function App() {
                             単語 {showWordOnExMode ? 'ON' : 'OFF'}
                           </button>
                         )}
-                        {/* ⭐️ 新機能：表面のみオート（意味スキップ）ボタン */}
                         <button onClick={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} className={`setting-badge-btn ${isFrontOnlyAuto ? 'active' : ''}`} title="自動めくり時に裏面をスキップします">
                           表面のみ {isFrontOnlyAuto ? 'ON' : 'OFF'}
                         </button>
@@ -1406,11 +1519,9 @@ function App() {
                       <div className="card-inner">
                         <div className="card-front">
                           <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)}>✔</button>
-                          {/* ⭐️ エラー修正：描画関数の呼び出し */}
                           {renderCardFront(studyCards[currentIndex], isFullscreen)}
                         </div>
                         <div className="card-back">
-                          {/* ⭐️ エラー修正：描画関数の呼び出し */}
                           {renderCardBack(studyCards[currentIndex], isFullscreen)}
                         </div>
                       </div>
@@ -1482,8 +1593,8 @@ function App() {
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
