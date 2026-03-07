@@ -1306,15 +1306,14 @@ function App() {
            background: white !important; padding: 10px 25px !important; border-radius: 20px !important;
            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; 
            width: 90% !important; max-width: 500px !important;
-           display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: space-between;
+           display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: center;
+           box-sizing: border-box !important;
         }
         @media(min-width: 768px) {
-          .fullscreen-stealth-bottom { flex-direction: row !important; }
-          .fullscreen-stealth-bottom .autoplay-controls { width: auto !important; flex: 1 !important; margin-left: 20px !important; }
+          .fullscreen-stealth-bottom { flex-direction: row !important; justify-content: center !important; }
+          .fullscreen-stealth-bottom .autoplay-controls { width: 100% !important; flex: 1 !important; margin-left: 0 !important; }
         }
         .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
-        
-        .fullscreen-active .autoplay-controls { margin: 0 !important; border: none !important; padding: 0 !important; min-width: 250px; }
       `}} />
       
       {ghostPos && (<div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>{ghostPos.title}</div>)}
@@ -1527,14 +1526,14 @@ function App() {
                   
                   {isFullscreen ? (
                     <div className="fullscreen-stealth-bottom">
-                      <div className="autoplay-controls" style={{ margin: 0, border: 'none', padding: 0 }}>
+                      <div className="autoplay-controls" style={{ margin: 0, border: 'none', padding: 0, width: '100%', boxSizing: 'border-box' }}>
                         <div className="autoplay-actions-row">
                           <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
                           <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
                           <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
                         </div>
                         <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                          <div style={{fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
+                          <div style={{fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center', whiteSpace: 'nowrap'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
                           <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
                             <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
                             <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
@@ -1547,26 +1546,24 @@ function App() {
                       </div>
                     </div>
                   ) : (
-                    <>
-                      <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8'}}>
-                        <div className="autoplay-actions-row">
-                          <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
-                          <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
-                          <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
-                        </div>
-                        <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                          <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
-                          <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
-                            <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
-                            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-                              <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
-                            </div>
-                            <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>🐢 {t.slow}</span>
+                    <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
+                      <div className="autoplay-actions-row">
+                        <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
+                        <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
+                        <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
+                      </div>
+                      <div className="speed-slider-container" style={{marginTop: '15px'}}>
+                        <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center', whiteSpace: 'nowrap'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
+                        <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
+                          <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
+                          <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
+                            <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
                           </div>
+                          <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>🐢 {t.slow}</span>
                         </div>
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
               ) : null}
