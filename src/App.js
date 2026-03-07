@@ -202,10 +202,21 @@ function App() {
         try {
           const docRef = doc(db, "users", user.uid);
           const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) { setBoxes(docSnap.data().boxes || []); setDecks(docSnap.data().decks || []); } 
-          else { setBoxes(initialBoxes); setDecks(initialDecks); await setDoc(docRef, { boxes: initialBoxes, decks: initialDecks }); }
+          if (docSnap.exists()) { 
+            const fetchedBoxes = docSnap.data().boxes;
+            const fetchedDecks = docSnap.data().decks;
+            setBoxes(fetchedBoxes && fetchedBoxes.length > 0 ? fetchedBoxes : initialBoxes); 
+            setDecks(fetchedDecks && fetchedDecks.length > 0 ? fetchedDecks : initialDecks); 
+          } else { 
+            setBoxes(initialBoxes); 
+            setDecks(initialDecks); 
+            await setDoc(docRef, { boxes: initialBoxes, decks: initialDecks }); 
+          }
         } catch (e) {
           console.error("Firestore read/write error. Check Rules.", e);
+          // 通信エラー等で読み込みに失敗した場合も、画面が真っ白にならないように初期箱をセット
+          setBoxes(prev => prev && prev.length > 0 ? prev : initialBoxes);
+          setDecks(prev => prev && prev.length > 0 ? prev : initialDecks);
         }
       }
       setIsAuthLoading(false);
