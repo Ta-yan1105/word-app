@@ -2,7 +2,8 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";
+// signInWithPopupに戻す。signInWithRedirectは削除。
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 
@@ -77,7 +78,7 @@ const DICT = {
 };
 
 const initialBoxes = [ { id: 1, nameKey: 'box1Name', name: '中学レベル' }, { id: 2, nameKey: 'box2Name', name: '資格・オリジナル箱' } ];
-const initialDecks = [ { id: 1, boxId: 1, nameKey: 'deck1Name', name: '基本の動詞', lastStudied: null, lastRecordTime: null, cards: [ { word: 'shine', meaning: '輝く / 光る', example: 'The stars **shine** brightly.', translation: '星が明るく**輝く**。', isMemorized: false, pos: '動詞' }, { word: 'have', meaning: '持っている / 食べる', example: 'I **have** a book.', translation: '私は本を**持っています**。', isMemorized: false, pos: '動詞' }, { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false, pos: '動詞' }, { word: 'attack', meaning: '攻撃する', example: 'The dog will not **attack** you.', translation: 'その犬はあなたを**攻撃し**ません。', isMemorized: false, pos: '動詞' } ] } ];
+const initialDecks = [ { id: 1, boxId: 1, nameKey: 'deck1Name', name: '基本の動詞', lastStudied: null, lastRecordTime: null, cards: [ { word: 'shine', meaning: '輝く / 光る', example: 'The stars **shine** brightly.', translation: '星が明るく**輝く**。', isMemorized: false, pos: '動詞' }, { word: 'have', meaning: '持っている / 食べる', example: 'I **have** a book.', translation: '私は本を**持っています**。', isMemorized: false, pos: '動詞' }, { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false, pos: '動詞' }, { word: 'attack', meaning: '攻撃する', example: 'The dog will not **attack** you.', translation: 'その dog will not **攻撃し**ません。', isMemorized: false, pos: '動詞' } ] } ];
 
 const parseCSV = (text) => {
   text = text.replace(/^\uFEFF/, ''); const rows = []; let row = []; let currentVal = ''; let inQuotes = false;
@@ -127,15 +128,15 @@ function App() {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [isInAppBrowser, setIsInAppBrowser] = useState(false); // SNSブラウザ検知用
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false); // ⭐️ SNSブラウザ検知用のステートを追加
   
   const [boxes, setBoxes] = useState(() => { const savedBoxes = localStorage.getItem('redline_boxes'); return savedBoxes ? JSON.parse(savedBoxes) : initialBoxes; });
   const [decks, setDecks] = useState(() => { const savedDecks = localStorage.getItem('redline_decks'); return savedDecks ? JSON.parse(savedDecks) : initialDecks; });
 
-  // アプリ読み込み時にInstagramやLINEの「アプリ内ブラウザ」を検知
+  // ⭐️ アプリ読み込み時にInstagramやLINEの「アプリ内ブラウザ」を検知
   useEffect(() => {
-    const ua = (navigator.userAgent || navigator.vendor || window.opera).toLowerCase();
-    if (ua.includes('line') || ua.includes('instagram') || ua.includes('fban') || ua.includes('fbav') || ua.includes('twitter')) {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.indexOf('line') > -1 || ua.indexOf('instagram') > -1 || ua.indexOf('fb') > -1 || ua.indexOf('twitter') > -1) {
       setIsInAppBrowser(true);
     }
   }, []);
@@ -169,24 +170,21 @@ function App() {
     }
   }, [boxes, decks, currentUser]);
 
+  // ⭐️ ログインロジックをPopupに戻す（スマホでの確実な画面遷移のため）
   const handleLogin = () => {
-    const ua = (navigator.userAgent || navigator.vendor || window.opera).toLowerCase();
-    if (ua.includes('line') || ua.includes('instagram') || ua.includes('fban') || ua.includes('fbav') || ua.includes('twitter')) {
-      alert("【ログインエラーの回避】\nLINEやSNSのアプリ内ブラウザではGoogleのセキュリティによりログインがブロックされます。\n画面右上のメニュー（︙ や ↗︎）から「Safariで開く」または「ブラウザで開く」を選択して、もう一度お試しください。");
+    // SNSブラウザの場合は警告を表示してログインさせない
+    if (isInAppBrowser) {
+      alert("【ログインエラーの回避】\nLINEやInstagramなどのアプリ内ブラウザでは、Googleのセキュリティ制限によりログインができません。\n画面の右上のメニュー（︙ や ↗︎）から「Safariで開く」または「ブラウザで開く」を選択して、もう一度お試しください。");
       return;
     }
 
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      signInWithRedirect(auth, provider);
-    } else {
-      signInWithPopup(auth, provider).catch((error) => {
-        if (error.code !== 'auth/popup-closed-by-user') {
-          console.error("Popup Login Error:", error);
-          alert("ログインに失敗しました。ブラウザのポップアップブロックを解除するか、別のブラウザでお試しください。");
-        }
-      });
-    }
+    // SNSブラウザ以外はPopupでログイン
+    signInWithPopup(auth, provider).catch((error) => {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error("Popup Login Error:", error);
+        alert("ログインに失敗しました。ブラウザのポップアップブロックを解除するか、別のブラウザでお試しください。");
+      }
+    });
   };
   
   const handleLogout = () => { signOut(auth).then(() => { setBoxes([]); setDecks([]); }); };
@@ -704,127 +702,8 @@ function App() {
     );
   };
 
-  // ⭐️ 表面の描画（テキストの左寄せ＆ブロックの中央配置を完璧に実現）
-  const renderCardFront = (card, isFullscreen) => {
-    if (qType === 'word') {
-      return (
-        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
-          {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
-          {qLang === 'en' ? (
-            <h1 className="word-text" style={{ margin: 0, fontSize: isFullscreen ? 'clamp(48px, 8vw, 80px)' : '' }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
-          ) : (
-            <div className="core-meaning-large" style={{ textAlign: 'center', margin: 0, fontSize: isFullscreen ? 'clamp(32px, 5vw, 56px)' : '' }}>{cleanText((card.meaning || '').split('/')[0])}</div>
-          )}
-        </div>
-      );
-    } else {
-      return (
-        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
-          {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
-          {qLang === 'en' ? (
-            <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-              <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: isFullscreen ? 'clamp(36px, 5vw, 56px)' : 'clamp(20px, 4vw, 28px)', lineHeight:'1.8', fontWeight:'bold', fontFamily:'"Times New Roman", Times, serif', width: '100%'}}>
-                {renderBlankExample(card.example)}
-              </p>
-            </div>
-          ) : (
-            <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-              <p className="example-ja" style={{textAlign: 'left', margin: 0, fontSize: isFullscreen ? 'clamp(32px, 5vw, 48px)' : 'clamp(18px, 4vw, 22px)', lineHeight:'1.8', fontWeight:'bold', color:'#334155', width: '100%'}}>
-                {cleanTranslation(card.translation)}
-              </p>
-            </div>
-          )}
-        </div>
-      );
-    }
-  };
-
-  // ⭐️ 裏面の描画（単語表示をスマートに1行化）
-  const renderCardBack = (card, isFullscreen) => {
-    if (qType === 'word') {
-      return (
-        <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
-          {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
-          
-          {qLang === 'en' ? (
-            <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}>
-              <div className="core-meaning-large" style={{ textAlign: 'center', fontSize: isFullscreen ? 'clamp(32px, 5vw, 56px)' : '' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{cleanText(m)}</div>)}</div>
-            </div>
-          ) : (
-            <h1 className="word-text" style={{fontSize: isFullscreen ? 'clamp(48px, 8vw, 80px)' : '48px', margin: 0}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
-          )}
-
-          {showExOnBack && (
-            <div className="example-section" style={{ borderTop: 'none', paddingTop: 0, marginTop: '20px', textAlign: 'center' }}>
-              <p className="example-en" style={{ marginBottom: '8px', fontSize: isFullscreen ? 'clamp(20px, 3vw, 32px)' : '' }}>{renderHighlightedText(card.example || '')}</p>
-              <p className="example-ja" style={{ margin: 0, fontSize: isFullscreen ? 'clamp(18px, 3vw, 28px)' : '' }}>{renderHighlightedText(card.translation || '')}</p>
-            </div>
-          )}
-        </div>
-      );
-    } else {
-      // 例文モードの裏面（単語表示を1行（row）でスマートに配置）
-      return (
-        <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', padding:'20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxSizing: 'border-box'}}>
-           {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
-           
-           <div className="example-section" style={{ margin: 0, padding: 0, border: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%'}}>
-              {qLang === 'en' ? (
-                <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-                  <p className="example-ja" style={{textAlign: 'left', fontSize: isFullscreen ? 'clamp(32px, 5vw, 48px)' : 'clamp(18px, 4vw, 24px)', color: '#1e293b', fontWeight: 'bold', margin: 0, lineHeight: 1.8}}>
-                    {renderHighlightedText(card.translation || '')}
-                  </p>
-                </div>
-              ) : (
-                <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-                  <p className="example-en" style={{textAlign: 'left', fontSize: isFullscreen ? 'clamp(36px, 5vw, 56px)' : 'clamp(20px, 4vw, 26px)', fontWeight: '900', color: '#1e293b', margin: 0, lineHeight: 1.5, fontFamily: '"Times New Roman", Times, serif'}}>
-                    {renderHighlightedText(card.example || '')}
-                  </p>
-                </div>
-              )}
-           </div>
-
-           {/* ⭐️ 単語表示を縦並びから「横並び(row)」にスリム化 */}
-           {showWordOnExMode && (
-             <div style={{ display:'flex', flexDirection: 'row', alignItems:'center', justifyContent:'center', gap:'15px', opacity: 0.7, marginTop: isFullscreen ? '30px' : '20px' }}>
-                <div style={{fontSize: isFullscreen ? '28px' : '18px', fontWeight:'bold', color:'#333', cursor: 'pointer'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
-                <div style={{fontSize: isFullscreen ? '22px' : '15px', color:'#64748b', fontWeight:'normal'}}>
-                  {cleanText((card.meaning || '').split('/')[0])}
-                </div>
-             </div>
-           )}
-        </div>
-      );
-    }
-  };
-
-  // ⭐️ 画面の警告用UIとローディング
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
 
-  if (view === 'manual') {
-    return (
-      <div className="app-container gentle-bg desk-view">
-        <div className="manual-container">
-          <div className="study-controls-top no-print" style={{ display: 'flex', justifyContent: 'flex-start', width: '100%', marginBottom: '20px', position: 'sticky', top: '10px', zIndex: 100 }}>
-             <button className="back-to-desk-btn" onClick={() => setView('boxes')} style={{background: '#fff', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', padding: '10px 20px', borderRadius: '8px'}}>{t.backToHome}</button>
-             <button className="add-btn" onClick={() => window.print()} style={{marginLeft: '15px', backgroundColor: '#e74c3c'}}>{t.printPdfBtn}</button>
-          </div>
-          <div className="manual-content print-area">
-              <h1 className="manual-title">{t.appTitle}<br/>{t.m_h1}</h1>
-              <div className="manual-section"><h2 className="manual-h2">{t.m_s1}</h2><p className="manual-p">{t.m_p1}</p><ul className="manual-list"><li>{t.m_l1_1}</li><li>{t.m_l1_2}</li><li>{t.m_l1_3}</li></ul></div>
-              <div className="manual-section"><h2 className="manual-h2">{t.m_s2}</h2><p className="manual-p">{t.m_p2}</p><h3 className="manual-h3">{t.m_s2_1}</h3><p className="manual-p">{t.m_p2_1}</p><h3 className="manual-h3">{t.m_s2_2}</h3><p className="manual-p">{t.m_p2_2}</p><p className="manual-p" style={{background: '#f8f9fa', padding: '10px', borderRadius: '8px', fontSize: '13px', color: '#555'}}>{t.m_p2_3}</p></div>
-              <div className="manual-section"><h2 className="manual-h2">{t.m_s3}</h2><p className="manual-p">{t.m_p3}</p><ul className="manual-list"><li>{t.m_l3_1}</li><li>{t.m_l3_2}</li><li>{t.m_l3_3}</li><li>{t.m_l3_4}</li></ul></div>
-              <div className="manual-section"><h2 className="manual-h2">{t.m_s4}</h2><p className="manual-p">{t.m_p4}</p><ul className="manual-list"><li>{t.m_l4_1}</li><li>{t.m_l4_2}</li><li>{t.m_l4_3}</li></ul></div>
-              <div className="manual-section"><h2 className="manual-h2">{t.m_s5}</h2><p className="manual-p">{t.m_p5}</p><p className="manual-p">{t.m_p5_1}</p></div>
-              <div className="manual-section"><h2 className="manual-h2">{t.m_s6}</h2><ul className="manual-list"><li>{t.m_l6_1}</li><li>{t.m_l6_2}</li></ul></div>
-              <div style={{marginTop: '50px', textAlign: 'center', color: '#95a5a6', fontSize: '12px'}}>{t.appTitle}</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ⭐️ SNSブラウザからのアクセスを検知した場合、ログイン画面の代わりに警告画面を表示
   if (!currentUser) {
     return (
       <div className="login-screen-bg">
@@ -835,21 +714,19 @@ function App() {
         <div className="login-hero-section">
           <h1 className="login-burning-text">{t.appTitle}</h1>
           <h2 className="login-burning-subtitle">{t.appSubtitle}</h2>
+          
+          {/* ⭐️ ログインボタンは残す */}
+          <button className="login-google-btn" onClick={handleLogin}>{t.loginWithGoogle}</button>
 
-          {isInAppBrowser ? (
-            <div className="webview-alert-box" style={{ background: 'rgba(255, 255, 255, 0.9)', padding: '30px', borderRadius: '20px', textAlign: 'center', maxWidth: '400px', margin: '0 auto', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-               <h3 style={{ color: '#e74c3c', marginTop: 0, fontSize: '22px' }}>⚠️ ログインのお願い</h3>
-               <p style={{ fontWeight: 'bold', color: '#333', fontSize: '15px', marginBottom: '15px' }}>
-                 InstagramやLINE等のアプリ内ブラウザでは、Googleのセキュリティ制限によりログインができません。
-               </p>
-               <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '15px', borderRadius: '12px', fontSize: '14px', lineHeight: '1.6', color: '#475569' }}>
-                  画面右上などのメニュー（<strong>･･･</strong> や <strong>↗︎</strong>）を押し<br/>
-                  「<strong>ブラウザで開く</strong>」または「<strong>Safariで開く</strong>」<br/>
-                  を選択してからログインしてください！
-               </div>
+          {/* ⭐️ SNSブラウザの場合に、タイトルの下に小さく誘導メッセージを表示 */}
+          {isInAppBrowser && (
+            <div className="sns-browser-alert">
+              <h3>【重要】ログインエラーについて</h3>
+              <p>
+                LINEやInstagramなどのアプリ内ブラウザでは、Googleログインが利用できません。<br />
+                画面右上のメニュー(･･･)から「<strong>Safariで開く</strong>」などを選択し、標準ブラウザで利用してください。
+              </p>
             </div>
-          ) : (
-            <button className="login-google-btn" onClick={handleLogin}>{t.loginWithGoogle}</button>
           )}
         </div>
       </div>
@@ -1049,96 +926,31 @@ function App() {
     );
   }
 
-  // ⭐️ PC表示時の「カード完全中央配置」と「究極にコンパクトな全画面ステルスUI」のCSS
-  const injectLayoutStyles = (
-    <style>{`
-      @media(min-width: 1024px) {
-        .app-container {
-          max-width: 100% !important;
-          padding-left: 2vw !important;
-          padding-right: 2vw !important;
-        }
-        .study-dashboard {
-          display: flex !important;
-          flex-direction: row !important;
-          justify-content: center !important;
-          align-items: flex-start !important;
-          width: 100% !important;
-          max-width: 1600px !important;
-          margin: 0 auto !important;
-          gap: 30px !important;
-        }
-        /* ⭐️ 左右のパネルを250pxに完全に固定し、センターを真ん中に持ってくる */
-        .left-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
-        .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 900px !important; margin: 0 auto !important; }
-        .right-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
-        
-        .mini-card-list { display: grid; grid-template-columns: 1fr !important; gap: 10px; align-content: start; }
-      }
-
-      .panel-top-action { width: 100%; box-sizing: border-box; }
-      .panel-top-action button { white-space: normal !important; word-break: keep-all !important; overflow-wrap: anywhere !important; line-height: 1.4 !important; height: auto !important; min-height: 44px !important; box-sizing: border-box !important; width: 100%; max-width: 100%; }
-      .bulk-file-actions { width: 100%; box-sizing: border-box; }
-      .bulk-file-actions button, .bulk-file-actions label { box-sizing: border-box; width: 100%; max-width: 100%; }
-
-      .setting-badge-btn { background: white; border: 2px solid #e2e8f0; border-radius: 50px; padding: 6px 12px; font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); white-space: nowrap; }
-      .setting-badge-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
-      .setting-badge-btn.active { background: #e0e7ff; border-color: #818cf8; color: #4338ca; }
-      
-      .toggle-tab-btn { background: transparent; border: none; padding: 6px 16px; font-size: 13px; font-weight: 900; color: #94a3b8; border-radius: 50px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-      .toggle-tab-btn.active { background: white; color: #4338ca; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-      /* ⭐️ 全画面（全集中）モード時の絶対的カード配置とUI被り防止 */
-      .fullscreen-active {
-         position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
-         background: #f1f5f9 !important; z-index: 9999 !important;
-         display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
-         max-width: none !important;
-         padding: 80px 0 100px 0 !important; 
-         box-sizing: border-box !important;
-      }
-      
-      /* ⭐️ カードの無駄な縦長を排除し、中身にフィットさせる */
-      .fullscreen-active .card-animation-wrapper {
-         width: 85vw !important; 
-         max-width: 1100px !important; 
-         height: auto !important;
-         min-height: 40vh !important;
-         margin: 0 auto !important; 
-      }
-      
-      .fullscreen-stealth-top {
-         position: absolute !important; top: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
-         opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
-         background: white !important; padding: 10px 20px !important; border-radius: 50px !important;
-         box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; margin: 0 !important; width: auto !important;
-      }
-      .fullscreen-active:hover .fullscreen-stealth-top, .fullscreen-stealth-top:hover, .fullscreen-stealth-top:active { opacity: 1; }
-
-      .fullscreen-stealth-bottom {
-         position: absolute !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
-         opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
-         background: white !important; padding: 10px 25px !important; border-radius: 20px !important;
-         box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; 
-         width: 90% !important; max-width: 700px !important;
-         display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: space-between;
-      }
-      @media(min-width: 768px) {
-        .fullscreen-stealth-bottom { flex-direction: row !important; }
-        .fullscreen-stealth-bottom .autoplay-controls { width: auto !important; flex: 1 !important; margin-left: 30px !important; }
-        .fullscreen-stealth-bottom .controls { flex: 0 0 auto !important; }
-        .fullscreen-stealth-bottom .speed-slider-container { margin-top: 5px !important; }
-      }
-      .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
-      
-      .fullscreen-active .controls { margin: 0 !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; gap: 10px !important; }
-      .fullscreen-active .autoplay-controls { margin: 0 !important; border: none !important; padding: 0 !important; min-width: 250px; }
-    `}</style>
-  );
+  if (view === 'manual') {
+    return (
+      <div className="app-container gentle-bg desk-view">
+        <div className="manual-container">
+          <div className="study-controls-top no-print" style={{ display: 'flex', justifyContent: 'flex-start', width: '100%', marginBottom: '20px', position: 'sticky', top: '10px', zIndex: 100 }}>
+             <button className="back-to-desk-btn" onClick={() => setView('boxes')} style={{background: '#fff', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', padding: '10px 20px', borderRadius: '8px'}}>{t.backToHome}</button>
+             <button className="add-btn" onClick={() => window.print()} style={{marginLeft: '15px', backgroundColor: '#e74c3c'}}>{t.printPdfBtn}</button>
+          </div>
+          <div className="manual-content print-area">
+              <h1 className="manual-title">{t.appTitle}<br/>{t.m_h1}</h1>
+              <div className="manual-section"><h2 className="manual-h2">{t.m_s1}</h2><p className="manual-p">{t.m_p1}</p><ul className="manual-list"><li>{t.m_l1_1}</li><li>{t.m_l1_2}</li><li>{t.m_l1_3}</li></ul></div>
+              <div className="manual-section"><h2 className="manual-h2">{t.m_s2}</h2><p className="manual-p">{t.m_p2}</p><h3 className="manual-h3">{t.m_s2_1}</h3><p className="manual-p">{t.m_p2_1}</p><h3 className="manual-h3">{t.m_s2_2}</h3><p className="manual-p">{t.m_p2_2}</p><p className="manual-p" style={{background: '#f8f9fa', padding: '10px', borderRadius: '8px', fontSize: '13px', color: '#555'}}>{t.m_p2_3}</p></div>
+              <div className="manual-section"><h2 className="manual-h2">{t.m_s3}</h2><p className="manual-p">{t.m_p3}</p><ul className="manual-list"><li>{t.m_l3_1}</li><li>{t.m_l3_2}</li><li>{t.m_l3_3}</li><li>{t.m_l3_4}</li></ul></div>
+              <div className="manual-section"><h2 className="manual-h2">{t.m_s4}</h2><p className="manual-p">{t.m_p4}</p><ul className="manual-list"><li>{t.m_l4_1}</li><li>{t.m_l4_2}</li><li>{t.m_l4_3}</li></ul></div>
+              <div className="manual-section"><h2 className="manual-h2">{t.m_s5}</h2><p className="manual-p">{t.m_p5}</p><p className="manual-p">{t.m_p5_1}</p></div>
+              <div className="manual-section"><h2 className="manual-h2">{t.m_s6}</h2><ul className="manual-list"><li>{t.m_l6_1}</li><li>{t.m_l6_2}</li></ul></div>
+              <div style={{marginTop: '50px', textAlign: 'center', color: '#95a5a6', fontSize: '12px'}}>{t.appTitle}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      {injectLayoutStyles}
       {ghostPos && (<div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>{ghostPos.title}</div>)}
       
       {editingCard && (
@@ -1295,106 +1107,89 @@ function App() {
                 </div>
               ) : studyCards.length > 0 && !isBulkMode ? (
                 <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
-                  
-                  <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: isFullscreen ? 0 : '20px', width: '100%', gap: '10px' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '15px', width: '100%' }}>
-                      
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">
-                          {qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}
-                        </button>
-                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
-                          <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>🔤 単語</button>
-                          <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>📝 例文</button>
-                        </div>
-                      </div>
-                      
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        {qType === 'word' ? (
-                          <button onClick={() => setShowExOnBack(!showExOnBack)} className={`setting-badge-btn ${showExOnBack ? 'active' : ''}`} title="裏面の例文表示">
-                            例文 {showExOnBack ? 'ON' : 'OFF'}
-                          </button>
-                        ) : (
-                          <button onClick={() => setShowWordOnExMode(!showWordOnExMode)} className={`setting-badge-btn ${showWordOnExMode ? 'active' : ''}`} title="裏面の単語表示">
-                            単語 {showWordOnExMode ? 'ON' : 'OFF'}
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px' }}>
-                        {currentIndex + 1} / {studyCards.length}
-                      </div>
-
-                    </div>
+                  <div className="card-header-actions" style={{ visibility: isBulkMode ? 'hidden' : 'visible' }}>
+                    <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">{qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}</button>
+                    <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>🔤 単語</button>
+                    <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>📝 例文</button>
+                    {qType === 'word' ? (
+                      <button onClick={() => setShowExOnBack(!showExOnBack)} className={`setting-badge-btn ${showExOnBack ? 'active' : ''}`} title="裏面の例文表示">例文 {showExOnBack ? 'ON' : 'OFF'}</button>
+                    ) : (
+                      <button onClick={() => setShowWordOnExMode(!showWordOnExMode)} className={`setting-badge-btn ${showWordOnExMode ? 'active' : ''}`} title="裏面の単語表示">単語 {showWordOnExMode ? 'ON' : 'OFF'}</button>
+                    )}
+                    <div className="card-counter">{currentIndex + 1} / {studyCards.length}</div>
                   </div>
-
                   <div className="card-animation-wrapper" key={currentIndex}>
                     <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
                       <div className="card-inner">
                         <div className="card-front">
                           <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)}>✔</button>
-                          {renderCardFront(studyCards[currentIndex], isFullscreen)}
+                          {qType === 'word' ? (
+                            <>
+                              {studyCards[currentIndex]?.pos && <span className="pos-badge">{studyCards[currentIndex].pos}</span>}
+                              {qLang === 'en' ? ( <h1 className="word-text" onClick={(e) => { e.stopPropagation(); playAudio(studyCards[currentIndex]?.word); }}>{studyCards[currentIndex]?.word}</h1> ) : ( <div className="core-meaning-large">{cleanText((studyCards[currentIndex]?.meaning || '').split('/')[0])}</div> )}
+                            </>
+                          ) : (
+                            <>
+                              {studyCards[currentIndex]?.pos && <span className="pos-badge">{studyCards[currentIndex].pos}</span>}
+                              {qLang === 'en' ? ( <p className="example-en">{renderBlankExample(studyCards[currentIndex]?.example)}</p> ) : ( <p className="example-ja">{cleanTranslation(studyCards[currentIndex]?.translation)}</p> )}
+                            </>
+                          )}
                         </div>
                         <div className="card-back">
-                          {renderCardBack(studyCards[currentIndex], isFullscreen)}
+                          {qType === 'word' ? (
+                            <div className="back-content">
+                              {qLang === 'en' ? (
+                                <div className="meaning-section"><div className="core-meaning-large">{String(studyCards[currentIndex]?.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{cleanText(m)}</div>)}</div></div>
+                              ) : (
+                                <h1 className="word-text" onClick={(e) => { e.stopPropagation(); playAudio(studyCards[currentIndex]?.word); }}>{studyCards[currentIndex]?.word}</h1>
+                              )}
+                              {showExOnBack && (
+                                <div className="example-section">
+                                  <p className="example-en">{renderHighlightedText(studyCards[currentIndex]?.example || '')}</p>
+                                  <p className="example-ja">{renderHighlightedText(studyCards[currentIndex]?.translation || '')}</p>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="back-content">
+                              <div className="example-section">
+                                {qLang === 'en' ? ( <p className="example-ja">{renderHighlightedText(studyCards[currentIndex]?.translation || '')}</p> ) : ( <p className="example-en">{renderHighlightedText(studyCards[currentIndex]?.example || '')}</p> )}
+                              </div>
+                              {showWordOnExMode && (
+                                <div className="word-mean-box">
+                                  <div className="word-text-mini" onClick={(e) => { e.stopPropagation(); playAudio(studyCards[currentIndex]?.word); }}>{studyCards[currentIndex]?.word}</div>
+                                  <div className="meaning-text-mini">{cleanText((studyCards[currentIndex]?.meaning || '').split('/')[0])}</div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
-                  
-                  {isFullscreen ? (
-                    <div className="fullscreen-stealth-bottom">
-                      <div className="controls" style={{ margin: 0, boxShadow: 'none', background: 'transparent', padding: 0 }}>
-                        <button onClick={handlePrevCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>◀</button>
-                        <button onClick={deleteCard} className="delete-btn">{t.discardBtn}</button>
-                        <button onClick={handleNextCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>▶</button>
-                      </div>
-                      <div className="autoplay-controls" style={{ margin: 0, border: 'none', padding: 0 }}>
-                        <div className="autoplay-actions-row">
-                          <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
-                          <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
-                          <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
+                  <div className="controls">
+                    <button onClick={handlePrevCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>◀</button>
+                    <button onClick={deleteCard} className="delete-btn">{t.discardBtn}</button>
+                    <button onClick={handleNextCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>▶</button>
+                  </div>
+                  <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8'}}>
+                    <div className="autoplay-actions-row">
+                      <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
+                      <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
+                      <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
+                    </div>
+                    <div className="speed-slider-container" style={{marginTop: '15px'}}>
+                      <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
+                      <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
+                        <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
+                        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
+                          <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
                         </div>
-                        <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                          <div style={{fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
-                          <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
-                            <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
-                            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '10px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '1px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-                              <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
-                            </div>
-                            <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'left' }}>🐢 {t.slow}</span>
-                          </div>
-                        </div>
+                        <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>🐢 {t.slow}</span>
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      <div className="controls">
-                        <button onClick={handlePrevCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>◀</button>
-                        <button onClick={deleteCard} className="delete-btn">{t.discardBtn}</button>
-                        <button onClick={handleNextCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>▶</button>
-                      </div>
-                      <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8'}}>
-                        <div className="autoplay-actions-row">
-                          <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
-                          <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
-                          <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
-                        </div>
-                        <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                          <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
-                          <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
-                            <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
-                            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-                              <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
-                            </div>
-                            <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>🐢 {t.slow}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
+                  </div>
                 </div>
               ) : null}
             </div>
