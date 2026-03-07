@@ -964,12 +964,12 @@ function App() {
     return (
       <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         <div className="top-right-actions">
+          <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout}</button>
           <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
           <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#9b59b6', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>📊 Log</button>
           <div style={{width: '2px', height: '24px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 5px'}}></div>
           <button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button>
           <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
-          <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout}</button>
         </div>
         <div className="hero-section">
           <h1 className="burning-text">{t.appTitle}</h1>
