@@ -2,7 +2,6 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-// ⭐️ signInWithRedirect を追加
 import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
@@ -128,9 +127,18 @@ function App() {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false); // SNSブラウザ検知用
   
   const [boxes, setBoxes] = useState(() => { const savedBoxes = localStorage.getItem('redline_boxes'); return savedBoxes ? JSON.parse(savedBoxes) : initialBoxes; });
   const [decks, setDecks] = useState(() => { const savedDecks = localStorage.getItem('redline_decks'); return savedDecks ? JSON.parse(savedDecks) : initialDecks; });
+
+  // アプリ読み込み時にInstagramやLINEの「アプリ内ブラウザ」を検知
+  useEffect(() => {
+    const ua = (navigator.userAgent || navigator.vendor || window.opera).toLowerCase();
+    if (ua.includes('line') || ua.includes('instagram') || ua.includes('fban') || ua.includes('fbav') || ua.includes('twitter')) {
+      setIsInAppBrowser(true);
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -161,16 +169,13 @@ function App() {
     }
   }, [boxes, decks, currentUser]);
 
-  // ⭐️ アプリ内ブラウザの検知とログインのスマートフォールバック
   const handleLogin = () => {
-    const ua = navigator.userAgent.toLowerCase();
-    // LINEやInstagramなどのアプリ内ブラウザからのアクセスを検知
-    if (ua.indexOf('line') > -1 || ua.indexOf('instagram') > -1 || ua.indexOf('fb') > -1 || ua.indexOf('twitter') > -1) {
-      alert("【ログインエラーの回避】\nLINEやSNSのアプリ内ブラウザではGoogleログインができません。\n画面のメニュー（︙ や ↗︎）から「Safariで開く」または「ブラウザで開く」を選択して、もう一度お試しください。");
+    const ua = (navigator.userAgent || navigator.vendor || window.opera).toLowerCase();
+    if (ua.includes('line') || ua.includes('instagram') || ua.includes('fban') || ua.includes('fbav') || ua.includes('twitter')) {
+      alert("【ログインエラーの回避】\nLINEやSNSのアプリ内ブラウザではGoogleのセキュリティによりログインがブロックされます。\n画面右上のメニュー（︙ や ↗︎）から「Safariで開く」または「ブラウザで開く」を選択して、もう一度お試しください。");
       return;
     }
 
-    // スマホ環境の場合は画面遷移（リダイレクト）ログイン、PCはポップアップ
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile) {
       signInWithRedirect(auth, provider);
@@ -699,7 +704,7 @@ function App() {
     );
   };
 
-  // ⭐️ 表面の描画（テキストの左寄せ＆ブロックの完全中央配置）
+  // ⭐️ 表面の描画（テキストの左寄せ＆ブロックの中央配置を完璧に実現）
   const renderCardFront = (card, isFullscreen) => {
     if (qType === 'word') {
       return (
@@ -734,7 +739,7 @@ function App() {
     }
   };
 
-  // ⭐️ 裏面の描画（無駄な線を排除、単語表示を横並び1行に）
+  // ⭐️ 裏面の描画（単語表示をスマートに1行化）
   const renderCardBack = (card, isFullscreen) => {
     if (qType === 'word') {
       return (
@@ -758,7 +763,7 @@ function App() {
         </div>
       );
     } else {
-      // 例文モードの裏面（英→日は和訳のみ。破線なし。完全中央配置）
+      // 例文モードの裏面（単語表示を1行（row）でスマートに配置）
       return (
         <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', padding:'20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxSizing: 'border-box'}}>
            {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
@@ -779,7 +784,7 @@ function App() {
               )}
            </div>
 
-           {/* ⭐️ 単語表示を横並び1行(row)でスリムに配置 */}
+           {/* ⭐️ 単語表示を縦並びから「横並び(row)」にスリム化 */}
            {showWordOnExMode && (
              <div style={{ display:'flex', flexDirection: 'row', alignItems:'center', justifyContent:'center', gap:'15px', opacity: 0.7, marginTop: isFullscreen ? '30px' : '20px' }}>
                 <div style={{fontSize: isFullscreen ? '28px' : '18px', fontWeight:'bold', color:'#333', cursor: 'pointer'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
@@ -793,6 +798,7 @@ function App() {
     }
   };
 
+  // ⭐️ 画面の警告用UIとローディング
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
 
   if (view === 'manual') {
@@ -818,6 +824,7 @@ function App() {
     );
   }
 
+  // ⭐️ SNSブラウザからのアクセスを検知した場合、ログイン画面の代わりに警告画面を表示
   if (!currentUser) {
     return (
       <div className="login-screen-bg">
@@ -828,7 +835,22 @@ function App() {
         <div className="login-hero-section">
           <h1 className="login-burning-text">{t.appTitle}</h1>
           <h2 className="login-burning-subtitle">{t.appSubtitle}</h2>
-          <button className="login-google-btn" onClick={handleLogin}>{t.loginWithGoogle}</button>
+
+          {isInAppBrowser ? (
+            <div className="webview-alert-box" style={{ background: 'rgba(255, 255, 255, 0.9)', padding: '30px', borderRadius: '20px', textAlign: 'center', maxWidth: '400px', margin: '0 auto', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+               <h3 style={{ color: '#e74c3c', marginTop: 0, fontSize: '22px' }}>⚠️ ログインのお願い</h3>
+               <p style={{ fontWeight: 'bold', color: '#333', fontSize: '15px', marginBottom: '15px' }}>
+                 InstagramやLINE等のアプリ内ブラウザでは、Googleのセキュリティ制限によりログインができません。
+               </p>
+               <div style={{ background: '#f8fafc', border: '1px solid #cbd5e1', padding: '15px', borderRadius: '12px', fontSize: '14px', lineHeight: '1.6', color: '#475569' }}>
+                  画面右上などのメニュー（<strong>･･･</strong> や <strong>↗︎</strong>）を押し<br/>
+                  「<strong>ブラウザで開く</strong>」または「<strong>Safariで開く</strong>」<br/>
+                  を選択してからログインしてください！
+               </div>
+            </div>
+          ) : (
+            <button className="login-google-btn" onClick={handleLogin}>{t.loginWithGoogle}</button>
+          )}
         </div>
       </div>
     );
@@ -1027,7 +1049,7 @@ function App() {
     );
   }
 
-  // ⭐️ PC表示時の完全なる中央配置と、無駄を削ぎ落としたステルスUIのCSS
+  // ⭐️ PC表示時の「カード完全中央配置」と「究極にコンパクトな全画面ステルスUI」のCSS
   const injectLayoutStyles = (
     <style>{`
       @media(min-width: 1024px) {
@@ -1046,7 +1068,7 @@ function App() {
           margin: 0 auto !important;
           gap: 30px !important;
         }
-        /* ⭐️ 左右のパネルを250pxで固定し、センターを完全な中央軸に強制配置 */
+        /* ⭐️ 左右のパネルを250pxに完全に固定し、センターを真ん中に持ってくる */
         .left-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
         .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 900px !important; margin: 0 auto !important; }
         .right-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
@@ -1054,7 +1076,6 @@ function App() {
         .mini-card-list { display: grid; grid-template-columns: 1fr !important; gap: 10px; align-content: start; }
       }
 
-      /* ボタンはみ出し防止魔法 */
       .panel-top-action { width: 100%; box-sizing: border-box; }
       .panel-top-action button { white-space: normal !important; word-break: keep-all !important; overflow-wrap: anywhere !important; line-height: 1.4 !important; height: auto !important; min-height: 44px !important; box-sizing: border-box !important; width: 100%; max-width: 100%; }
       .bulk-file-actions { width: 100%; box-sizing: border-box; }
@@ -1086,7 +1107,6 @@ function App() {
          margin: 0 auto !important; 
       }
       
-      /* 上部のステルス設定パネル */
       .fullscreen-stealth-top {
          position: absolute !important; top: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
          opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
@@ -1095,7 +1115,6 @@ function App() {
       }
       .fullscreen-active:hover .fullscreen-stealth-top, .fullscreen-stealth-top:hover, .fullscreen-stealth-top:active { opacity: 1; }
 
-      /* ⭐️ 極限までスリム化した下部のステルス操作パネル */
       .fullscreen-stealth-bottom {
          position: absolute !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
          opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
@@ -1105,17 +1124,9 @@ function App() {
          display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: space-between;
       }
       @media(min-width: 768px) {
-        .fullscreen-stealth-bottom {
-          flex-direction: row !important; 
-        }
-        .fullscreen-stealth-bottom .autoplay-controls {
-          width: auto !important;
-          flex: 1 !important;
-          margin-left: 30px !important;
-        }
-        .fullscreen-stealth-bottom .controls {
-          flex: 0 0 auto !important;
-        }
+        .fullscreen-stealth-bottom { flex-direction: row !important; }
+        .fullscreen-stealth-bottom .autoplay-controls { width: auto !important; flex: 1 !important; margin-left: 30px !important; }
+        .fullscreen-stealth-bottom .controls { flex: 0 0 auto !important; }
         .fullscreen-stealth-bottom .speed-slider-container { margin-top: 5px !important; }
       }
       .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
@@ -1285,7 +1296,6 @@ function App() {
               ) : studyCards.length > 0 && !isBulkMode ? (
                 <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '800px', margin: '0 auto' }}>
                   
-                  {/* ⭐️ 神のカスタマイズUIエリア */}
                   <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: isFullscreen ? 0 : '20px', width: '100%', gap: '10px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '15px', width: '100%' }}>
                       
@@ -1332,7 +1342,6 @@ function App() {
                     </div>
                   </div>
                   
-                  {/* ⭐️ 全画面（全集中）モード専用：極限まで削ぎ落としたステルス下部UI */}
                   {isFullscreen ? (
                     <div className="fullscreen-stealth-bottom">
                       <div className="controls" style={{ margin: 0, boxShadow: 'none', background: 'transparent', padding: 0 }}>
