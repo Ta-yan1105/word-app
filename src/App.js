@@ -2,7 +2,8 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+// ⭐️ signInWithRedirect を追加
+import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 
@@ -160,12 +161,27 @@ function App() {
     }
   }, [boxes, decks, currentUser]);
 
+  // ⭐️ アプリ内ブラウザの検知とログインのスマートフォールバック
   const handleLogin = () => {
-    signInWithPopup(auth, provider).catch((error) => {
-      if (error.code !== 'auth/popup-closed-by-user') {
-        console.error("Popup Login Error:", error);
-      }
-    });
+    const ua = navigator.userAgent.toLowerCase();
+    // LINEやInstagramなどのアプリ内ブラウザからのアクセスを検知
+    if (ua.indexOf('line') > -1 || ua.indexOf('instagram') > -1 || ua.indexOf('fb') > -1 || ua.indexOf('twitter') > -1) {
+      alert("【ログインエラーの回避】\nLINEやSNSのアプリ内ブラウザではGoogleログインができません。\n画面のメニュー（︙ や ↗︎）から「Safariで開く」または「ブラウザで開く」を選択して、もう一度お試しください。");
+      return;
+    }
+
+    // スマホ環境の場合は画面遷移（リダイレクト）ログイン、PCはポップアップ
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      signInWithRedirect(auth, provider);
+    } else {
+      signInWithPopup(auth, provider).catch((error) => {
+        if (error.code !== 'auth/popup-closed-by-user') {
+          console.error("Popup Login Error:", error);
+          alert("ログインに失敗しました。ブラウザのポップアップブロックを解除するか、別のブラウザでお試しください。");
+        }
+      });
+    }
   };
   
   const handleLogout = () => { signOut(auth).then(() => { setBoxes([]); setDecks([]); }); };
@@ -472,7 +488,6 @@ function App() {
     return { label: t.statusWarning, className: 'status-warning', needsReview: false };
   };
 
-  // ⭐️ 修正版CSVテンプレート（無駄な行を削除）
   const downloadTemplate = () => {
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); 
     const content = '英単語,日本語訳,英語例文,例文和訳\n"例: apple",りんご,"I have an **apple**.","私は**りんご**を持っています。"\n';
@@ -684,7 +699,7 @@ function App() {
     );
   };
 
-  // ⭐️ 表面の描画（テキストの左寄せ＆ブロックの中央配置を完璧に実現）
+  // ⭐️ 表面の描画（テキストの左寄せ＆ブロックの完全中央配置）
   const renderCardFront = (card, isFullscreen) => {
     if (qType === 'word') {
       return (
@@ -719,7 +734,7 @@ function App() {
     }
   };
 
-  // ⭐️ 裏面の描画（単語表示をスマートに1行化）
+  // ⭐️ 裏面の描画（無駄な線を排除、単語表示を横並び1行に）
   const renderCardBack = (card, isFullscreen) => {
     if (qType === 'word') {
       return (
@@ -743,7 +758,7 @@ function App() {
         </div>
       );
     } else {
-      // 例文モードの裏面（単語表示を1行（row）でスマートに配置）
+      // 例文モードの裏面（英→日は和訳のみ。破線なし。完全中央配置）
       return (
         <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', padding:'20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', boxSizing: 'border-box'}}>
            {card.pos && <span style={{ position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', border: '2px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', fontWeight: '900', color: '#64748b', background: '#f8fafc', zIndex: 10 }}>{card.pos}</span>}
@@ -764,7 +779,7 @@ function App() {
               )}
            </div>
 
-           {/* ⭐️ 単語表示を縦並びから「横並び(row)」にスリム化 */}
+           {/* ⭐️ 単語表示を横並び1行(row)でスリムに配置 */}
            {showWordOnExMode && (
              <div style={{ display:'flex', flexDirection: 'row', alignItems:'center', justifyContent:'center', gap:'15px', opacity: 0.7, marginTop: isFullscreen ? '30px' : '20px' }}>
                 <div style={{fontSize: isFullscreen ? '28px' : '18px', fontWeight:'bold', color:'#333', cursor: 'pointer'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
@@ -1012,7 +1027,7 @@ function App() {
     );
   }
 
-  // ⭐️ PC表示時の「カード完全中央配置」と「究極にコンパクトな全画面ステルスUI」のCSS
+  // ⭐️ PC表示時の完全なる中央配置と、無駄を削ぎ落としたステルスUIのCSS
   const injectLayoutStyles = (
     <style>{`
       @media(min-width: 1024px) {
@@ -1031,7 +1046,7 @@ function App() {
           margin: 0 auto !important;
           gap: 30px !important;
         }
-        /* ⭐️ 左右のパネルを細く固定し、センターを完全なド真ん中に配置 */
+        /* ⭐️ 左右のパネルを250pxで固定し、センターを完全な中央軸に強制配置 */
         .left-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
         .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 900px !important; margin: 0 auto !important; }
         .right-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
@@ -1039,6 +1054,7 @@ function App() {
         .mini-card-list { display: grid; grid-template-columns: 1fr !important; gap: 10px; align-content: start; }
       }
 
+      /* ボタンはみ出し防止魔法 */
       .panel-top-action { width: 100%; box-sizing: border-box; }
       .panel-top-action button { white-space: normal !important; word-break: keep-all !important; overflow-wrap: anywhere !important; line-height: 1.4 !important; height: auto !important; min-height: 44px !important; box-sizing: border-box !important; width: 100%; max-width: 100%; }
       .bulk-file-actions { width: 100%; box-sizing: border-box; }
@@ -1057,17 +1073,16 @@ function App() {
          background: #f1f5f9 !important; z-index: 9999 !important;
          display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
          max-width: none !important;
-         padding: 0 !important;
+         padding: 80px 0 100px 0 !important; 
          box-sizing: border-box !important;
       }
       
-      /* ⭐️ 無駄な縦幅を消し、スマートなカードサイズを維持 */
+      /* ⭐️ カードの無駄な縦長を排除し、中身にフィットさせる */
       .fullscreen-active .card-animation-wrapper {
-         width: 80vw !important; 
-         max-width: 1000px !important; 
+         width: 85vw !important; 
+         max-width: 1100px !important; 
          height: auto !important;
-         min-height: 40vh !important; /* 潰れすぎ防止 */
-         max-height: 60vh !important; /* 伸びすぎ防止 */
+         min-height: 40vh !important;
          margin: 0 auto !important; 
       }
       
@@ -1101,7 +1116,6 @@ function App() {
         .fullscreen-stealth-bottom .controls {
           flex: 0 0 auto !important;
         }
-        /* スライダー周りの余白も極限まで削る */
         .fullscreen-stealth-bottom .speed-slider-container { margin-top: 5px !important; }
       }
       .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
@@ -1318,7 +1332,7 @@ function App() {
                     </div>
                   </div>
                   
-                  {/* ⭐️ 全画面（全集中）モード専用の極限スリムなステルス操作パネル */}
+                  {/* ⭐️ 全画面（全集中）モード専用：極限まで削ぎ落としたステルス下部UI */}
                   {isFullscreen ? (
                     <div className="fullscreen-stealth-bottom">
                       <div className="controls" style={{ margin: 0, boxShadow: 'none', background: 'transparent', padding: 0 }}>
@@ -1332,7 +1346,7 @@ function App() {
                           <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
                           <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
                         </div>
-                        <div className="speed-slider-container" style={{marginTop: '5px'}}>
+                        <div className="speed-slider-container" style={{marginTop: '15px'}}>
                           <div style={{fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
                           <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
                             <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
