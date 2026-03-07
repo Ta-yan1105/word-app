@@ -1181,9 +1181,11 @@ function App() {
         `}} />
 
         <div className="print-area-wrapper">
+          
+          {/* ---------- 問題用紙 ---------- */}
           {chunks.map((chunk, pageIndex) => {
             return (
-              <div key={pageIndex} className="print-page">
+              <div key={`question-page-${pageIndex}`} className="print-page">
                 {pageIndex === 0 && (
                   <div className="print-header-compact">
                     <div className="print-date-compact">{t.printDate} {todayStr}</div>
@@ -1238,6 +1240,76 @@ function App() {
                               <span className="print-q-ja">{cleanText((c.meaning || '').split('/')[0])}</span>
                             </div>
                             <div className="print-q-bottom"><div className="print-q-ans"></div></div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* ---------- 解答用紙 ---------- */}
+          {chunks.map((chunk, pageIndex) => {
+            return (
+              <div key={`answer-page-${pageIndex}`} className="print-page">
+                {pageIndex === 0 && (
+                  <div className="print-header-compact">
+                    <div className="print-date-compact">{t.printDate} {todayStr}</div>
+                    <h1 className="print-title-compact" title={`${activeDeck?.name} ${title} ${lang === 'ja' ? '【解答】' : '[Answers]'}`}>
+                      {activeDeck?.name} {title} <span style={{color: '#e74c3c', fontSize: '18px', marginLeft: '10px'}}>{lang === 'ja' ? '【解答】' : '[Answers]'}</span>
+                    </h1>
+                    <div className="print-name-compact">{t.printName}</div>
+                    <div className="print-score-compact">
+                      {t.printScore.split('：')[0]}：<span className="print-score-large-compact">　　 / {printCards.length}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {printMode === 'example' ? (
+                  <div className="print-column-single" style={{ marginTop: pageIndex > 0 ? '20px' : '35px' }}>
+                    {chunk.map((c, i) => {
+                      const globalIndex = pageIndex * chunkSize + i + 1;
+                      return (
+                        <div key={`ans-ex-${i}`} className="print-q-item-example">
+                          <div className="print-q-top">
+                            <span className="print-q-num">({globalIndex})</span>
+                            <span className="print-q-ja-example">{cleanTranslation(c.translation) || cleanText((c.meaning || '').split('/')[0])}</span>
+                          </div>
+                          <div className="print-q-bottom">
+                            <div className="print-q-example-en" style={{fontWeight: 'bold', color: '#2c3e50'}}>{renderHighlightedText(c.example)}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="print-columns-container" style={{ marginTop: pageIndex > 0 ? '10px' : '0' }}>
+                    <div className="print-column">
+                      {chunk.slice(0, Math.ceil(chunk.length / 2)).map((c, i) => {
+                        const globalIndex = pageIndex * chunkSize + i + 1;
+                        return (
+                          <div key={`ans-left-${i}`} className="print-q-item">
+                            <div className="print-q-top">
+                              <span className="print-q-num">({globalIndex})</span>
+                              <span className="print-q-ja">{cleanText((c.meaning || '').split('/')[0])}</span>
+                            </div>
+                            <div className="print-q-bottom" style={{ borderBottom: '1px solid #000', height: '24px', display: 'flex', alignItems: 'flex-end', paddingBottom: '2px', paddingLeft: '5px', fontSize: '15px', fontWeight: 'bold', color: '#e74c3c' }}>{c.word}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="print-column">
+                      {chunk.slice(Math.ceil(chunk.length / 2)).map((c, i) => {
+                        const globalIndex = pageIndex * chunkSize + Math.ceil(chunk.length / 2) + i + 1;
+                        return (
+                          <div key={`ans-right-${i}`} className="print-q-item">
+                            <div className="print-q-top">
+                              <span className="print-q-num">({globalIndex})</span>
+                              <span className="print-q-ja">{cleanText((c.meaning || '').split('/')[0])}</span>
+                            </div>
+                            <div className="print-q-bottom" style={{ borderBottom: '1px solid #000', height: '24px', display: 'flex', alignItems: 'flex-end', paddingBottom: '2px', paddingLeft: '5px', fontSize: '15px', fontWeight: 'bold', color: '#e74c3c' }}>{c.word}</div>
                           </div>
                         );
                       })}
