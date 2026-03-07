@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 
@@ -229,12 +229,22 @@ function App() {
       alert("【ログインエラーの回避】\nLINEやInstagramなどのアプリ内ブラウザでは、Googleのセキュリティ制限によりログインができません。\n画面の右上のメニュー（︙ や ↗︎）から「Safariで開く」または「ブラウザで開く」を選択して、もう一度お試しください。");
       return;
     }
-    signInWithPopup(auth, provider).catch((error) => {
-      if (error.code !== 'auth/popup-closed-by-user') {
-        console.error("Popup Login Error:", error);
-        alert("ログインに失敗しました。ブラウザのポップアップブロックを解除するか、別のブラウザでお試しください。");
-      }
-    });
+    
+    // スマホ環境（iPhone等）の場合はPopupではなくRedirect方式を使用する
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      signInWithRedirect(auth, provider).catch((error) => {
+        console.error("Redirect Login Error:", error);
+        alert("ログインに失敗しました。別のブラウザでお試しください。");
+      });
+    } else {
+      signInWithPopup(auth, provider).catch((error) => {
+        if (error.code !== 'auth/popup-closed-by-user') {
+          console.error("Popup Login Error:", error);
+          alert("ログインに失敗しました。ブラウザのポップアップブロックを解除するか、別のブラウザでお試しください。");
+        }
+      });
+    }
   };
   
   const handleLogout = () => { signOut(auth).then(() => { setBoxes([]); setDecks([]); }); };
