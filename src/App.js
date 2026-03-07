@@ -794,10 +794,10 @@ function App() {
 
   const renderCardFront = (card, isFullscreen) => {
     if (!card) return null;
-    const fontSizeWord = isFullscreen ? 'clamp(56px, 12vw, 140px)' : '';
-    const fontSizeMean = isFullscreen ? 'clamp(40px, 8vw, 100px)' : '';
-    const fontSizeExEn = isFullscreen ? 'clamp(40px, 7vw, 90px)' : 'clamp(20px, 4vw, 28px)';
-    const fontSizeExJa = isFullscreen ? 'clamp(32px, 6vw, 70px)' : 'clamp(18px, 4vw, 22px)';
+    const fontSizeWord = isFullscreen ? 'clamp(40px, 8vw, 80px)' : '';
+    const fontSizeMean = isFullscreen ? 'clamp(32px, 6vw, 64px)' : '';
+    const fontSizeExEn = isFullscreen ? 'clamp(28px, 5vw, 56px)' : 'clamp(20px, 4vw, 28px)';
+    const fontSizeExJa = isFullscreen ? 'clamp(24px, 4vw, 48px)' : 'clamp(18px, 4vw, 22px)';
 
     const isJapanese = qLang === 'ja';
 
@@ -832,13 +832,13 @@ function App() {
 
   const renderCardBack = (card, isFullscreen) => {
     if (!card) return null; 
-    const fontSizeWord = isFullscreen ? 'clamp(56px, 12vw, 140px)' : '48px';
-    const fontSizeMean = isFullscreen ? 'clamp(40px, 8vw, 100px)' : '';
-    const fontSizeExEn = isFullscreen ? 'clamp(24px, 4vw, 48px)' : '';
-    const fontSizeExJa = isFullscreen ? 'clamp(20px, 3.5vw, 40px)' : '';
+    const fontSizeWord = isFullscreen ? 'clamp(40px, 8vw, 80px)' : '48px';
+    const fontSizeMean = isFullscreen ? 'clamp(32px, 6vw, 64px)' : '';
+    const fontSizeExEn = isFullscreen ? 'clamp(24px, 4vw, 40px)' : '';
+    const fontSizeExJa = isFullscreen ? 'clamp(20px, 3.5vw, 36px)' : '';
 
-    const exModeExJaFontSize = isFullscreen ? 'clamp(36px, 6vw, 80px)' : 'clamp(18px, 4vw, 24px)';
-    const exModeExEnFontSize = isFullscreen ? 'clamp(40px, 7vw, 90px)' : 'clamp(20px, 4vw, 26px)';
+    const exModeExJaFontSize = isFullscreen ? 'clamp(28px, 5vw, 56px)' : 'clamp(18px, 4vw, 24px)';
+    const exModeExEnFontSize = isFullscreen ? 'clamp(32px, 5.5vw, 64px)' : 'clamp(20px, 4vw, 26px)';
 
     const isJapanese = qLang === 'en'; 
 
@@ -1113,7 +1113,7 @@ function App() {
   }
 
   if (view === 'printPreview') {
-    const chunkSize = printMode === 'example' ? 14 : 25;
+    const chunkSize = printMode === 'example' ? 10 : 25;
     const chunks = chunkArray(printCards, chunkSize);
     const title = printMode === 'example' ? t.printTestExampleTitle : t.printTestTitle;
     const todayStr = new Date().toLocaleDateString();
@@ -1140,7 +1140,7 @@ function App() {
           .print-area-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; padding-bottom: 50px; background: #f1f5f9; }
           .print-page { background: white; width: 210mm; height: 297mm; margin: 0 0 30px 0; padding: 12mm 15mm; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box; color: #000; overflow: hidden; position: relative; }
 
-          .print-header-compact { position: relative; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+          .print-header-compact { position: relative; border-bottom: none; padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
           .print-date-compact { position: absolute; top: -12px; right: 0; font-size: 10px; color: #555; font-weight: bold; }
           .print-title-compact { font-size: 22px; font-weight: 900; margin: 0; white-space: nowrap; max-width: 45%; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
           .print-name-compact { font-size: 16px; font-weight: bold; flex-grow: 1; padding-bottom: 2px; }
@@ -1151,16 +1151,16 @@ function App() {
           .print-column { flex: 1; display: flex; flex-direction: column; }
           .print-column-single { display: flex; flex-direction: column; width: 100%; height: calc(100% - 60px); }
 
-          .print-q-item { display: flex; flex-direction: column; margin-bottom: 18px; page-break-inside: avoid; break-inside: avoid; } 
-          .print-q-top { display: flex; align-items: flex-start; margin-bottom: 4px; }
-          .print-q-num { width: 35px; font-weight: bold; flex-shrink: 0; font-size: 14px; }
+          .print-q-item { display: flex; flex-direction: column; justify-content: space-between; height: 58px; margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; } 
+          .print-q-top { display: flex; align-items: flex-start; flex-grow: 1; }
+          .print-q-num { width: 45px; font-weight: bold; flex-shrink: 0; font-size: 14px; }
           .print-q-ja { font-size: 14px; line-height: 1.2; word-break: keep-all; overflow-wrap: anywhere; }
-          .print-q-bottom { padding-left: 35px; width: 100%; box-sizing: border-box; }
-          .print-q-ans { width: 100%; border-bottom: 1px solid #000; height: 18px; }
+          .print-q-bottom { padding-left: 45px; width: 100%; box-sizing: border-box; flex-shrink: 0; padding-bottom: 4px; }
+          .print-q-ans { width: 100%; border-bottom: 1px solid #000; height: 6px; }
 
-          .print-q-item-example { display: flex; flex-direction: column; margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; }
+          .print-q-item-example { display: flex; flex-direction: column; justify-content: space-between; min-height: 65px; margin-bottom: 30px; page-break-inside: avoid; break-inside: avoid; }
           .print-q-ja-example { font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-          .print-q-example-en { font-size: 16px; line-height: 1.6; padding-left: 5px; font-family: "Times New Roman", Times, serif; margin-top: 2px; }
+          .print-q-example-en { font-size: 16px; line-height: 1.6; padding-left: 5px; font-family: "Times New Roman", Times, serif; flex-shrink: 0; }
           
           .print-blank-line { display: inline-block; width: 150px; border-bottom: 1.5px solid #000; margin: 0 10px; vertical-align: text-bottom; }
         `}} />
@@ -1181,7 +1181,7 @@ function App() {
                 )}
                 
                 {printMode === 'example' ? (
-                  <div className="print-column-single" style={{ marginTop: pageIndex > 0 ? '10px' : '0' }}>
+                  <div className="print-column-single" style={{ marginTop: pageIndex > 0 ? '20px' : '35px' }}>
                     {chunk.map((c, i) => {
                       const globalIndex = pageIndex * chunkSize + i + 1;
                       return (
@@ -1305,18 +1305,15 @@ function App() {
            opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
            background: white !important; padding: 10px 25px !important; border-radius: 20px !important;
            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; 
-           width: 90% !important; max-width: 700px !important;
+           width: 90% !important; max-width: 500px !important;
            display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: space-between;
         }
         @media(min-width: 768px) {
           .fullscreen-stealth-bottom { flex-direction: row !important; }
-          .fullscreen-stealth-bottom .autoplay-controls { width: auto !important; flex: 1 !important; margin-left: 30px !important; }
-          .fullscreen-stealth-bottom .controls { flex: 0 0 auto !important; }
-          .fullscreen-stealth-bottom .speed-slider-container { margin-top: 5px !important; }
+          .fullscreen-stealth-bottom .autoplay-controls { width: auto !important; flex: 1 !important; margin-left: 20px !important; }
         }
         .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
         
-        .fullscreen-active .controls { margin: 0 !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; gap: 10px !important; }
         .fullscreen-active .autoplay-controls { margin: 0 !important; border: none !important; padding: 0 !important; min-width: 250px; }
       `}} />
       
@@ -1484,7 +1481,7 @@ function App() {
                       
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">
-                          {qLang === 'en' ? '🇺🇸 英→日' : '🇯 ঐতি 日→英'}
+                          {qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}
                         </button>
                         <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
                           <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>🔤 単語</button>
@@ -1530,11 +1527,6 @@ function App() {
                   
                   {isFullscreen ? (
                     <div className="fullscreen-stealth-bottom">
-                      <div className="controls" style={{ margin: 0, boxShadow: 'none', background: 'transparent', padding: 0 }}>
-                        <button onClick={handlePrevCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>◀</button>
-                        <button onClick={deleteCard} className="delete-btn">{t.discardBtn}</button>
-                        <button onClick={handleNextCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>▶</button>
-                      </div>
                       <div className="autoplay-controls" style={{ margin: 0, border: 'none', padding: 0 }}>
                         <div className="autoplay-actions-row">
                           <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
@@ -1556,11 +1548,6 @@ function App() {
                     </div>
                   ) : (
                     <>
-                      <div className="controls">
-                        <button onClick={handlePrevCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>◀</button>
-                        <button onClick={deleteCard} className="delete-btn">{t.discardBtn}</button>
-                        <button onClick={handleNextCard} className="nav-btn" style={{background: '#ecf0f1', color: '#2c3e50', textShadow: 'none'}}>▶</button>
-                      </div>
                       <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8'}}>
                         <div className="autoplay-actions-row">
                           <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
