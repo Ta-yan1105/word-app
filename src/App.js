@@ -189,8 +189,12 @@ function App() {
   const [decks, setDecks] = useState(() => { const savedDecks = localStorage.getItem('redline_decks'); return savedDecks ? JSON.parse(savedDecks) : initialDecks; });
 
   useEffect(() => {
+    // WebView（アプリ内ブラウザ）の検知を強化（LINE, Instagram, Twitter, Googleアプリ, Yahooアプリ, 汎用iOS WebView等）
     const ua = (navigator.userAgent || navigator.vendor || window.opera).toLowerCase();
-    if (ua.includes('line') || ua.includes('instagram') || ua.includes('fban') || ua.includes('fbav') || ua.includes('twitter')) {
+    const isWebView = /line|instagram|fban|fbav|twitter|gsa|yahoouisearch|yabrowser/.test(ua) || 
+                      (ua.includes('iphone') && !ua.includes('safari')) || 
+                      (ua.includes('android') && ua.includes('wv'));
+    if (isWebView) {
       setIsInAppBrowser(true);
     }
   }, []);
@@ -214,7 +218,6 @@ function App() {
           }
         } catch (e) {
           console.error("Firestore read/write error. Check Rules.", e);
-          // 通信エラー等で読み込みに失敗した場合も、画面が真っ白にならないように初期箱をセット
           setBoxes(prev => prev && prev.length > 0 ? prev : initialBoxes);
           setDecks(prev => prev && prev.length > 0 ? prev : initialDecks);
         }
@@ -237,14 +240,14 @@ function App() {
 
   const handleLogin = () => {
     if (isInAppBrowser) {
-      alert("【ログインエラーの回避】\nLINEやInstagramなどのアプリ内ブラウザでは、Googleのセキュリティ制限によりログインができません。\n画面の右上のメニュー（︙ や ↗︎）から「Safariで開く」または「ブラウザで開く」を選択して、もう一度お試しください。");
+      alert("【ログインエラーの回避】\nGoogleアプリやLINEなどの「アプリ内ブラウザ」ではセキュリティ制限によりログインできません。\n画面下部や右上のメニュー（共有ボタンなど）から「Safariで開く」または「ブラウザで開く」を選択して、もう一度お試しください。");
       return;
     }
     
     signInWithPopup(auth, provider).catch((error) => {
       if (error.code !== 'auth/popup-closed-by-user') {
         console.error("Popup Login Error:", error);
-        alert("ログインに失敗しました。\n\n【iPhoneをお使いの方へ】\n「ポップアップがブロックされました」と表示された場合は「許可」または「常に表示」をタップしてください。\n解決しない場合は、設定からブラウザ(Safari等)の「ポップアップブロック」をオフにしてお試しください。");
+        alert("ログインに失敗しました。\n\n【エラー403が出た場合】\nGoogleアプリ等の「アプリ内ブラウザ」が原因です。画面下部や右上の「共有ボタン」等から「Safariで開く」を選択し、Safari上で再度お試しください。\n\n【ポップアップがブロックされた場合】\n「許可」または「常に表示」をタップしてください。");
       }
     });
   };
