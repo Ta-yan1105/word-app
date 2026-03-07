@@ -1290,7 +1290,7 @@ function App() {
            background: #f1f5f9 !important; z-index: 9999 !important;
            display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
            max-width: none !important;
-           padding: 80px 0 100px 0 !important; 
+           padding: 80px 0 160px 0 !important; 
            box-sizing: border-box !important;
         }
         
