@@ -29,7 +29,7 @@ const DICT = {
     promptBoxRename: "箱の新しい名前を入力してください:", promptDeckRename: "束の新しい名前を入力してください:", alertReq: "「英単語」と「意味」は必ず入力してください！", alertCsvError: "ファイルの読み込み中にエラーが発生しました。",
     testNeeds4: "テストには最低4枚のカードが必要です！", testFinished: "テスト終了！", score: "スコア:", tryAgainBtn: "🔄 もう一度テストする", backToStudyBtn: "◀ 学習に戻る",
     question: "問題", testHint: "この単語の正しい意味はどれ？", quitBtn: "中断して戻る", noPrintCards: "印刷するカードがありません。", shuffleBtn: "🔄 問題をシャッフル",
-    printTestTitle: "- 単語テスト", printTestExampleTitle: "- 例文テスト", printDate: "出力日:", printName: "氏名：__________________________", printScore: "得点：　　 / ",
+    printTestTitle: "- 単語テスト", printTestExampleTitle: "- 例文テスト", printDate: "出力日:", printName: "氏名：__________________________", printScore: "得点：      / ",
     
     m_h1: "公式 取扱説明書", m_s1: "1. はじめに（基本構造）", m_p1: "このアプリは、現実の単語帳と同じように直感的に操作できます。",
     m_l1_1: "📦 箱（Box）：一番外側の入れ物です。「中学英語」「英検」など大きなカテゴリを作ります。", m_l1_2: "🔖 束（Deck）：箱の中に入る単語カードの束です。「基本動詞 50語」など、学習しやすい単位で作ります。", m_l1_3: "📇 単語カード：実際のフラッシュカードです。束を開くと学習が始まります。",
@@ -415,14 +415,39 @@ function App() {
   }, [studyCards.length, currentIndex]);
 
   const toggleFullScreen = () => {
-    if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(err => console.log(err)); } 
-    else { if (document.exitFullscreen) document.exitFullscreen(); }
+    if (!isFullscreen) {
+      const docElm = document.documentElement;
+      if (docElm.requestFullscreen) {
+        docElm.requestFullscreen().catch(err => console.log(err));
+      } else if (docElm.webkitRequestFullscreen) {
+        docElm.webkitRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else {
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(err => console.log(err));
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+      setIsFullscreen(false);
+    }
   };
 
   useEffect(() => {
-    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    const handleFullscreenChange = () => {
+      const isFull = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if (!isFull) {
+        setIsFullscreen(false);
+      }
+    };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
   }, []);
 
   const unlockAudio = useCallback(() => {
@@ -840,7 +865,6 @@ function App() {
   const handleClick = () => { unlockAudio(); };
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
-  // ⭐️ 描画関数群 ⭐️
   const renderMiniCard = (c, isMemorizedList, index = null) => {
     const isSelected = selectedForDelete.has(c.word);
     return (
@@ -1012,8 +1036,6 @@ function App() {
     );
   };
 
-  // --- JSXレンダリング ---
-
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
 
   if (!currentUser) {
@@ -1066,7 +1088,6 @@ function App() {
     return (
       <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
         
-        {/* ボタン群をCSSで絶対配置し、DOM構造は維持 */}
         <div className="top-right-actions">
           <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout}</button>
           <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
@@ -1556,6 +1577,7 @@ function App() {
         }
         .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
         
+        /* ヘッダーボタンの再配置用スタイル */
         .top-right-actions {
           width: 100% !important;
           position: absolute !important;
@@ -1594,7 +1616,11 @@ function App() {
         }
       `}} />
       
-      {ghostPos && (<div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>{ghostPos.title}</div>)}
+      {ghostPos && (
+        <div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>
+          {ghostPos.title}
+        </div>
+      )}
       
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
@@ -1606,9 +1632,15 @@ function App() {
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.posLabel}</label>
             <select className="modal-input" style={{ appearance: 'auto', marginBottom: '15px' }} value={editingCard.pos || ''} onChange={(e) => setEditingCard({...editingCard, pos: e.target.value})}>
               <option value="">-- 指定なし --</option>
-              <option value="名詞">名詞</option><option value="動詞">動詞</option><option value="形容詞">形容詞</option>
-              <option value="副詞">副詞</option><option value="代名詞">代名詞</option><option value="前置詞">前置詞</option>
-              <option value="接続詞">接続詞</option><option value="熟語">熟語</option><option value="その他">その他</option>
+              <option value="名詞">名詞</option>
+              <option value="動詞">動詞</option>
+              <option value="形容詞">形容詞</option>
+              <option value="副詞">副詞</option>
+              <option value="代名詞">代名詞</option>
+              <option value="前置詞">前置詞</option>
+              <option value="接続詞">接続詞</option>
+              <option value="熟語">熟語</option>
+              <option value="その他">その他</option>
             </select>
 
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.meanReq}</label>
@@ -1617,7 +1649,10 @@ function App() {
             <textarea className="modal-input" value={editingCard.example} onChange={(e) => setEditingCard({...editingCard, example: e.target.value})} rows="2" />
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint}</label>
             <textarea className="modal-input" value={editingCard.translation} onChange={(e) => setEditingCard({...editingCard, translation: e.target.value})} rows="2" />
-            <div className="modal-actions"><button className="cancel-btn" onClick={() => setEditingCard(null)}>{t.cancelBtn}</button><button className="add-btn" onClick={saveEditedCard}>{t.saveBtn}</button></div>
+            <div className="modal-actions">
+              <button className="cancel-btn" onClick={() => setEditingCard(null)}>{t.cancelBtn}</button>
+              <button className="add-btn" onClick={saveEditedCard}>{t.saveBtn}</button>
+            </div>
           </div>
         </div>
       )}
@@ -1632,9 +1667,15 @@ function App() {
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.posLabel}</label>
             <select className="modal-input" style={{ appearance: 'auto', marginBottom: '15px' }} value={newCardData.pos || ''} onChange={(e) => setNewCardData({...newCardData, pos: e.target.value})}>
               <option value="">-- 指定なし --</option>
-              <option value="名詞">名詞</option><option value="動詞">動詞</option><option value="形容詞">形容詞</option>
-              <option value="副詞">副詞</option><option value="代名詞">代名詞</option><option value="前置詞">前置詞</option>
-              <option value="接続詞">接続詞</option><option value="熟語">熟語</option><option value="その他">その他</option>
+              <option value="名詞">名詞</option>
+              <option value="動詞">動詞</option>
+              <option value="形容詞">形容詞</option>
+              <option value="副詞">副詞</option>
+              <option value="代名詞">代名詞</option>
+              <option value="前置詞">前置詞</option>
+              <option value="接続詞">接続詞</option>
+              <option value="熟語">熟語</option>
+              <option value="その他">その他</option>
             </select>
 
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.meanReq}</label>
@@ -1643,7 +1684,10 @@ function App() {
             <textarea className="modal-input" value={newCardData.example} onChange={(e) => setNewCardData({...newCardData, example: e.target.value})} rows="2" />
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint}</label>
             <textarea className="modal-input" value={newCardData.translation} onChange={(e) => setNewCardData({...newCardData, translation: e.target.value})} rows="2" />
-            <div className="modal-actions"><button className="cancel-btn" onClick={() => setAddingCard(false)}>{t.cancelBtn}</button><button className="add-btn" style={{backgroundColor: '#27ae60'}} onClick={saveNewCard}>{t.addBtn}</button></div>
+            <div className="modal-actions">
+              <button className="cancel-btn" onClick={() => setAddingCard(false)}>{t.cancelBtn}</button>
+              <button className="add-btn" style={{backgroundColor: '#27ae60'}} onClick={saveNewCard}>{t.addBtn}</button>
+            </div>
           </div>
         </div>
       )}
@@ -1655,9 +1699,17 @@ function App() {
         return (
           <div style={dynamicStyle}>
             <div className="inner-view-wrapper">
-              <div className="study-header"><button className="back-to-desk-btn" onClick={() => setView('boxes')}>{t.backToHome}</button><h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2><div style={{width: '80px'}}></div></div>
+              <div className="study-header">
+                <button className="back-to-desk-btn" onClick={() => setView('boxes')}>{t.backToHome}</button>
+                <h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2>
+                <div style={{width: '80px'}}></div>
+              </div>
               <div className="integrated-creation-area">
-                <div className="creation-row"><span className="creation-label" title="Deck">🔖</span><input type="text" placeholder={t.deckPlaceholder} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} /><button onClick={createNewDeckInsideBox} className="add-btn mini-btn">{t.addBtn}</button></div>
+                <div className="creation-row">
+                  <span className="creation-label" title="Deck">🔖</span>
+                  <input type="text" placeholder={t.deckPlaceholder} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
+                  <button onClick={createNewDeckInsideBox} className="add-btn mini-btn">{t.addBtn}</button>
+                </div>
               </div>
               <div className="decks-split-layout">
                 <div className="decks-unmemorized-area" onDragOver={onDragOver} onDrop={(e) => onDropToArea(e, 'unmemorized')}>
@@ -1746,7 +1798,9 @@ function App() {
                   </div>
 
                   <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{t.chatGptNote}</p>
-                  <div className="bulk-actions" style={{ marginTop: '15px' }}><button onClick={() => setIsBulkMode(false)} className="cancel-btn" disabled={loading}>{t.closeBtn}</button></div>
+                  <div className="bulk-actions" style={{ marginTop: '15px' }}>
+                    <button onClick={() => setIsBulkMode(false)} className="cancel-btn" disabled={loading}>{t.closeBtn}</button>
+                  </div>
                 </div>
               )}
               
