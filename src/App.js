@@ -35,7 +35,7 @@ const DICT = {
     m_l1_1: "📦 箱（Box）：一番外側の入れ物です。「中学英語」「英検」など大きなカテゴリを作ります。", m_l1_2: "🔖 束（Deck）：箱の中に入る単語カードの束です。「基本動詞 50語」など、学習しやすい単位で作ります。", m_l1_3: "📇 単語カード：実際のフラッシュカードです。束を開くと学習が始まります。",
     m_s2: "2. 単語カードの作り方", m_p2: "学習画面（束を開いた状態）の左側メニューから追加できます。", m_s2_1: "✏️ 手動で1枚ずつ追加", m_p2_1: "「手動で単語を1枚追加」ボタンを押すと、その場でカードを作成できます。この時、タブから「名詞」「動詞」などの品詞を登録しておくと、学習時に日本語の横に品詞バッジが表示されます。",
     m_s2_2: "📂 CSVから一括で追加", m_p2_2: "Excelやスプレッドシートで作ったデータを一気に読み込めます。ChatGPTに「以下の単語をCSV化して」と指示してコピペするのが一番簡単です！（※品詞は後から編集画面で追加できます）", m_p2_3: "※例文の中で黄色くマーカーを引きたい部分は **apple** のように **（アスタリスク2つ）で囲んでください。",
-    m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。全画面アイコン（全集中🔥）を押すと、大迫力の巨大フォントで没入学習が可能です。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー] / [上下矢印]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボードの [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
+    m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。全画面アイコン（全集中🔥）を押すと、大迫力の巨大フォントで没入学習が可能です。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー] / [上下矢印]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボード의 [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
     m_s4: "4. 自動めくり機能 ＆ 表示間隔（スピード）", m_p4: "画面下の「▶️ 自動めくり」を押すと、設定した秒数ごとに自動でカードがめくられ、音声が流れます。「表面のみ」をONにすると、意味を確認せず次々と高速フラッシュできます。", m_l4_1: "🐢 遅（4.0秒）：じっくり意味を確認したい時に。", m_l4_2: "🐇 標準（2.0秒）：テンポよく進めたい時に。", m_l4_3: "👼 神速（0.0秒）：脳に直接刷り込む超高速フラッシュモード！",
     m_s5: "5. 暗記の管理（ドラッグ＆ドロップ）", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、リストから「✅ 暗記済」や「📖 学習中」エリアへドラッグ＆ドロップして移動させましょう！スマホでも長押しで移動可能です。", m_p5_1: "束（デッキ）を丸ごと「暗記済」エリアにドラッグして、一気に完了させることも可能です。",
     m_s6: "6. テスト ＆ 印刷機能 ＆ 注意事項", m_l6_1: "📝 テスト：4択クイズに挑戦できます。連続正解でド派手な演出が待っています！", m_l6_2: "🖨️ プリント：実際の授業で配れる「紙の小テスト」として印刷できます。例文プリントでは対象単語が自動で穴埋め（＿＿＿）になります。", m_l6_3: "⚠️ ログイン注意：LINEやInstagram等のアプリ内ブラウザからはログインエラーになります。標準ブラウザ（Safari/Chrome）で開いてください。",
@@ -56,7 +56,7 @@ const DICT = {
     downloadTemplate: "📥 Download CSV Template", uploadCsv: "📂 Select CSV File", loading: "Loading...",
     chatGptNote: "💡 Prompt for ChatGPT:\n'Create a CSV for flashcards with 4 columns: Word, Meaning, Example, Translation. Wrap the target word in ** to highlight it. Output in code block.'",
     closeBtn: "Close", allMemorizedMsg: "👏 You've memorized all words!", resetBtn: "🔄 Reset and try again", discardBtn: "Discard",
-    autoPlayStart: "▶️ Auto Play", autoPlayStop: "⏸ Stop", repeatBtn: "🔄 Repeat", fullScreenEnter: "Focus 🔥", fullScreenExit: "Exit ↘️",
+    autoPlayStart: "▶️ Auto Play", autoPlayStop: "⏸ Stop", repeatBtn: "🔄 もう1回", fullScreenEnter: "Focus 🔥", fullScreenExit: "Exit ↘️",
     intervalLabel: "Interval", sec: "sec", godspeed: "⚡️ Godspeed", fast: "Fast", slow: "Slow", memorizedPanel: "✅ Memorized", dragHereMsg: "Drag words here from the left!",
     markUnmem: "Move to Learning", markMem: "Memorized!", editCardTitle: "Edit Card", newCardTitle: "Create New Card", wordReq: "Word (Required)", meanReq: "Meaning (Required)", posLabel: "Part of Speech (Optional)",
     exHint: "Example (Wrap in ** to highlight)", trHint: "Translation (Wrap in ** to highlight)", cancelBtn: "Cancel", saveBtn: "Save",
@@ -1762,6 +1762,15 @@ function App() {
           85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
           100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
         }
+
+        .nav-btn-physical {
+          background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+          width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+          font-size: 18px; color: #64748b; cursor: pointer; transition: all 0.2s;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .nav-btn-physical:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .nav-btn-physical:active { transform: scale(0.95); background: #f1f5f9; }
       `}} />
       
       {ghostPos && (
@@ -2013,6 +2022,7 @@ function App() {
                     <div className="fullscreen-stealth-bottom">
                       <div className="autoplay-controls" style={{ margin: 0, border: 'none', padding: 0, width: '100%', boxSizing: 'border-box' }}>
                         <div className="autoplay-actions-row">
+                          <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>
                           <button 
                             className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} 
                             onClick={(e) => { 
@@ -2023,6 +2033,7 @@ function App() {
                           >
                             {isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}
                           </button>
+                          <button className="nav-btn-physical" onClick={handleNextCard}>▶</button>
                           <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
                           <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
                         </div>
@@ -2050,6 +2061,7 @@ function App() {
                   ) : (
                     <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
                       <div className="autoplay-actions-row">
+                        <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>
                         <button 
                           className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} 
                           onClick={(e) => { 
@@ -2060,6 +2072,7 @@ function App() {
                         >
                           {isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}
                         </button>
+                        <button className="nav-btn-physical" onClick={handleNextCard}>▶</button>
                         <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
                         <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
                       </div>
