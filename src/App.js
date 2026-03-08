@@ -37,7 +37,7 @@ const DICT = {
     m_s2_2: "📂 CSVから一括で追加", m_p2_2: "Excelやスプレッドシートで作ったデータを一気に読み込めます。ChatGPTに「以下の単語をCSV化して」と指示してコピペするのが一番簡単です！（※品詞は後から編集画面で追加できます）", m_p2_3: "※例文の中で黄色くマーカーを引きたい部分は **apple** のように **（アスタリスク2つ）で囲んでください。",
     m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。全画面アイコン（全集中🔥）を押すと、大迫力の巨大フォントで没入学習が可能です。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー] / [上下矢印]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボードの [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
     m_s4: "4. 自動めくり機能 ＆ 表示間隔（スピード）", m_p4: "画面下の「▶️ 自動めくり」を押すと、設定した秒数ごとに自動でカードがめくられ、音声が流れます。「表面のみ」をONにすると、意味を確認せず次々と高速フラッシュできます。", m_l4_1: "🐢 遅（4.0秒）：じっくり意味を確認したい時に。", m_l4_2: "🐇 標準（2.0秒）：テンポよく進めたい時に。", m_l4_3: "👼 神速（0.0秒）：脳に直接刷り込む超高速フラッシュモード！",
-    m_s5: "5. 暗記の管理（ドラッグ＆ドロップ）", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、左側のリストから右側の「✅ 暗記済」エリアへ長押しドラッグ＆ドロップして移動させましょう！", m_p5_1: "束（デッキ）を丸ごと「暗記済」エリアにドラッグして、一気に完了させることも可能です。",
+    m_s5: "5. 暗記の管理（ドラッグ＆ドロップ）", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、リストから「✅ 暗記済」や「📖 学習中」エリアへドラッグ＆ドロップして移動させましょう！スマホでも長押しで移動可能です。", m_p5_1: "束（デッキ）を丸ごと「暗記済」エリアにドラッグして、一気に完了させることも可能です。",
     m_s6: "6. テスト ＆ 印刷機能 ＆ 注意事項", m_l6_1: "📝 テスト：4択クイズに挑戦できます。連続正解でド派手な演出が待っています！", m_l6_2: "🖨️ プリント：実際の授業で配れる「紙の小テスト」として印刷できます。例文プリントでは対象単語が自動で穴埋め（＿＿＿）になります。", m_l6_3: "⚠️ ログイン注意：LINEやInstagram等のアプリ内ブラウザからはログインエラーになります。標準ブラウザ（Safari/Chrome）で開いてください。",
     box1Name: "中学レベル", box2Name: "資格・オリジナル箱", deck1Name: "基本の動詞", card1_mean: "輝く / 光る", card1_trans: "星が明るく**輝く**。", card2_mean: "持っている / 食べる", card2_trans: "私は本を**持っています**。", card3_mean: "作る", card3_trans: "彼女は夕食を**作ります**。", card4_mean: "攻撃する", card4_trans: "その犬はあなたを**攻撃し**ません。"
   },
@@ -804,7 +804,7 @@ function App() {
     touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     touchDragTimer.current = setTimeout(() => { 
       setDraggedDeckId(deck.id); 
-      setGhostPos({ x: touch.clientX, y: touch.clientY, title: deck.name });
+      setGhostPos({ x: touch.clientX, y: touch.clientY - 40, title: deck.name });
     }, 400); 
   };
   const onTouchMoveDeck = (e) => { 
@@ -812,19 +812,19 @@ function App() {
       const touch = e.touches[0];
       const dx = touch.clientX - touchStartPos.current.x;
       const dy = touch.clientY - touchStartPos.current.y;
-      if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(touchDragTimer.current); }
+      if (Math.sqrt(dx*dx + dy*dy) > 20) { clearTimeout(touchDragTimer.current); }
       return; 
     } 
     e.preventDefault(); 
     const touch = e.touches[0]; 
-    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null);
+    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY - 40 } : null);
   };
   const onTouchEndDeck = (e) => {
     clearTimeout(touchDragTimer.current);
     if (draggedDeckId) {
       const touch = e.changedTouches[0];
       if(touch) {
-         const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+         const elem = document.elementFromPoint(touch.clientX, touch.clientY - 20) || document.elementFromPoint(touch.clientX, touch.clientY);
          const targetMemArea = elem?.closest('.decks-memorized-area'); const targetUnmemArea = elem?.closest('.decks-unmemorized-area');
          setDecks(prev => {
             let newDecks = [...prev]; const index = newDecks.findIndex(d => d.id === draggedDeckId);
@@ -846,7 +846,7 @@ function App() {
     touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     touchDragTimer.current = setTimeout(() => { 
       setDraggedCardWord(word); 
-      setGhostPos({ x: touch.clientX, y: touch.clientY, title: word }); 
+      setGhostPos({ x: touch.clientX, y: touch.clientY - 40, title: word }); 
     }, 400); 
   };
   
@@ -855,12 +855,19 @@ function App() {
       const touch = e.touches[0];
       const dx = touch.clientX - touchStartPos.current.x;
       const dy = touch.clientY - touchStartPos.current.y;
-      if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(touchDragTimer.current); }
+      if (Math.sqrt(dx*dx + dy*dy) > 20) { clearTimeout(touchDragTimer.current); }
       return; 
     } 
     e.preventDefault(); 
     const touch = e.touches[0]; 
-    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null); 
+    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY - 40 } : null); 
+
+    const scrollMargin = 100;
+    if (touch.clientY < scrollMargin) {
+      window.scrollBy(0, -25);
+    } else if (window.innerHeight - touch.clientY < scrollMargin) {
+      window.scrollBy(0, 25);
+    }
   };
   
   const onTouchEndCard = (e) => {
@@ -868,7 +875,7 @@ function App() {
     if (draggedCardWord) {
       const touch = e.changedTouches[0];
       if(touch) {
-         const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+         const elem = document.elementFromPoint(touch.clientX, touch.clientY - 20) || document.elementFromPoint(touch.clientX, touch.clientY);
          const targetLeftPanel = elem?.closest('.left-panel'); 
          const targetRightPanel = elem?.closest('.right-panel');
          if (targetRightPanel) { toggleMemorize(null, draggedCardWord, true); } 
@@ -924,7 +931,10 @@ function App() {
             e.dataTransfer.setDragImage(emptyImage, 0, 0);
           }
         }} 
-        onDragEnd={() => setDraggedCardWord(null)} title="Drag & Drop"
+        onDragEnd={(e) => {
+          setDraggedCardWord(null);
+        }} 
+        title="Drag & Drop"
         onTouchStart={(e) => onTouchStartCard(e, c.word)} onTouchMove={onTouchMoveCard} onTouchEnd={onTouchEndCard}
       >
         <div className="mini-card-header">
@@ -999,7 +1009,9 @@ function App() {
         
         {qType === 'word' ? (
           qLang === 'en' ? (
-            <h1 className="word-text" style={{ margin: 0, fontSize: fontSizeWord, fontWeight: 'bold' }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
+            <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+              <h1 className="word-text" style={{ textAlign: 'left', margin: 0, fontSize: fontSizeWord, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%', wordBreak: 'break-word' }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
+            </div>
           ) : (
             <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
               <div className="core-meaning-large" style={{ textAlign: 'left', margin: 0, fontSize: fontSizeMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>{cleanText((card.meaning || '').split('/')[0])}</div>
@@ -1045,11 +1057,13 @@ function App() {
             {qLang === 'en' ? (
               <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}>
                 <div className="core-meaning-large" style={{ textAlign: 'left', fontSize: fontSizeMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>
-                  {String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{cleanText(m)}</div>)}
+                  {String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line" style={{textAlign: 'left'}}>{cleanText(m)}</div>)}
                 </div>
               </div>
             ) : (
-              <h1 className="word-text" style={{fontSize: fontSizeWord, margin: 0, fontWeight: 'bold'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
+              <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                <h1 className="word-text" style={{textAlign: 'left', fontSize: fontSizeWord, margin: 0, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%', wordBreak: 'break-word'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
+              </div>
             )}
 
             {showExOnBack && (
@@ -1080,8 +1094,8 @@ function App() {
              </div>
 
              {showWordOnExMode && (
-               <div style={{ display:'flex', flexDirection: 'row', alignItems:'center', justifyContent:'center', gap:'15px', opacity: 0.7, marginTop: isFullscreen ? '40px' : '25px' }}>
-                  <div className="word-text" style={{fontSize: isFullscreen ? 'clamp(32px, 5vw, 56px)' : '18px', fontWeight:'bold', margin: 0, cursor: 'pointer', color:'#333'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
+               <div style={{ display:'flex', flexDirection: 'column', alignItems:'center', justifyContent:'center', gap:'15px', opacity: 0.7, marginTop: isFullscreen ? '40px' : '25px', width: '100%' }}>
+                  <div className="word-text" style={{textAlign: 'left', fontSize: isFullscreen ? 'clamp(32px, 5vw, 56px)' : '18px', fontWeight:'bold', margin: 0, cursor: 'pointer', color:'#333', display: 'inline-block', maxWidth: '100%', wordBreak: 'break-word'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
                   <div className="core-meaning-large" style={{textAlign: 'left', fontSize: isFullscreen ? 'clamp(24px, 4vw, 40px)' : '15px', color:'#64748b', fontWeight:'bold', margin: 0, display: 'inline-block', maxWidth: '100%'}}>
                     {cleanText((card.meaning || '').split('/')[0])}
                   </div>
@@ -1561,10 +1575,11 @@ function App() {
       
       {toastMessage && (
         <div style={{
-          position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
-          background: 'rgba(39, 174, 96, 0.9)', color: '#fff', padding: '12px 24px',
-          borderRadius: '50px', fontWeight: 'bold', zIndex: 10001,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)', animation: 'fadeInOut 3s forwards'
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          background: 'rgba(39, 174, 96, 0.95)', color: '#fff', padding: '20px 40px',
+          borderRadius: '16px', fontWeight: 'bold', zIndex: 10001, fontSize: '20px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.2)', animation: 'popInOut 3s forwards',
+          textAlign: 'center', whiteSpace: 'nowrap'
         }}>
           {toastMessage}
         </div>
@@ -1574,23 +1589,23 @@ function App() {
         @media(min-width: 1024px) {
           .app-container {
             max-width: 100% !important;
-            padding-left: 2vw !important;
-            padding-right: 2vw !important;
+            padding-left: 1vw !important;
+            padding-right: 1vw !important;
           }
           .study-dashboard {
             display: flex !important;
             flex-direction: row !important;
-            justify-content: center !important;
+            justify-content: space-between !important;
             align-items: flex-start !important;
             width: 100% !important;
-            max-width: 1600px !important;
+            max-width: 100% !important;
             margin: 0 auto !important;
-            gap: 30px !important;
+            gap: 20px !important;
           }
-          .left-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
-          .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 900px !important; margin: 0 auto !important; }
-          .right-panel { flex: 0 0 250px !important; width: 250px !important; max-width: 250px !important; }
-          .mini-card-list { display: grid; grid-template-columns: 1fr !important; gap: 10px; align-content: start; }
+          .left-panel { flex: 0 0 380px !important; width: 380px !important; max-width: 380px !important; }
+          .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 1000px !important; margin: 0 auto !important; }
+          .right-panel { flex: 0 0 380px !important; width: 380px !important; max-width: 380px !important; }
+          .mini-card-list { display: grid; grid-template-columns: 1fr 1fr !important; gap: 8px; align-content: start; }
         }
 
         .panel-top-action { width: 100%; box-sizing: border-box; }
@@ -1607,17 +1622,18 @@ function App() {
 
         .fullscreen-active {
            position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
+           height: 100dvh !important;
            background: #f1f5f9 !important; z-index: 9999 !important;
            display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
            max-width: none !important;
-           padding: 80px 0 160px 0 !important; 
+           padding: 0 !important; 
            box-sizing: border-box !important;
         }
         
         .fullscreen-active .card-animation-wrapper {
-           width: 85vw !important; 
+           width: 90vw !important; 
            max-width: 1100px !important; 
-           height: 60vh !important;
+           height: auto !important;
            min-height: 40vh !important;
            margin: 0 auto !important; 
         }
@@ -1647,22 +1663,23 @@ function App() {
         
         @media (max-width: 900px) and (orientation: portrait) {
            .fullscreen-active {
-              padding: 10px !important; 
-              justify-content: space-between !important;
+              padding: 0 !important; 
+              justify-content: center !important;
            }
            .fullscreen-stealth-top {
-              position: relative !important; top: 0 !important; left: 0 !important; transform: none !important;
-              width: 100% !important; max-width: 400px !important; padding: 10px !important; opacity: 1 !important;
+              position: absolute !important; top: 10px !important; left: 50% !important; transform: translateX(-50%) scale(0.85) !important;
+              transform-origin: top center !important;
+              width: 95% !important; opacity: 1 !important;
            }
            .fullscreen-stealth-bottom {
-              position: relative !important; bottom: 0 !important; left: 0 !important; transform: none !important;
-              width: 100% !important; opacity: 1 !important;
+              position: absolute !important; bottom: 10px !important; left: 50% !important; transform: translateX(-50%) scale(0.85) !important;
+              transform-origin: bottom center !important;
+              width: 95% !important; opacity: 1 !important;
            }
            .fullscreen-active .card-animation-wrapper {
-              flex: 1 !important; 
-              height: auto !important; 
-              max-height: none !important; 
-              margin: 15px 0 !important;
+              flex: none !important; 
+              height: 50vh !important; 
+              margin: 0 !important;
               display: flex; align-items: center; justify-content: center;
            }
         }
@@ -1726,7 +1743,7 @@ function App() {
 
         .drag-ghost {
           position: fixed;
-          pointer-events: none;
+          pointer-events: none !important;
           z-index: 9999;
           background: rgba(255, 255, 255, 0.95);
           padding: 8px 16px;
@@ -1738,11 +1755,12 @@ function App() {
           white-space: nowrap;
         }
 
-        @keyframes fadeInOut {
-          0% { opacity: 0; transform: translate(-50%, -20px); }
-          10% { opacity: 1; transform: translate(-50%, 0); }
-          90% { opacity: 1; transform: translate(-50%, 0); }
-          100% { opacity: 0; transform: translate(-50%, -20px); }
+        @keyframes popInOut {
+          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+          10% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+          15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+          100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
         }
       `}} />
       
