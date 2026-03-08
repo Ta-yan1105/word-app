@@ -1234,7 +1234,7 @@ function App() {
                      if (option === testQuestions[currentTestIndex].correct) {
                         btnClass += " test-btn-show-correct"; 
                      } else {
-                        btnClass += " test-btn-dimmed";
+                        btnClass += " test-btn-dimmed"; 
                      }
                   }
                   return (
@@ -1593,41 +1593,25 @@ function App() {
           pointer-events: none !important;
           z-index: 100 !important;
         }
-        
         .top-right-actions > * {
           pointer-events: auto !important;
         }
-        
         .top-right-actions > .logout-btn {
           position: absolute !important;
           left: 15px !important;
           top: 0 !important;
           margin: 0 !important;
         }
-        
         .top-right-actions > .lang-toggle-btn:not(.logout-btn) {
           position: absolute !important;
           right: 15px !important;
           top: 0 !important;
           margin: 0 !important;
         }
-        
         @media(max-width: 768px) {
           .top-right-actions {
             padding-top: 45px !important;
           }
-        }
-        
-        @media (max-height: 500px) and (orientation: landscape) {
-          .fullscreen-active { padding: 45px 0 70px 0 !important; }
-          .fullscreen-stealth-top { top: 5px !important; transform: translateX(-50%) scale(0.75) !important; transform-origin: top center !important; }
-          .fullscreen-stealth-bottom { bottom: 5px !important; transform: translateX(-50%) scale(0.75) !important; transform-origin: bottom center !important; }
-        }
-        
-        @media (max-height: 750px) and (orientation: portrait) {
-          .fullscreen-active { padding: 60px 0 110px 0 !important; }
-          .fullscreen-stealth-top { top: 10px !important; transform: translateX(-50%) scale(0.9) !important; transform-origin: top center !important; }
-          .fullscreen-stealth-bottom { bottom: 10px !important; transform: translateX(-50%) scale(0.9) !important; transform-origin: bottom center !important; }
         }
       `}} />
       
