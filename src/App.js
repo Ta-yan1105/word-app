@@ -332,7 +332,6 @@ function App() {
   const [printCards, setPrintCards] = useState([]);
   const [printMode, setPrintMode] = useState('word');
   const [draggedDeckId, setDraggedDeckId] = useState(null); 
-  const [ghostPos, setGhostPos] = useState(null); 
   const touchDragTimer = useRef(null);
   const [draggedCardWord, setDraggedCardWord] = useState(null); 
   const [openingBoxId, setOpeningBoxId] = useState(null);
@@ -791,8 +790,17 @@ function App() {
     setDraggedDeckId(null);
   };
   
-  const onTouchStartDeck = (e, deck) => { e.stopPropagation(); const touch = e.touches[0]; touchDragTimer.current = setTimeout(() => { setDraggedDeckId(deck.id); setGhostPos({ x: touch.clientX, y: touch.clientY, title: deck.name }); }, 400); };
-  const onTouchMoveDeck = (e) => { if (!draggedDeckId) { clearTimeout(touchDragTimer.current); return; } e.preventDefault(); const touch = e.touches[0]; setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null); };
+  const onTouchStartDeck = (e, deck) => { 
+    e.stopPropagation(); 
+    const touch = e.touches[0]; 
+    touchDragTimer.current = setTimeout(() => { 
+      setDraggedDeckId(deck.id); 
+    }, 400); 
+  };
+  const onTouchMoveDeck = (e) => { 
+    if (!draggedDeckId) { clearTimeout(touchDragTimer.current); return; } 
+    e.preventDefault(); 
+  };
   const onTouchEndDeck = (e) => {
     clearTimeout(touchDragTimer.current);
     if (draggedDeckId) {
@@ -809,7 +817,7 @@ function App() {
             return newDecks;
          });
       }
-      setTimeout(() => { setDraggedDeckId(null); setGhostPos(null); }, 100);
+      setTimeout(() => { setDraggedDeckId(null); }, 100);
     }
   };
 
@@ -819,15 +827,12 @@ function App() {
     const touch = e.touches[0]; 
     touchDragTimer.current = setTimeout(() => { 
       setDraggedCardWord(word); 
-      setGhostPos({ x: touch.clientX, y: touch.clientY, title: word }); 
     }, 400); 
   };
   
   const onTouchMoveCard = (e) => { 
     if (!draggedCardWord) { clearTimeout(touchDragTimer.current); return; } 
     e.preventDefault(); 
-    const touch = e.touches[0]; 
-    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null); 
   };
   
   const onTouchEndCard = (e) => {
@@ -841,7 +846,7 @@ function App() {
          if (targetRightPanel) { toggleMemorize(null, draggedCardWord, true); } 
          else if (targetLeftPanel) { toggleMemorize(null, draggedCardWord, false); }
       }
-      setTimeout(() => { setDraggedCardWord(null); setGhostPos(null); }, 100);
+      setTimeout(() => { setDraggedCardWord(null); }, 100);
     }
   };
 
@@ -878,7 +883,7 @@ function App() {
     return (
       <div key={c.word} 
         className={`mini-card ${draggedCardWord === c.word ? 'dragging-mini' : ''} ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
-        style={{ userSelect: 'none', WebkitUserSelect: 'none', ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
+        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none', ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
         draggable={!isDeleteMode && "true"}
         onClick={() => { if (isDeleteMode) toggleDeleteSelection(c.word); }}
         onDragStart={(e) => { 
@@ -919,7 +924,7 @@ function App() {
     const status = getEbbinghausStatus(deck); const isDragging = draggedDeckId === deck.id; const isAllMemorized = (deck.cards || []).length > 0 && (deck.cards || []).every(c => c.isMemorized);
     return (
       <div key={deck.id} data-id={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''} ${isDragging ? 'dragging' : ''}`} 
-        style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }}
         onClick={() => openDeck(deck.id)} draggable="true" onDragStart={(e) => onDragStart(e, deck.id)} onDragEnd={() => setDraggedDeckId(null)}
         onTouchStart={(e) => onTouchStartDeck(e, deck)} onTouchMove={onTouchMoveDeck} onTouchEnd={onTouchEndDeck} title="PC:ドラッグ / スマホ:長押しで並べ替え">
         <div className="deck-paper stack-bottom"></div><div className="deck-paper stack-middle"></div>
@@ -968,18 +973,20 @@ function App() {
           qLang === 'en' ? (
             <h1 className="word-text" style={{ margin: 0, fontSize: fontSizeWord, fontWeight: 'bold' }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
           ) : (
-            <div className="core-meaning-large" style={{ textAlign: 'center', margin: 0, fontSize: fontSizeMean, fontWeight: 'bold' }}>{cleanText((card.meaning || '').split('/')[0])}</div>
+            <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+              <div className="core-meaning-large" style={{ textAlign: 'left', margin: 0, fontSize: fontSizeMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>{cleanText((card.meaning || '').split('/')[0])}</div>
+            </div>
           )
         ) : (
           qLang === 'en' ? (
             <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-              <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: fontSizeExEn, lineHeight: '1.8', fontWeight: 'bold', fontFamily: '"Times New Roman", Times, serif', width: '100%'}}>
+              <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: fontSizeExEn, lineHeight: '1.8', fontWeight: 'bold', fontFamily: '"Times New Roman", Times, serif', width: '100%', display: 'inline-block'}}>
                 {renderHighlightedText(card.example || '')}
               </p>
             </div>
           ) : (
             <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-              <p className="example-ja" style={{textAlign: 'left', margin: 0, fontSize: fontSizeExJa, lineHeight: '1.8', fontWeight: 'bold', color: '#334155', width: '100%'}}>
+              <p className="example-ja" style={{textAlign: 'left', margin: 0, fontSize: fontSizeExJa, lineHeight: '1.8', fontWeight: 'bold', color: '#334155', width: '100%', display: 'inline-block'}}>
                 {cleanTranslation(card.translation)}
               </p>
             </div>
@@ -1009,16 +1016,20 @@ function App() {
           <>
             {qLang === 'en' ? (
               <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}>
-                <div className="core-meaning-large" style={{ textAlign: 'center', fontSize: fontSizeMean, fontWeight: 'bold' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{cleanText(m)}</div>)}</div>
+                <div className="core-meaning-large" style={{ textAlign: 'left', fontSize: fontSizeMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>
+                  {String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line">{cleanText(m)}</div>)}
+                </div>
               </div>
             ) : (
               <h1 className="word-text" style={{fontSize: fontSizeWord, margin: 0, fontWeight: 'bold'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1>
             )}
 
             {showExOnBack && (
-              <div className="example-section" style={{ borderTop: 'none', paddingTop: 0, marginTop: '20px', textAlign: 'center' }}>
-                <p className="example-en" style={{ marginBottom: '8px', fontSize: fontSizeExEn, fontWeight: 'bold' }}>{renderHighlightedText(card.example || '')}</p>
-                <p className="example-ja" style={{ margin: 0, fontSize: fontSizeExJa, fontWeight: 'bold' }}>{renderHighlightedText(card.translation || '')}</p>
+              <div className="example-section" style={{ borderTop: 'none', paddingTop: 0, marginTop: '20px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ display: 'inline-block', textAlign: 'left', maxWidth: '100%' }}>
+                  <p className="example-en" style={{ marginBottom: '8px', fontSize: fontSizeExEn, fontWeight: 'bold', textAlign: 'left' }}>{renderHighlightedText(card.example || '')}</p>
+                  <p className="example-ja" style={{ margin: 0, fontSize: fontSizeExJa, fontWeight: 'bold', textAlign: 'left' }}>{renderHighlightedText(card.translation || '')}</p>
+                </div>
               </div>
             )}
           </>
@@ -1043,7 +1054,7 @@ function App() {
              {showWordOnExMode && (
                <div style={{ display:'flex', flexDirection: 'row', alignItems:'center', justifyContent:'center', gap:'15px', opacity: 0.7, marginTop: isFullscreen ? '40px' : '25px' }}>
                   <div className="word-text" style={{fontSize: isFullscreen ? 'clamp(32px, 5vw, 56px)' : '18px', fontWeight:'bold', margin: 0, cursor: 'pointer', color:'#333'}} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</div>
-                  <div className="core-meaning-large" style={{fontSize: isFullscreen ? 'clamp(24px, 4vw, 40px)' : '15px', color:'#64748b', fontWeight:'bold', margin: 0}}>
+                  <div className="core-meaning-large" style={{textAlign: 'left', fontSize: isFullscreen ? 'clamp(24px, 4vw, 40px)' : '15px', color:'#64748b', fontWeight:'bold', margin: 0, display: 'inline-block', maxWidth: '100%'}}>
                     {cleanText((card.meaning || '').split('/')[0])}
                   </div>
                </div>
@@ -1595,6 +1606,24 @@ function App() {
         }
         .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
         
+        @media (max-width: 900px) and (orientation: landscape) {
+          .fullscreen-stealth-top {
+            top: 5px !important;
+            transform: translateX(-50%) scale(0.7) !important;
+            transform-origin: top center !important;
+          }
+          .fullscreen-stealth-bottom {
+            bottom: 5px !important;
+            transform: translateX(-50%) scale(0.7) !important;
+            transform-origin: bottom center !important;
+            width: 95% !important;
+          }
+          .fullscreen-active .card-animation-wrapper {
+            min-height: 40vh !important;
+            height: 60vh !important;
+          }
+        }
+
         .top-right-actions {
           width: 100% !important;
           position: absolute !important;
@@ -1632,12 +1661,6 @@ function App() {
           }
         }
       `}} />
-      
-      {ghostPos && (
-        <div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>
-          {ghostPos.title}
-        </div>
-      )}
       
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
