@@ -555,7 +555,7 @@ function App() {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
       if (view !== 'study' || isBulkMode) return;
       unlockAudio();
-      if (e.code === 'Space') { e.preventDefault(); stopAutoPlayIfActive(); setIsFlipped(prev => !prev); } 
+      if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); stopAutoPlayIfActive(); setIsFlipped(prev => !prev); } 
       else if (e.code === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); handleNextCard(); } 
       else if (e.key === 'ArrowLeft') { e.preventDefault(); handlePrevCard(); }
     };
@@ -767,7 +767,15 @@ function App() {
 
   const deleteDeck = (e, id) => { e.stopPropagation(); if (window.confirm(t.confirmDeleteDeck)) setDecks(decks.filter(d => d.id !== id)); };
 
-  const onDragStart = (e, id) => { setDraggedDeckId(id); e.dataTransfer.effectAllowed = "move"; };
+  const onDragStart = (e, id) => { 
+    setDraggedDeckId(id); 
+    e.dataTransfer.effectAllowed = "move"; 
+    const emptyImage = new Image();
+    emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    if (e.dataTransfer.setDragImage) {
+      e.dataTransfer.setDragImage(emptyImage, 0, 0);
+    }
+  };
   const onDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
   const onDropToArea = (e, targetArea) => {
     e.preventDefault(); if (!draggedDeckId) return;
@@ -870,10 +878,19 @@ function App() {
     return (
       <div key={c.word} 
         className={`mini-card ${draggedCardWord === c.word ? 'dragging-mini' : ''} ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
-        style={isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}}
+        style={{ userSelect: 'none', WebkitUserSelect: 'none', ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
         draggable={!isDeleteMode && "true"}
         onClick={() => { if (isDeleteMode) toggleDeleteSelection(c.word); }}
-        onDragStart={(e) => { if(isDeleteMode) return; setDraggedCardWord(c.word); e.dataTransfer.effectAllowed = "move"; }} 
+        onDragStart={(e) => { 
+          if(isDeleteMode) return; 
+          setDraggedCardWord(c.word); 
+          e.dataTransfer.effectAllowed = "move"; 
+          const emptyImage = new Image();
+          emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+          if (e.dataTransfer.setDragImage) {
+            e.dataTransfer.setDragImage(emptyImage, 0, 0);
+          }
+        }} 
         onDragEnd={() => setDraggedCardWord(null)} title="Drag & Drop"
         onTouchStart={(e) => onTouchStartCard(e, c.word)} onTouchMove={onTouchMoveCard} onTouchEnd={onTouchEndCard}
       >
@@ -902,6 +919,7 @@ function App() {
     const status = getEbbinghausStatus(deck); const isDragging = draggedDeckId === deck.id; const isAllMemorized = (deck.cards || []).length > 0 && (deck.cards || []).every(c => c.isMemorized);
     return (
       <div key={deck.id} data-id={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''} ${isDragging ? 'dragging' : ''}`} 
+        style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
         onClick={() => openDeck(deck.id)} draggable="true" onDragStart={(e) => onDragStart(e, deck.id)} onDragEnd={() => setDraggedDeckId(null)}
         onTouchStart={(e) => onTouchStartDeck(e, deck)} onTouchMove={onTouchMoveDeck} onTouchEnd={onTouchEndDeck} title="PC:ドラッグ / スマホ:長押しで並べ替え">
         <div className="deck-paper stack-bottom"></div><div className="deck-paper stack-middle"></div>
@@ -1549,7 +1567,7 @@ function App() {
         .fullscreen-active .card-animation-wrapper {
            width: 85vw !important; 
            max-width: 1100px !important; 
-           height: auto !important;
+           height: 60vh !important;
            min-height: 40vh !important;
            margin: 0 auto !important; 
         }
