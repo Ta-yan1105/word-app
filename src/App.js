@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 
@@ -81,13 +81,44 @@ const initialBoxes = [ { id: 1, nameKey: 'box1Name', name: '中学レベル' }, 
 const initialDecks = [ { id: 1, boxId: 1, nameKey: 'deck1Name', name: '基本の動詞', lastStudied: null, lastRecordTime: null, cards: [ { word: 'shine', meaning: '輝く / 光る', example: 'The stars **shine** brightly.', translation: '星が明るく**輝く**。', isMemorized: false, pos: '動詞' }, { word: 'have', meaning: '持っている / 食べる', example: 'I **have** a book.', translation: '私は本を**持っています**。', isMemorized: false, pos: '動詞' }, { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false, pos: '動詞' }, { word: 'attack', meaning: '攻撃する', example: 'The dog will not **attack** you.', translation: 'その犬はあなたを**攻撃し**ません。', isMemorized: false, pos: '動詞' } ] } ];
 
 const parseCSV = (text) => {
-  text = text.replace(/^\uFEFF/, ''); const rows = []; let row = []; let currentVal = ''; let inQuotes = false;
+  text = text.replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [];
+  let currentVal = '';
+  let inQuotes = false;
   for (let i = 0; i < text.length; i++) {
-    const char = text[i]; const nextChar = text[i+1];
-    if (inQuotes) { if (char === '"' && nextChar === '"') { currentVal += '"'; i++; } else if (char === '"') { inQuotes = false; } else { currentVal += char; }
-    } else { if (char === '"') { inQuotes = true; } else if (char === ',') { row.push(currentVal); currentVal = ''; } else if (char === '\n' || char === '\r') { row.push(currentVal); rows.push(row); row = []; currentVal = ''; if (char === '\r' && nextChar === '\n') i++; } else { currentVal += char; } }
+    const char = text[i];
+    const nextChar = text[i+1];
+    if (inQuotes) {
+      if (char === '"' && nextChar === '"') {
+        currentVal += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = false;
+      } else {
+        currentVal += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === ',') {
+        row.push(currentVal);
+        currentVal = '';
+      } else if (char === '\n' || char === '\r') {
+        row.push(currentVal);
+        rows.push(row);
+        row = [];
+        currentVal = '';
+        if (char === '\r' && nextChar === '\n') i++;
+      } else {
+        currentVal += char;
+      }
+    }
   }
-  if (currentVal || row.length > 0) { row.push(currentVal); rows.push(row); }
+  if (currentVal || row.length > 0) {
+    row.push(currentVal);
+    rows.push(row);
+  }
   return rows;
 };
 
@@ -110,7 +141,6 @@ const cleanTranslation = (text) => {
   return cleanText(text).split(/\*\*(.*?)\*\*/g).join('');
 };
 
-// プリント用穴埋め
 const renderBlankExample = (text) => {
   if (!text) return <span className="print-blank-line"></span>;
   const cleanedText = cleanText(text);
@@ -144,7 +174,6 @@ const renderBlankExample = (text) => {
   return <>{elements}</>;
 };
 
-// アプリ画面用ハイライト（句読点ぼっち防止）
 const renderHighlightedText = (text) => {
   if (!text) return null;
   try {
@@ -203,7 +232,6 @@ function App() {
   });
 
   useEffect(() => {
-    // WebView（アプリ内ブラウザ）の検知
     const ua = (navigator.userAgent || navigator.vendor || window.opera).toLowerCase();
     const isWebView = /line|instagram|fban|fbav|twitter|gsa|yahoouisearch|yabrowser/.test(ua) || 
                       (ua.includes('iphone') && !ua.includes('safari')) || 
@@ -232,7 +260,6 @@ function App() {
           }
         } catch (e) {
           console.error("Firestore read/write error. Check Rules.", e);
-          // 通信エラー等で読み込みに失敗した場合も、画面が真っ白にならないように初期箱をセット
           setBoxes(prev => Array.isArray(prev) && prev.length > 0 ? prev : initialBoxes);
           setDecks(prev => Array.isArray(prev) && prev.length > 0 ? prev : initialDecks);
         }
@@ -272,26 +299,43 @@ function App() {
   
   const handleLogout = () => { signOut(auth).then(() => { setBoxes([]); setDecks([]); }); };
 
-  const touchStartX = useRef(null); const touchStartY = useRef(null); const touchEndX = useRef(null); const touchEndY = useRef(null);
-  const [pullDownY, setPullDownY] = useState(0); const [isStoring, setIsStoring] = useState(false);
+  const touchStartX = useRef(null); 
+  const touchStartY = useRef(null); 
+  const touchEndX = useRef(null); 
+  const touchEndY = useRef(null);
+  const [pullDownY, setPullDownY] = useState(0); 
+  const [isStoring, setIsStoring] = useState(false);
   const [view, setView] = useState('boxes'); 
-  const [currentBoxId, setCurrentBoxId] = useState(null); const [currentDeckId, setCurrentDeckId] = useState(null);
-  const [studyTime, setStudyTime] = useState(0); const [hasRecorded, setHasRecorded] = useState(false); 
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false); const [displaySeconds, setDisplaySeconds] = useState(2.0); const [isMuted, setIsMuted] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0); const [isFlipped, setIsFlipped] = useState(false);
-  const [isBulkMode, setIsBulkMode] = useState(false); const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentBoxId, setCurrentBoxId] = useState(null); 
+  const [currentDeckId, setCurrentDeckId] = useState(null);
+  const [studyTime, setStudyTime] = useState(0); 
+  const [hasRecorded, setHasRecorded] = useState(false); 
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false); 
+  const [displaySeconds, setDisplaySeconds] = useState(2.0); 
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0); 
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isBulkMode, setIsBulkMode] = useState(false); 
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
-  const [newBoxName, setNewBoxName] = useState(''); const [newDeckNameInside, setNewDeckNameInside] = useState('');
-  const [editingCard, setEditingCard] = useState(null); const [addingCard, setAddingCard] = useState(false);
+  const [newBoxName, setNewBoxName] = useState(''); 
+  const [newDeckNameInside, setNewDeckNameInside] = useState('');
+  const [editingCard, setEditingCard] = useState(null); 
+  const [addingCard, setAddingCard] = useState(false);
   const [newCardData, setNewCardData] = useState({ word: '', meaning: '', example: '', translation: '', pos: '' });
   const [loading, setLoading] = useState(false);
   
-  const [testQuestions, setTestQuestions] = useState([]); const [currentTestIndex, setCurrentTestIndex] = useState(0);
-  const [score, setScore] = useState(0); const [showTestResult, setShowTestResult] = useState(false); 
+  const [testQuestions, setTestQuestions] = useState([]); 
+  const [currentTestIndex, setCurrentTestIndex] = useState(0);
+  const [score, setScore] = useState(0); 
+  const [showTestResult, setShowTestResult] = useState(false); 
   const [printCards, setPrintCards] = useState([]);
   const [printMode, setPrintMode] = useState('word');
-  const [draggedDeckId, setDraggedDeckId] = useState(null); const [ghostPos, setGhostPos] = useState(null); const touchDragTimer = useRef(null);
-  const [draggedCardWord, setDraggedCardWord] = useState(null); const [openingBoxId, setOpeningBoxId] = useState(null);
+  const [draggedDeckId, setDraggedDeckId] = useState(null); 
+  const [ghostPos, setGhostPos] = useState(null); 
+  const touchDragTimer = useRef(null);
+  const [draggedCardWord, setDraggedCardWord] = useState(null); 
+  const [openingBoxId, setOpeningBoxId] = useState(null);
   
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedForDelete, setSelectedForDelete] = useState(new Set());
@@ -302,7 +346,6 @@ function App() {
   const [showWordOnExMode, setShowWordOnExMode] = useState(true); 
   const [isFrontOnlyAuto, setIsFrontOnlyAuto] = useState(false); 
 
-  // ⭐️ 4択テスト用のステート
   const [testEffect, setTestEffect] = useState(null); 
   const [combo, setCombo] = useState(0);
 
@@ -342,7 +385,8 @@ function App() {
   };
 
   const deleteSpecificCard = (e, wordToDelete) => {
-    e.stopPropagation(); stopAutoPlayIfActive();
+    e.stopPropagation(); 
+    stopAutoPlayIfActive();
     setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: (d.cards || []).filter(c => c.word !== wordToDelete) } : d));
   };
 
@@ -442,8 +486,11 @@ function App() {
 
   useEffect(() => {
     let studyTimerInterval = null;
-    if (view === 'study' && !isCompleted && !isBulkMode && studyCards.length > 0) { studyTimerInterval = setInterval(() => setStudyTime(prev => prev + 1), 1000); } 
-    else if (view !== 'study') { setStudyTime(0); }
+    if (view === 'study' && !isCompleted && !isBulkMode && studyCards.length > 0) {
+      studyTimerInterval = setInterval(() => setStudyTime(prev => prev + 1), 1000); 
+    } else if (view !== 'study') { 
+      setStudyTime(0); 
+    }
     return () => { if (studyTimerInterval) clearInterval(studyTimerInterval); };
   }, [view, isCompleted, isBulkMode, studyCards.length]);
 
@@ -733,11 +780,44 @@ function App() {
     }
   };
 
+  const onTouchStartCard = (e, word) => { 
+    e.stopPropagation(); 
+    if (isDeleteMode) return; 
+    const touch = e.touches[0]; 
+    touchDragTimer.current = setTimeout(() => { 
+      setDraggedCardWord(word); 
+      setGhostPos({ x: touch.clientX, y: touch.clientY, title: word }); 
+    }, 400); 
+  };
+  
+  const onTouchMoveCard = (e) => { 
+    if (!draggedCardWord) { clearTimeout(touchDragTimer.current); return; } 
+    e.preventDefault(); 
+    const touch = e.touches[0]; 
+    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null); 
+  };
+  
+  const onTouchEndCard = (e) => {
+    clearTimeout(touchDragTimer.current);
+    if (draggedCardWord) {
+      const touch = e.changedTouches[0];
+      if(touch) {
+         const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+         const targetLeftPanel = elem?.closest('.left-panel'); 
+         const targetRightPanel = elem?.closest('.right-panel');
+         if (targetRightPanel) { toggleMemorize(null, draggedCardWord, true); } 
+         else if (targetLeftPanel) { toggleMemorize(null, draggedCardWord, false); }
+      }
+      setTimeout(() => { setDraggedCardWord(null); setGhostPos(null); }, 100);
+    }
+  };
+
   const handleTouchStart = (e) => {
     unlockAudio();
     if (draggedDeckId || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes' || view === 'printPreview' || view === 'manual') return;
     touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; touchEndX.current = null; touchEndY.current = null; 
   };
+  
   const handleTouchMove = (e) => {
     if (draggedDeckId || window.scrollY > 10) return;
     if (!touchStartX.current || !touchStartY.current || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes' || view === 'printPreview' || view === 'manual') return;
@@ -745,6 +825,7 @@ function App() {
     const diffY = touchEndY.current - touchStartY.current; const diffX = touchStartX.current - touchEndX.current;
     if (diffY > 10 && diffY > Math.abs(diffX) && (view === 'study' || view === 'decks')) setPullDownY(diffY);
   };
+  
   const handleTouchEnd = () => {
     if (view === 'boxes' || view === 'printPreview' || view === 'manual') return;
     if (pullDownY > 120) {
@@ -769,7 +850,9 @@ function App() {
         draggable={!isDeleteMode && "true"}
         onClick={() => { if (isDeleteMode) toggleDeleteSelection(c.word); }}
         onDragStart={(e) => { if(isDeleteMode) return; setDraggedCardWord(c.word); e.dataTransfer.effectAllowed = "move"; }} 
-        onDragEnd={() => setDraggedCardWord(null)} title="Drag & Drop">
+        onDragEnd={() => setDraggedCardWord(null)} title="Drag & Drop"
+        onTouchStart={(e) => onTouchStartCard(e, c.word)} onTouchMove={onTouchMoveCard} onTouchEnd={onTouchEndCard}
+      >
         <div className="mini-card-header">
           <span className="mini-word">
             {isDeleteMode && (
@@ -982,14 +1065,17 @@ function App() {
   if (view === 'boxes') {
     return (
       <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+        
+        {/* ボタン群をCSSで絶対配置し、DOM構造は維持 */}
         <div className="top-right-actions">
           <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout}</button>
-          <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
-          <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#9b59b6', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>📊 Log</button>
+          <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
+          <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>📊 Log</button>
           <div style={{width: '2px', height: '24px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 5px'}}></div>
           <button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button>
           <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
         </div>
+        
         <div className="hero-section">
           <h1 className="burning-text">{t.appTitle}</h1>
           <h2 className="burning-subtitle">{t.appSubtitle}</h2>
@@ -1158,7 +1244,22 @@ function App() {
 
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-        <div className="print-controls no-print" style={{ display: 'flex', gap: '15px', marginBottom: '20px', justifyContent: 'center', width: '100%', padding: '20px', background: '#fff', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div 
+          className="print-controls no-print" 
+          style={{ 
+            display: 'flex', 
+            gap: '15px', 
+            marginBottom: '20px', 
+            justifyContent: 'center', 
+            width: '100%', 
+            padding: '20px', 
+            background: '#fff', 
+            boxShadow: '0 4px 10px rgba(0,0,0,0.05)', 
+            position: 'sticky', 
+            top: 0, 
+            zIndex: 100 
+          }}
+        >
           <button className="cancel-btn" onClick={() => setView('study')} style={{ margin: 0 }}>{t.backToStudyBtn}</button>
           <button className="add-btn" onClick={shufflePrintCards} style={{ backgroundColor: '#8e44ad', margin: 0 }}>{t.shuffleBtn}</button>
           <button className="add-btn" onClick={() => window.print()} style={{ backgroundColor: '#e74c3c', margin: 0 }}>{t.printPdfBtn}</button>
@@ -1318,7 +1419,22 @@ function App() {
                               <span className="print-q-num">({globalIndex})</span>
                               <span className="print-q-ja">{cleanText((c.meaning || '').split('/')[0])}</span>
                             </div>
-                            <div className="print-q-bottom" style={{ borderBottom: '1px solid #000', height: '24px', display: 'flex', alignItems: 'flex-end', paddingBottom: '2px', paddingLeft: '5px', fontSize: '15px', fontWeight: 'bold', color: '#e74c3c' }}>{c.word}</div>
+                            <div 
+                              className="print-q-bottom" 
+                              style={{ 
+                                borderBottom: '1px solid #000', 
+                                height: '24px', 
+                                display: 'flex', 
+                                alignItems: 'flex-end', 
+                                paddingBottom: '2px', 
+                                paddingLeft: '5px', 
+                                fontSize: '15px', 
+                                fontWeight: 'bold', 
+                                color: '#e74c3c' 
+                              }}
+                            >
+                              {c.word}
+                            </div>
                           </div>
                         );
                       })}
@@ -1332,7 +1448,22 @@ function App() {
                               <span className="print-q-num">({globalIndex})</span>
                               <span className="print-q-ja">{cleanText((c.meaning || '').split('/')[0])}</span>
                             </div>
-                            <div className="print-q-bottom" style={{ borderBottom: '1px solid #000', height: '24px', display: 'flex', alignItems: 'flex-end', paddingBottom: '2px', paddingLeft: '5px', fontSize: '15px', fontWeight: 'bold', color: '#e74c3c' }}>{c.word}</div>
+                            <div 
+                              className="print-q-bottom" 
+                              style={{ 
+                                borderBottom: '1px solid #000', 
+                                height: '24px', 
+                                display: 'flex', 
+                                alignItems: 'flex-end', 
+                                paddingBottom: '2px', 
+                                paddingLeft: '5px', 
+                                fontSize: '15px', 
+                                fontWeight: 'bold', 
+                                color: '#e74c3c' 
+                              }}
+                            >
+                              {c.word}
+                            </div>
                           </div>
                         );
                       })}
@@ -1424,6 +1555,43 @@ function App() {
           .fullscreen-stealth-bottom .autoplay-controls { width: 100% !important; flex: 1 !important; margin-left: 0 !important; }
         }
         .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
+        
+        .top-right-actions {
+          width: 100% !important;
+          position: absolute !important;
+          top: 15px !important;
+          left: 0 !important;
+          right: 0 !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: flex-start !important;
+          flex-wrap: wrap !important;
+          padding: 0 15px !important;
+          box-sizing: border-box !important;
+          gap: 8px !important;
+          pointer-events: none !important;
+          z-index: 100 !important;
+        }
+        .top-right-actions > * {
+          pointer-events: auto !important;
+        }
+        .top-right-actions > .logout-btn {
+          position: absolute !important;
+          left: 15px !important;
+          top: 0 !important;
+          margin: 0 !important;
+        }
+        .top-right-actions > .lang-toggle-btn:not(.logout-btn) {
+          position: absolute !important;
+          right: 15px !important;
+          top: 0 !important;
+          margin: 0 !important;
+        }
+        @media(max-width: 768px) {
+          .top-right-actions {
+            padding-top: 45px !important;
+          }
+        }
       `}} />
       
       {ghostPos && (<div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>{ghostPos.title}</div>)}
@@ -1562,11 +1730,16 @@ function App() {
                   <p className="bulk-hint" style={{fontSize:'16px', color:'#333'}}>{t.csvHint}</p>
                   
                   <div className="bulk-file-actions" style={{ display: 'flex', flexDirection: 'column', gap: '15px', justifyContent: 'center', marginBottom: '20px', width: '100%' }}>
-                    <button onClick={downloadTemplate} style={{ backgroundColor: '#f39c12', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0 }}>
+                    <button 
+                      onClick={downloadTemplate} 
+                      style={{ backgroundColor: '#f39c12', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0 }}
+                    >
                       📥 テンプレート(CSV)をダウンロードする
                     </button>
                     
-                    <label style={{ backgroundColor: '#27ae60', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0, textAlign: 'center' }}>
+                    <label 
+                      style={{ backgroundColor: '#27ae60', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0, textAlign: 'center' }}
+                    >
                       {loading ? t.loading : '📂 CSVファイルをインポートする'}
                       <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
                     </label>
@@ -1638,17 +1811,34 @@ function App() {
                     <div className="fullscreen-stealth-bottom">
                       <div className="autoplay-controls" style={{ margin: 0, border: 'none', padding: 0, width: '100%', boxSizing: 'border-box' }}>
                         <div className="autoplay-actions-row">
-                          <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
+                          <button 
+                            className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } 
+                              setIsAutoPlaying(!isAutoPlaying); 
+                            }}
+                          >
+                            {isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}
+                          </button>
                           <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
                           <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
                         </div>
                         <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                          <div style={{fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center', whiteSpace: 'nowrap'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
+                          <div style={{fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center', whiteSpace: 'nowrap'}}>
+                            {t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}
+                          </div>
                           <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
                             <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
                             <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '10px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '1px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-                              <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
+                              <input 
+                                type="range" min="0" max="4.0" step="0.1" 
+                                value={displaySeconds} 
+                                onChange={(e) => setDisplaySeconds(Number(e.target.value))} 
+                                className="speed-slider" 
+                                style={{ width: '100%', margin: 0 }} 
+                              />
                             </div>
                             <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'left' }}>🐢 {t.slow}</span>
                           </div>
@@ -1658,17 +1848,34 @@ function App() {
                   ) : (
                     <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
                       <div className="autoplay-actions-row">
-                        <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>{isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}</button>
+                        <button 
+                          className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } 
+                            setIsAutoPlaying(!isAutoPlaying); 
+                          }}
+                        >
+                          {isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}
+                        </button>
                         <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
                         <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
                       </div>
                       <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                        <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center', whiteSpace: 'nowrap'}}>{t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}</div>
+                        <div style={{fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center', whiteSpace: 'nowrap'}}>
+                          {t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}
+                        </div>
                         <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
                           <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
                           <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-                            <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ width: '100%', margin: 0 }} />
+                            <input 
+                              type="range" min="0" max="4.0" step="0.1" 
+                              value={displaySeconds} 
+                              onChange={(e) => setDisplaySeconds(Number(e.target.value))} 
+                              className="speed-slider" 
+                              style={{ width: '100%', margin: 0 }} 
+                            />
                           </div>
                           <span style={{ fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>🐢 {t.slow}</span>
                         </div>
