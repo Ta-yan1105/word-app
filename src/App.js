@@ -35,9 +35,9 @@ const DICT = {
     m_l1_1: "📦 箱（Box）：一番外側の入れ物です。「中学英語」「英検」など大きなカテゴリを作ります。", m_l1_2: "🔖 束（Deck）：箱の中に入る単語カードの束です。「基本動詞 50語」など、学習しやすい単位で作ります。", m_l1_3: "📇 単語カード：実際のフラッシュカードです。束を開くと学習が始まります。",
     m_s2: "2. 単語カードの作り方", m_p2: "学習画面（束を開いた状態）の左側メニューから追加できます。", m_s2_1: "✏️ 手動で1枚ずつ追加", m_p2_1: "「手動で単語を1枚追加」ボタンを押すと、その場でカードを作成できます。この時、タブから「名詞」「動詞」などの品詞を登録しておくと、学習時に日本語の横に品詞バッジが表示されます。",
     m_s2_2: "📂 CSVから一括で追加", m_p2_2: "Excelやスプレッドシートで作ったデータを一気に読み込めます。ChatGPTに「以下の単語をCSV化して」と指示してコピペするのが一番簡単です！（※品詞は後から編集画面で追加できます）", m_p2_3: "※例文の中で黄色くマーカーを引きたい部分は **apple** のように **（アスタリスク2つ）で囲んでください。",
-    m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。全画面アイコン（全集中🔥）を押すと、大迫力の巨大フォントで没入学習が可能です。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボードの [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
+    m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。全画面アイコン（全集中🔥）を押すと、大迫力の巨大フォントで没入学習が可能です。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー] / [上下矢印]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボードの [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
     m_s4: "4. 自動めくり機能 ＆ 表示間隔（スピード）", m_p4: "画面下の「▶️ 自動めくり」を押すと、設定した秒数ごとに自動でカードがめくられ、音声が流れます。「表面のみ」をONにすると、意味を確認せず次々と高速フラッシュできます。", m_l4_1: "🐢 遅（4.0秒）：じっくり意味を確認したい時に。", m_l4_2: "🐇 標準（2.0秒）：テンポよく進めたい時に。", m_l4_3: "👼 神速（0.0秒）：脳に直接刷り込む超高速フラッシュモード！",
-    m_s5: "5. 暗記の管理（ドラッグ＆ドロップ）", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、左側のリストから右側の「✅ 暗記済」エリアへドラッグ＆ドロップして移動させましょう！", m_p5_1: "束（デッキ）を丸ごと「暗記済」エリアにドラッグして、一気に完了させることも可能です。",
+    m_s5: "5. 暗記の管理（ドラッグ＆ドロップ）", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、左側のリストから右側の「✅ 暗記済」エリアへ長押しドラッグ＆ドロップして移動させましょう！", m_p5_1: "束（デッキ）を丸ごと「暗記済」エリアにドラッグして、一気に完了させることも可能です。",
     m_s6: "6. テスト ＆ 印刷機能 ＆ 注意事項", m_l6_1: "📝 テスト：4択クイズに挑戦できます。連続正解でド派手な演出が待っています！", m_l6_2: "🖨️ プリント：実際の授業で配れる「紙の小テスト」として印刷できます。例文プリントでは対象単語が自動で穴埋め（＿＿＿）になります。", m_l6_3: "⚠️ ログイン注意：LINEやInstagram等のアプリ内ブラウザからはログインエラーになります。標準ブラウザ（Safari/Chrome）で開いてください。",
     box1Name: "中学レベル", box2Name: "資格・オリジナル箱", deck1Name: "基本の動詞", card1_mean: "輝く / 光る", card1_trans: "星が明るく**輝く**。", card2_mean: "持っている / 食べる", card2_trans: "私は本を**持っています**。", card3_mean: "作る", card3_trans: "彼女は夕食を**作ります**。", card4_mean: "攻撃する", card4_trans: "その犬はあなたを**攻撃し**ません。"
   },
@@ -70,9 +70,9 @@ const DICT = {
     m_l1_1: "📦 Box: The outermost container (e.g., 'Basic Level', 'TOEFL').", m_l1_2: "🔖 Deck: A bundle of cards inside a box (e.g., 'Basic Verbs 50').", m_l1_3: "📇 Card: The actual flashcard. Open a deck to start learning.",
     m_s2: "2. How to create cards", m_p2: "You can add cards from the left menu in the study view.", m_s2_1: "✏️ Add Manually", m_p2_1: "Click 'Add 1 Card Manually' to create a card on the spot.",
     m_s2_2: "📂 Import from CSV", m_p2_2: "Import data from Excel/Spreadsheets. The easiest way is to ask ChatGPT to 'Create a CSV for flashcards' and paste it!", m_p2_3: "* Enclose the target word in ** (double asterisks) to highlight it in yellow.",
-    m_s3: "3. Learning Controls", m_p3: "Flip and learn like real paper cards. Click the 'Focus 🔥' button for an immersive, large-font full-screen mode.", m_l3_1: "Flip Card: Click the center of the card, or press [Space].", m_l3_2: "Next Card: '▶' button, or [Right Arrow] / [Enter].", m_l3_3: "Prev Card: '◀' button, or [Left Arrow].", m_l3_4: "Play Audio: Click the English word itself to hear native pronunciation.",
+    m_s3: "3. Learning Controls", m_p3: "Flip and learn like real paper cards. Click the 'Focus 🔥' button for an immersive, large-font full-screen mode.", m_l3_1: "Flip Card: Click the center of the card, or press [Space] / [Up/Down Arrow].", m_l3_2: "Next Card: '▶' button, or [Right Arrow] / [Enter].", m_l3_3: "Prev Card: '◀' button, or [Left Arrow].", m_l3_4: "Play Audio: Click the English word itself to hear native pronunciation.",
     m_s4: "4. Auto Play & Speed", m_p4: "Click '▶️ Auto Play' to automatically flip cards. Turn on 'Front Only' to skip the back and flash through words quickly.", m_l4_1: "🐢 Slow (4.0s): When you want to carefully check the meaning.", m_l4_2: "🐇 Normal (2.0s): For a good learning tempo.", m_l4_3: "👼 Godspeed (0.0s): Ultra-fast flash mode to burn into your brain!",
-    m_s5: "5. Memorization (Drag & Drop)", m_p5: "Click the '✔' button on the card, or Drag & Drop the word to the '✅ Memorized' area on the right!", m_p5_1: "You can also drag an entire deck to the 'Memorized' area to complete it instantly.",
+    m_s5: "5. Memorization (Drag & Drop)", m_p5: "Click the '✔' button on the card, or Long-Press & Drag the word to the '✅ Memorized' area on the right!", m_p5_1: "You can also drag an entire deck to the 'Memorized' area to complete it instantly.",
     m_s6: "6. Test, Print & Notes", m_l6_1: "📝 Test: Take a fast-paced 4-choice quiz. Incorrect answers will highlight the correct choice.", m_l6_2: "🖨️ Print: Print a paper quiz. In Example Print mode, target words automatically become blanks (___).", m_l6_3: "⚠️ Login Note: Google login is blocked in in-app browsers like LINE/Instagram. Please open in a standard browser (Safari/Chrome)."
   }
 };
@@ -303,6 +303,8 @@ function App() {
   const touchStartY = useRef(null); 
   const touchEndX = useRef(null); 
   const touchEndY = useRef(null);
+  const touchStartPos = useRef({x: 0, y: 0});
+  
   const [pullDownY, setPullDownY] = useState(0); 
   const [isStoring, setIsStoring] = useState(false);
   const [view, setView] = useState('boxes'); 
@@ -324,6 +326,7 @@ function App() {
   const [addingCard, setAddingCard] = useState(false);
   const [newCardData, setNewCardData] = useState({ word: '', meaning: '', example: '', translation: '', pos: '' });
   const [loading, setLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   
   const [testQuestions, setTestQuestions] = useState([]); 
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -333,6 +336,7 @@ function App() {
   const [printMode, setPrintMode] = useState('word');
   const [draggedDeckId, setDraggedDeckId] = useState(null); 
   const touchDragTimer = useRef(null);
+  const [ghostPos, setGhostPos] = useState(null); 
   const [draggedCardWord, setDraggedCardWord] = useState(null); 
   const [openingBoxId, setOpeningBoxId] = useState(null);
   
@@ -681,6 +685,10 @@ function App() {
         newCards.push({ word: targetWord, meaning: row[1] ? cleanText(row[1]) : '', example: row[2] ? cleanText(row[2]) : '', translation: row[3] ? cleanText(row[3]) : '', pos: '', isMemorized: false });
       }
       setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...(d.cards || []), ...newCards] } : d));
+      
+      setToastMessage(`🎉 ${newCards.length}語追加されました！`);
+      setTimeout(() => setToastMessage(''), 3000);
+      
     } catch(e) { alert(t.alertCsvError); } finally { setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false); }
   };
 
@@ -793,13 +801,23 @@ function App() {
   const onTouchStartDeck = (e, deck) => { 
     e.stopPropagation(); 
     const touch = e.touches[0]; 
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     touchDragTimer.current = setTimeout(() => { 
       setDraggedDeckId(deck.id); 
+      setGhostPos({ x: touch.clientX, y: touch.clientY, title: deck.name });
     }, 400); 
   };
   const onTouchMoveDeck = (e) => { 
-    if (!draggedDeckId) { clearTimeout(touchDragTimer.current); return; } 
+    if (!draggedDeckId) { 
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStartPos.current.x;
+      const dy = touch.clientY - touchStartPos.current.y;
+      if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(touchDragTimer.current); }
+      return; 
+    } 
     e.preventDefault(); 
+    const touch = e.touches[0]; 
+    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null);
   };
   const onTouchEndDeck = (e) => {
     clearTimeout(touchDragTimer.current);
@@ -817,7 +835,7 @@ function App() {
             return newDecks;
          });
       }
-      setTimeout(() => { setDraggedDeckId(null); }, 100);
+      setTimeout(() => { setDraggedDeckId(null); setGhostPos(null); }, 100);
     }
   };
 
@@ -825,14 +843,24 @@ function App() {
     e.stopPropagation(); 
     if (isDeleteMode) return; 
     const touch = e.touches[0]; 
+    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     touchDragTimer.current = setTimeout(() => { 
       setDraggedCardWord(word); 
+      setGhostPos({ x: touch.clientX, y: touch.clientY, title: word }); 
     }, 400); 
   };
   
   const onTouchMoveCard = (e) => { 
-    if (!draggedCardWord) { clearTimeout(touchDragTimer.current); return; } 
+    if (!draggedCardWord) { 
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStartPos.current.x;
+      const dy = touch.clientY - touchStartPos.current.y;
+      if (Math.sqrt(dx*dx + dy*dy) > 10) { clearTimeout(touchDragTimer.current); }
+      return; 
+    } 
     e.preventDefault(); 
+    const touch = e.touches[0]; 
+    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY } : null); 
   };
   
   const onTouchEndCard = (e) => {
@@ -846,7 +874,7 @@ function App() {
          if (targetRightPanel) { toggleMemorize(null, draggedCardWord, true); } 
          else if (targetLeftPanel) { toggleMemorize(null, draggedCardWord, false); }
       }
-      setTimeout(() => { setDraggedCardWord(null); }, 100);
+      setTimeout(() => { setDraggedCardWord(null); setGhostPos(null); }, 100);
     }
   };
 
@@ -883,7 +911,7 @@ function App() {
     return (
       <div key={c.word} 
         className={`mini-card ${draggedCardWord === c.word ? 'dragging-mini' : ''} ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
-        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none', ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
+        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y', ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
         draggable={!isDeleteMode && "true"}
         onClick={() => { if (isDeleteMode) toggleDeleteSelection(c.word); }}
         onDragStart={(e) => { 
@@ -924,7 +952,7 @@ function App() {
     const status = getEbbinghausStatus(deck); const isDragging = draggedDeckId === deck.id; const isAllMemorized = (deck.cards || []).length > 0 && (deck.cards || []).every(c => c.isMemorized);
     return (
       <div key={deck.id} data-id={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''} ${isDragging ? 'dragging' : ''}`} 
-        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }}
+        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
         onClick={() => openDeck(deck.id)} draggable="true" onDragStart={(e) => onDragStart(e, deck.id)} onDragEnd={() => setDraggedDeckId(null)}
         onTouchStart={(e) => onTouchStartDeck(e, deck)} onTouchMove={onTouchMoveDeck} onTouchEnd={onTouchEndDeck} title="PC:ドラッグ / スマホ:長押しで並べ替え">
         <div className="deck-paper stack-bottom"></div><div className="deck-paper stack-middle"></div>
@@ -1531,6 +1559,17 @@ function App() {
   return (
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       
+      {toastMessage && (
+        <div style={{
+          position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+          background: 'rgba(39, 174, 96, 0.9)', color: '#fff', padding: '12px 24px',
+          borderRadius: '50px', fontWeight: 'bold', zIndex: 10001,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)', animation: 'fadeInOut 3s forwards'
+        }}>
+          {toastMessage}
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{ __html: `
         @media(min-width: 1024px) {
           .app-container {
@@ -1606,17 +1645,41 @@ function App() {
         }
         .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
         
+        @media (max-width: 900px) and (orientation: portrait) {
+           .fullscreen-active {
+              padding: 10px !important; 
+              justify-content: space-between !important;
+           }
+           .fullscreen-stealth-top {
+              position: relative !important; top: 0 !important; left: 0 !important; transform: none !important;
+              width: 100% !important; max-width: 400px !important; padding: 10px !important; opacity: 1 !important;
+           }
+           .fullscreen-stealth-bottom {
+              position: relative !important; bottom: 0 !important; left: 0 !important; transform: none !important;
+              width: 100% !important; opacity: 1 !important;
+           }
+           .fullscreen-active .card-animation-wrapper {
+              flex: 1 !important; 
+              height: auto !important; 
+              max-height: none !important; 
+              margin: 15px 0 !important;
+              display: flex; align-items: center; justify-content: center;
+           }
+        }
+        
         @media (max-width: 900px) and (orientation: landscape) {
           .fullscreen-stealth-top {
             top: 5px !important;
             transform: translateX(-50%) scale(0.7) !important;
             transform-origin: top center !important;
+            opacity: 1 !important;
           }
           .fullscreen-stealth-bottom {
             bottom: 5px !important;
             transform: translateX(-50%) scale(0.7) !important;
             transform-origin: bottom center !important;
             width: 95% !important;
+            opacity: 1 !important;
           }
           .fullscreen-active .card-animation-wrapper {
             min-height: 40vh !important;
@@ -1660,7 +1723,34 @@ function App() {
             padding-top: 45px !important;
           }
         }
+
+        .drag-ghost {
+          position: fixed;
+          pointer-events: none;
+          z-index: 9999;
+          background: rgba(255, 255, 255, 0.95);
+          padding: 8px 16px;
+          border-radius: 8px;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+          font-weight: bold;
+          color: #333;
+          transform: translate(-50%, -50%);
+          white-space: nowrap;
+        }
+
+        @keyframes fadeInOut {
+          0% { opacity: 0; transform: translate(-50%, -20px); }
+          10% { opacity: 1; transform: translate(-50%, 0); }
+          90% { opacity: 1; transform: translate(-50%, 0); }
+          100% { opacity: 0; transform: translate(-50%, -20px); }
+        }
       `}} />
+      
+      {ghostPos && (
+        <div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>
+          {ghostPos.title}
+        </div>
+      )}
       
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
