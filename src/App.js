@@ -392,7 +392,7 @@ function App() {
 
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      let targetFound = false; // 1件だけ削除するため
+      let targetFound = false; 
       return { ...d, cards: (d.cards || []).filter(c => {
         if (!targetFound) {
            if (typeof wordOrCard === 'object' && wordOrCard !== null) {
@@ -1902,12 +1902,12 @@ function App() {
            box-sizing: border-box !important;
         }
         @media(min-width: 768px) {
-          /* Chromebook・PC向け：全集中モードのパネルを横1列にして干渉を防ぐ */
+          /* ★Chromebook・PC向け：全集中モードのパネルを完全な横1列にして干渉を防ぐ */
           .fullscreen-stealth-bottom { 
              flex-direction: row !important; 
              justify-content: center !important; 
-             width: auto !important; 
-             max-width: 95vw !important; 
+             width: max-content !important; /* 中身の要素に合わせて背景枠を広げる */
+             max-width: 95vw !important; /* 画面幅は超えないように制限 */
              border-radius: 50px !important; 
              padding: 10px 30px !important; 
           }
@@ -2205,7 +2205,6 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
-                  {/* 安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
