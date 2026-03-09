@@ -1610,6 +1610,17 @@ function App() {
             width: 100% !important; 
             margin: 0 auto !important; 
           }
+          
+          /* カード拡大に伴うPCでのテキストサイズ拡張 */
+          .center-panel:not(.fullscreen-active) .card-container .word-text { font-size: 72px !important; }
+          .center-panel:not(.fullscreen-active) .card-container .core-meaning-large { font-size: 48px !important; }
+          .center-panel:not(.fullscreen-active) .card-container .example-en { font-size: 36px !important; line-height: 1.5 !important; }
+          .center-panel:not(.fullscreen-active) .card-container .example-ja { font-size: 28px !important; line-height: 1.6 !important; }
+
+          /* 例文モード時の下部の薄い単語表示の調整 */
+          .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .word-text { font-size: 28px !important; }
+          .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .core-meaning-large { font-size: 20px !important; }
+
           .mini-card-list { display: grid; grid-template-columns: 1fr 1fr !important; gap: 8px; align-content: start; }
         }
 
