@@ -193,6 +193,52 @@ html, body {
   100% { text-shadow: 0 -2px 3px #fff, 0 -3px 6px #ff0, 0 -5px 12px #ff8000, 0 -10px 25px #f00; }
 }
 
+
+/* =========================================================================
+   🚨 視認性改善：右上のナビゲーションボタン群（ホーム画面の白背景用）
+   ========================================================================= */
+
+/* 「このアプリの使い方」ボタン（インラインstyleを持たないmanual-link-btn） */
+.top-right-actions .manual-link-btn:not([style*="background"]) {
+  color: #34495e !important;
+  text-shadow: none !important;
+  animation: none !important;
+  font-style: normal !important;
+  font-weight: bold !important;
+  opacity: 1 !important;
+}
+
+/* 「Blog」「Log」ボタン（インラインstyleで背景色を持つもの） */
+.top-right-actions .manual-link-btn[style*="background"] {
+  text-shadow: none !important;
+  animation: none !important;
+  font-style: normal !important;
+  padding: 4px 12px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+/* 「English / 日本語」トグルボタン */
+.top-right-actions .lang-toggle-btn:not(.logout-btn) {
+  background: #ffffff !important;
+  color: #34495e !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+}
+
+/* ログアウトボタンの調整（シャドウ除去など） */
+.top-right-actions .logout-btn {
+  text-shadow: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  border: none !important;
+}
+
+/* 白くて見えなくなっている区切り線（div）をグレーに */
+.top-right-actions div[style*="width"] {
+  background-color: #cbd5e1 !important;
+}
+
+
 /* 🟥🟥 対象部分：赤基調の重厚な中央配置デザインへ変更 🟥🟥 */
 .hero-section {
   text-align: center;

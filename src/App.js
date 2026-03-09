@@ -2046,13 +2046,14 @@ function App() {
         .nav-btn-physical:active { transform: scale(0.95); background: #f1f5f9; }
       `}} />
       
-      {/* スマホ操作時にカード全体が持ち上がる美しいドラッグエフェクト */}
+      {/* スマホ操作時にカード全体が持ち上がる美しいドラッグエフェクト（GPUアクセラレーションで滑らかに） */}
       {ghostPos && (
         <div className="drag-ghost" style={{ 
           position: 'fixed',
-          left: ghostPos.x, 
-          top: ghostPos.y,
-          transform: 'translate(-50%, -50%) rotate(4deg)',
+          left: 0, 
+          top: 0,
+          transform: `translate3d(calc(${ghostPos.x}px - 50%), calc(${ghostPos.y}px - 50%), 0) rotate(4deg)`,
+          willChange: 'transform',
           pointerEvents: 'none',
           zIndex: 9999,
           background: 'white',
