@@ -18,7 +18,7 @@ const DICT = {
     addManualBtn: "✏️ 手動で追加", addCsvBtn: "📂 CSVで追加", backBtn: "◀ 戻る", audioOn: "🔊 音声: オン", audioOff: "🔇 音声: オフ",
     testBtn: "📝 テスト", printBtn: "🖨️ 単語プリント", printExampleBtn: "📝 例文プリント", bulkDeleteBtn: "🗑️ 一括削除",
     cancelBulkDelete: "キャンセル", executeBulkDelete: "選択分を削除",
-    csvHint: "スプレッドシートやChatGPTで作成したCSVデータを読み込みます。",
+    csvHint: "スプレッドシートやChatGPTで作成した CSVデータを読み込みます。",
     chatGptNote: "💡 ChatGPTへの指示コピペ用：\n「以下の英単語リストを学習アプリ用のCSVデータに変換してください。\n【絶対ルール】\n1. A列に英単語、B列に日本語訳、C列に英語例文、D列に例文和訳の4列構成にすること。1行目はヘッダーにすること。\n2. すべての値をダブルクォーテーション(\"\")で囲むこと。\n3. 英語例文と例文和訳の中にある「対象の単語・訳」は ** で囲むこと（例: I have an **apple**.）。\n4. 挨拶や解説文は一切出力せず、CSV形式のコードブロックのみを返すこと。\n【リスト】（ここに単語を貼る）」",
     closeBtn: "閉じる", allMemorizedMsg: "👏 全ての単語を覚えました！", resetBtn: "🔄 覚えた状態をリセットしてもう1回", discardBtn: "捨てる",
     autoPlayStart: "▶️ 自動めくり", autoPlayStop: "⏸ 停止", repeatBtn: "🔄 もう1回", fullScreenEnter: "全集中 🔥", fullScreenExit: "解除 ↘️",
@@ -392,7 +392,7 @@ function App() {
 
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      let targetFound = false; 
+      let targetFound = false; // 1件だけ削除するため
       return { ...d, cards: (d.cards || []).filter(c => {
         if (!targetFound) {
            if (typeof wordOrCard === 'object' && wordOrCard !== null) {
@@ -1202,7 +1202,7 @@ function App() {
 
           {isInAppBrowser && (
             <div style={{ marginTop: '20px', fontSize: '13px', color: '#cbd5e1', background: 'rgba(0,0,0,0.5)', padding: '10px 15px', borderRadius: '8px', maxWidth: '350px', margin: '20px auto 0', lineHeight: '1.5' }}>
-              ⚠️ LINEやInstagramのブラウザではログインエラーになる場合があります。<br/>右上のメニュー等から「<strong>Safari/ブラウザで開く</strong>」を選択してください。
+              ⚠️ LINEやInstagramのブラウザではログインエラーになる場合があります。<br/>右上のメニュー等から「<strong>Safari/ブラウザで開く</strong>」を選択してください.
             </div>
           )}
         </div>
@@ -2205,6 +2205,7 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
+                  {/* 安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
@@ -2328,7 +2329,6 @@ function App() {
                   
                   {isFullscreen ? (
                     <div className="fullscreen-stealth-bottom">
-                      <div className="autoplay-controls" style={{ margin: 0, border: 'none', padding: 0, width: '100%', boxSizing: 'border-box' }}>
                         <div className="autoplay-actions-row">
                           <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>
                           <button 
@@ -2342,29 +2342,24 @@ function App() {
                             {isAutoPlaying ? t.autoPlayStop : t.autoPlayStart}
                           </button>
                           <button className="nav-btn-physical" onClick={handleNextCard}>▶</button>
-                          <button className="repeat-btn" onClick={handleRepeat} style={{background: '#f8f9fa', color: '#555'}}>{t.repeatBtn}</button>
-                          <button className="fullscreen-btn" onClick={toggleFullScreen} style={{background: '#f8f9fa', color: '#555'}}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
+                          <button className="repeat-btn" onClick={handleRepeat}>{t.repeatBtn}</button>
+                          <button className="fullscreen-btn" onClick={toggleFullScreen}>{isFullscreen ? t.fullScreenExit : t.fullScreenEnter}</button>
                         </div>
-                        <div className="speed-slider-container" style={{marginTop: '15px'}}>
-                          <div style={{fontSize: '11px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '2px', textAlign: 'center', whiteSpace: 'nowrap'}}>
-                            {t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed} (0.0 ${t.sec})` : `${displaySeconds.toFixed(1)} ${t.sec}`}
+                        <div className="speed-slider-container">
+                          <div className="speed-slider-label">
+                            {t.intervalLabel}: {displaySeconds === 0 ? `${t.godspeed}` : `${displaySeconds.toFixed(1)} ${t.sec}`}
                           </div>
-                          <div className="speed-slider-wrapper" style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
-                            <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'right' }}>{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
-                            <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '10px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '1px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>
-                              <input 
-                                type="range" min="0" max="4.0" step="0.1" 
-                                value={displaySeconds} 
-                                onChange={(e) => setDisplaySeconds(Number(e.target.value))} 
-                                className="speed-slider" 
-                                style={{ width: '100%', margin: 0 }} 
-                              />
-                            </div>
-                            <span style={{ fontSize: '12px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '35px', textAlign: 'left' }}>🐢 {t.slow}</span>
+                          <div className="speed-slider-wrapper">
+                            <span className="speed-min-max">{t.fast} {displaySeconds === 0 ? '👼' : '🐇'}</span>
+                            <input 
+                              type="range" min="0" max="4.0" step="0.1" 
+                              value={displaySeconds} 
+                              onChange={(e) => setDisplaySeconds(Number(e.target.value))} 
+                              className="speed-slider" 
+                            />
+                            <span className="speed-min-max">🐢 {t.slow}</span>
                           </div>
                         </div>
-                      </div>
                     </div>
                   ) : (
                     <div className="autoplay-controls" style={{background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
