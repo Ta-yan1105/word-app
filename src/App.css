@@ -245,7 +245,7 @@ html, body {
   padding: 60px 20px 40px;
   width: 90%; /* 両サイドをカット */
   max-width: 800px;
-  margin: 40px auto 30px auto; /* 中央にかっこいい感じで配置 */
+  margin: 80px auto 30px auto; /* ★ 中央にかっこいい感じで配置 (ボタン群との被りを防ぐため上余白を確保) */
   box-sizing: border-box;
   background: linear-gradient(135deg, #2b0a0a 0%, #1a0202 100%); /* 赤を基調とした重厚なデザイン */
   border: 1px solid rgba(231, 76, 60, 0.2);
@@ -597,7 +597,7 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
   .manual-link-btn { font-size: 11px; left: auto; }
 
   /* 🟥🟥 スマホ版の重厚デザイン用調整（その他の要素は変更なし） 🟥🟥 */
-  .hero-section { padding: 50px 15px 30px; width: 95%; margin-top: 60px; }
+  .hero-section { padding: 50px 15px 30px; width: 95%; margin-top: 80px; }
   .creation-header-row { flex-wrap: wrap; }
   .inner-view-wrapper { padding: 0 15px; }
   .decks-split-layout { gap: 15px; }
