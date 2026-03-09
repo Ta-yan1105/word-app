@@ -807,7 +807,7 @@ function App() {
   const createNewDeckInsideBox = () => {
     if (!newDeckNameInside.trim()) return;
     setDecks([...decks, { id: Date.now(), boxId: currentBoxId, name: newDeckNameInside, lastStudied: null, lastRecordTime: null, cards: [] }]);
-    setNewDeckNameInside('');
+    newDeckNameInside('');
   };
 
   const deleteBox = (e, boxId) => {
