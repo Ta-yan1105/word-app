@@ -336,10 +336,12 @@ function App() {
   const [printMode, setPrintMode] = useState('word');
   const [draggedDeckId, setDraggedDeckId] = useState(null); 
   const touchDragTimer = useRef(null);
-  const [ghostPos, setGhostPos] = useState(null); 
-  const [draggedCard, setDraggedCard] = useState(null); 
-  const [openingBoxId, setOpeningBoxId] = useState(null);
   
+  // ★バグ修正：コンパイルエラーを解決するために draggedCard を定義
+  const [draggedCard, setDraggedCard] = useState(null); 
+  const [ghostPos, setGhostPos] = useState(null); 
+  
+  const [openingBoxId, setOpeningBoxId] = useState(null);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedForDelete, setSelectedForDelete] = useState(new Set());
 
@@ -601,6 +603,7 @@ function App() {
     return () => { if (autoPlayTimer) clearInterval(autoPlayTimer); };
   }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, isFrontOnlyAuto]);
 
+  // オブジェクト参照で確実に1枚だけを処理
   const toggleMemorize = (e, wordOrCard, isMemorized) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
     setDecks(prev => prev.map(d => {
@@ -636,6 +639,7 @@ function App() {
     const meaning = newCardData.meaning.trim();
     if (!word || !meaning) { alert(t.alertReq); return; }
     
+    // 重複チェック
     const isDuplicate = allCards.some(c => c.word === word);
     if (isDuplicate) {
       const msg = lang === 'ja' 
@@ -653,6 +657,7 @@ function App() {
     setAddingCard(false); setNewCardData({ word: '', meaning: '', example: '', translation: '', pos: '' }); 
   };
 
+  // 編集保存時もオブジェクト参照で特定する
   const saveEditedCard = () => {
     if (!editingCard) return;
     setDecks(prev => prev.map(d => {
@@ -722,7 +727,7 @@ function App() {
     setLoading(true);
     try {
       const newCards = [];
-      const duplicateWords = []; 
+      const duplicateWords = []; // CSVインポート時の重複チェック
       for (const row of rows) {
         const targetWord = row[0] ? String(row[0]).trim() : ''; if (!targetWord) continue;
         
@@ -900,6 +905,7 @@ function App() {
     }
   };
 
+  // ★D&D完全修正：安定したカードオブジェクトをセットし、再描画時のデータ消失を防ぐ
   const onTouchStartCard = (e, card) => { 
     e.stopPropagation(); 
     if (isDeleteMode) return; 
@@ -907,7 +913,7 @@ function App() {
     touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     touchDragTimer.current = setTimeout(() => { 
       setDraggedCard(card); 
-      setGhostPos({ x: touch.clientX, y: touch.clientY - 40, title: card.word }); 
+      setGhostPos({ x: touch.clientX, y: touch.clientY - 40, word: card.word, meaning: card.meaning }); 
     }, 400); 
   };
   
@@ -974,13 +980,13 @@ function App() {
   const handleClick = () => { unlockAudio(); };
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
-  // ★「uid」をkeyにすることで、ドラッグや操作のバグを完全に防ぎます
+  // ★「uid」をkeyにすることで、ドラッグや操作のバグを完全に防ぐ
   const renderMiniCard = (c, isMemorizedList, index = null, uid = null) => {
     const isSelected = selectedForDelete.has(c.word);
     return (
       <div key={uid} 
         className={`mini-card ${draggedCard === c ? 'dragging-mini' : ''} ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
-        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y', ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
+        style={{ ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
         draggable={!isDeleteMode && "true"}
         onClick={() => { if (isDeleteMode) toggleDeleteSelection(c.word); }}
         onDragStart={(e) => { 
@@ -996,7 +1002,7 @@ function App() {
         onDragEnd={(e) => {
           setDraggedCard(null);
         }} 
-        title="Drag & Drop"
+        title="PC:ドラッグ / スマホ:長押しで移動"
         onTouchStart={(e) => onTouchStartCard(e, c)} onTouchMove={onTouchMoveCard} onTouchEnd={onTouchEndCard}
       >
         <div className="mini-card-header">
@@ -1735,14 +1741,21 @@ function App() {
           background: transparent !important;
         }
 
+        /* ★PCでも確実にドラッグできるように修正し、絶対に潰れないようにする */
         .mini-card {
           width: 100% !important;
           box-sizing: border-box !important;
-          display: flex !important;
-          flex-direction: column !important;
           background: white !important;
           overflow: hidden !important;
-          flex-shrink: 0 !important;
+          cursor: grab !important;
+          padding: 12px !important;
+          border-radius: 8px !important;
+          border: 1px solid #e2e8f0 !important;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+        }
+        
+        .mini-card:active {
+          cursor: grabbing !important;
         }
 
         .mini-card-header {
@@ -1754,7 +1767,7 @@ function App() {
           gap: 5px !important;
         }
         
-        /* ↓ここを変更：長すぎる文字は「...」と省略し、ボタンに干渉しないようにする */
+        /* 文字が長すぎる場合は「...」と省略し、ボタンに干渉しないようにする */
         .mini-word {
           flex: 1 1 0% !important;
           min-width: 0 !important;
@@ -1763,6 +1776,8 @@ function App() {
           text-overflow: ellipsis !important;
           display: block !important;
           padding-bottom: 2px !important;
+          font-weight: bold !important;
+          color: #334155 !important;
         }
         
         .mini-meaning {
@@ -1772,7 +1787,9 @@ function App() {
           display: block !important;
           width: 100% !important;
           box-sizing: border-box !important;
-          padding-bottom: 2px !important;
+          padding-top: 4px !important;
+          color: #64748b !important;
+          font-size: 13px !important;
         }
         
         .mini-icons {
@@ -1782,6 +1799,20 @@ function App() {
           align-items: center !important;
           position: relative !important;
           z-index: 10 !important;
+        }
+
+        /* ★元のカードが奥に沈み込むエフェクト */
+        .dragging-mini {
+          opacity: 0.3 !important;
+          transform: scale(0.96) !important;
+          background-color: #f8fafc !important;
+          transition: all 0.2s ease !important;
+        }
+        
+        .dragging {
+          opacity: 0.4 !important;
+          transform: scale(0.95) !important;
+          transition: all 0.2s ease !important;
         }
 
         .panel-top-action { width: 100%; box-sizing: border-box; }
@@ -1949,9 +1980,33 @@ function App() {
         .nav-btn-physical:active { transform: scale(0.95); background: #f1f5f9; }
       `}} />
       
+      {/* スマホ操作時にカード全体が持ち上がる美しいドラッグエフェクト */}
       {ghostPos && (
-        <div className="drag-ghost" style={{ left: ghostPos.x, top: ghostPos.y }}>
-          {ghostPos.title}
+        <div className="drag-ghost" style={{ 
+          position: 'fixed',
+          left: ghostPos.x, 
+          top: ghostPos.y,
+          transform: 'translate(-50%, -50%) rotate(4deg)',
+          pointerEvents: 'none',
+          zIndex: 9999,
+          background: 'white',
+          padding: draggedCard ? '10px 15px' : '12px 20px',
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          border: draggedCard ? '1px solid #e2e8f0' : '2px solid #cbd5e1',
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: draggedCard ? '150px' : 'auto',
+          maxWidth: '250px'
+        }}>
+          {draggedCard ? (
+            <>
+              <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ghostPos.word}</div>
+              <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ghostPos.meaning}</div>
+            </>
+          ) : (
+            <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#334155', textAlign: 'center' }}>{ghostPos.title}</div>
+          )}
         </div>
       )}
       
@@ -2084,7 +2139,6 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
-                  {/* 安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
