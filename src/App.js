@@ -31,7 +31,7 @@ const DICT = {
     question: "問題", testHint: "この単語の正しい意味はどれ？", quitBtn: "中断して戻る", noPrintCards: "印刷するカードがありません。", shuffleBtn: "🔄 問題をシャッフル",
     printTestTitle: "- 単語テスト", printTestExampleTitle: "- 例文テスト", printDate: "出力日:", printName: "氏名：__________________________", printScore: "得点：      / ",
     
-    m_h1: "公式 取扱説明書", m_s1: "1. はじめに（基本構造）", m_p1: "このアプリは、現実の単語帳と同じように直感的に操作できます。",
+    m_h1: "公式 取扱説明書", m_s1: "1. Introduction (Basic Structure)", m_p1: "This app works just like real physical flashcards.",
     m_l1_1: "📦 箱（Box）：一番外側の入れ物です。「中学英語」「英検」など大きなカテゴリを作ります。", m_l1_2: "🔖 束（Deck）：箱の中に入る単語カードの束です。「基本動詞 50語」など、学習しやすい単位で作ります。", m_l1_3: "📇 単語カード：実際のフラッシュカードです。束を開くと学習が始まります。",
     m_s2: "2. 単語カードの作り方", m_p2: "学習画面（束を開いた状態）の左側メニューから追加できます。", m_s2_1: "✏️ 手動で1枚ずつ追加", m_p2_1: "「手動で単語を1枚追加」ボタンを押すと、その場でカードを作成できます。この時、タブから「名詞」「動詞」などの品詞を登録しておくと、学習時に日本語の横に品詞バッジが表示されます。",
     m_s2_2: "📂 CSVから一括で追加", m_p2_2: "Excelやスプレッドシートで作ったデータを一気に読み込めます。ChatGPTに「以下の単語をCSV化して」と指示してコピペするのが一番簡単です！（※品詞は後から編集画面で追加できます）", m_p2_3: "※例文の中で黄色くマーカーを引きたい部分は **apple** のように **（アスタリスク2つ）で囲んでください。",
@@ -1738,6 +1738,7 @@ function App() {
           overflow: hidden !important;
           display: flex !important;
           flex-direction: column !important;
+          flex-shrink: 0 !important; /* スマホ表示時に単語数が増えても縦に潰れないように固定 */
         }
 
         .mini-card-header {
@@ -2088,7 +2089,8 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
-                  {studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}
+                  {/* ユニークなuidを付与することで、重複単語が存在してもボタンが作動するように修正 */}
+                  {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
             )}
@@ -2295,7 +2297,8 @@ function App() {
               <div className="side-panel right-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCardWord) { toggleMemorize(null, draggedCardWord, true); setDraggedCardWord(null); } }}>
                 <h3 className="panel-title">{t.memorizedPanel} ({memorizedCards.length})</h3>
                 <div className="mini-card-list">
-                  {memorizedCards.length === 0 ? (<p className="empty-mini-msg">{t.dragHereMsg}</p>) : (memorizedCards.map((c, i) => renderMiniCard(c, true, null)))}
+                  {/* ユニークなuidを付与 */}
+                  {memorizedCards.length === 0 ? (<p className="empty-mini-msg">{t.dragHereMsg}</p>) : (memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`)))}
                 </div>
               </div>
             )}
