@@ -337,11 +337,9 @@ function App() {
   const [draggedDeckId, setDraggedDeckId] = useState(null); 
   const touchDragTimer = useRef(null);
   const [ghostPos, setGhostPos] = useState(null); 
-  
-  // ★バグ修正：文字列(word)ではなくカードのオブジェクトそのものを保存する
   const [draggedCard, setDraggedCard] = useState(null); 
-  
   const [openingBoxId, setOpeningBoxId] = useState(null);
+  
   const [isDeleteMode, setIsDeleteMode] = useState(false);
   const [selectedForDelete, setSelectedForDelete] = useState(new Set());
 
@@ -381,7 +379,7 @@ function App() {
 
   const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
   
-  // オブジェクト参照(wordOrCard)で特定する
+  // オブジェクト参照で特定する
   const deleteSpecificCard = (e, wordOrCard) => {
     if (e) e.stopPropagation(); 
     stopAutoPlayIfActive();
@@ -603,7 +601,6 @@ function App() {
     return () => { if (autoPlayTimer) clearInterval(autoPlayTimer); };
   }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, isFrontOnlyAuto]);
 
-  // オブジェクト参照で確実に1枚だけを処理
   const toggleMemorize = (e, wordOrCard, isMemorized) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
     setDecks(prev => prev.map(d => {
@@ -903,7 +900,6 @@ function App() {
     }
   };
 
-  // ★D&D修正：draggedCardWordではなく、カードのオブジェクト(card)をセットする
   const onTouchStartCard = (e, card) => { 
     e.stopPropagation(); 
     if (isDeleteMode) return; 
@@ -978,7 +974,7 @@ function App() {
   const handleClick = () => { unlockAudio(); };
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
-  // ★バグ修正：安定した uid（study-0, mem-1など）を key に使用し、ドラッグが切れないようにする
+  // ★「uid」をkeyにすることで、ドラッグや操作のバグを完全に防ぎます
   const renderMiniCard = (c, isMemorizedList, index = null, uid = null) => {
     const isSelected = selectedForDelete.has(c.word);
     return (
@@ -1012,7 +1008,7 @@ function App() {
             {c.word}
           </span>
           {!isDeleteMode && (
-            <div className="mini-icons">
+            <div className="mini-icons" onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
               <button className="mini-icon-btn" onClick={(e) => {
                   e.stopPropagation();
                   if (studyCards[currentIndex] === c) {
@@ -1701,28 +1697,28 @@ function App() {
           .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .word-text { font-size: 28px !important; }
           .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .core-meaning-large { font-size: 20px !important; }
 
-          /* PC用: 2列グリッドで、横幅が足りない時は広げて横スクロールさせる */
+          /* PC用: 2列グリッド */
           .mini-card-list { 
             display: grid !important; 
-            grid-template-columns: repeat(2, minmax(160px, max-content)) !important; 
+            grid-template-columns: 1fr 1fr !important; 
             gap: 8px !important; 
             align-content: start !important; 
           }
         }
 
-        /* サイドパネル（学習中・暗記済）のリスト自体の横・縦スクロール対応と幅の統一 */
+        /* サイドパネルのリスト自体の縦スクロール設定 */
         .mini-card-list {
-          overflow-x: auto !important;
+          overflow-x: hidden !important;
           overflow-y: auto !important;
           padding-bottom: 12px !important;
           display: grid;
           gap: 8px;
         }
         
-        /* スマホ用: 1列で中身に合わせて広がる */
+        /* スマホ用: 1列 */
         @media(max-width: 1023px) {
           .mini-card-list {
-            grid-template-columns: minmax(100%, max-content) !important;
+            grid-template-columns: 1fr !important;
           }
         }
         
@@ -1739,13 +1735,14 @@ function App() {
           background: transparent !important;
         }
 
-        /* 内部カードはスクロール機能を持たず、文字長に合わせて広がるだけにする */
         .mini-card {
           width: 100% !important;
           box-sizing: border-box !important;
           display: flex !important;
           flex-direction: column !important;
           background: white !important;
+          overflow: hidden !important;
+          flex-shrink: 0 !important;
         }
 
         .mini-card-header {
@@ -1754,15 +1751,33 @@ function App() {
           justify-content: space-between !important;
           width: 100% !important;
           flex-wrap: nowrap !important;
-          gap: 8px !important;
+          gap: 5px !important;
         }
         
-        .mini-word, .mini-meaning {
+        /* ↓ここを変更：長すぎる文字は「...」と省略し、ボタンに干渉しないようにする */
+        .mini-word {
+          flex: 1 1 0% !important;
+          min-width: 0 !important;
           white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          display: block !important;
+          padding-bottom: 2px !important;
+        }
+        
+        .mini-meaning {
+          white-space: nowrap !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+          display: block !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          padding-bottom: 2px !important;
         }
         
         .mini-icons {
           flex-shrink: 0 !important;
+          margin-left: 4px !important;
           display: flex !important;
           align-items: center !important;
           position: relative !important;
@@ -2069,7 +2084,7 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
-                  {/* ★安定したuid(インデックス付き)を渡す */}
+                  {/* 安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
@@ -2173,7 +2188,7 @@ function App() {
                       <div className="card-inner">
                         <div className="card-front">
                           <div className="ring-hole"></div>
-                          {/* メインカードの「✔」ボタン */}
+                          {/* メインカードの「✔」ボタン：オブジェクト参照(currentCardObj)で確実に操作 */}
                           <button className="memorize-check-btn" onClick={(e) => {
                               e.stopPropagation();
                               const currentCardObj = studyCards[currentIndex];
@@ -2277,7 +2292,7 @@ function App() {
               <div className="side-panel right-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCard) { toggleMemorize(null, draggedCard, true); setDraggedCard(null); } }}>
                 <h3 className="panel-title">{t.memorizedPanel} ({memorizedCards.length})</h3>
                 <div className="mini-card-list">
-                  {/* ★安定したuid(インデックス付き)を渡す */}
+                  {/* 安定したuid(インデックス付き)を渡す */}
                   {memorizedCards.length === 0 ? (<p className="empty-mini-msg">{t.dragHereMsg}</p>) : (memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`)))}
                 </div>
               </div>
