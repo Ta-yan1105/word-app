@@ -337,7 +337,7 @@ function App() {
   const [draggedDeckId, setDraggedDeckId] = useState(null); 
   const touchDragTimer = useRef(null);
   
-  // ★ドラッグ中のカード情報を確実に保存し、エラーを防ぐ
+  // ★バグ修正：コンパイルエラーを解決するため、draggedCard を一元管理
   const [draggedCard, setDraggedCard] = useState(null); 
   const [ghostPos, setGhostPos] = useState(null); 
   
@@ -1006,13 +1006,16 @@ function App() {
         onTouchStart={(e) => onTouchStartCard(e, c)} onTouchMove={onTouchMoveCard} onTouchEnd={onTouchEndCard}
       >
         <div className="mini-card-header">
-          <span className="mini-word">
-            {isDeleteMode && (
-              <input type="checkbox" checked={isSelected} readOnly style={{marginRight: '8px', pointerEvents: 'none'}} />
-            )}
-            {!isDeleteMode && index !== null && <span className="mini-index">{index}.</span>}
-            {c.word}
-          </span>
+          {isDeleteMode && (
+            <input type="checkbox" checked={isSelected} readOnly style={{marginRight: '8px', pointerEvents: 'none'}} />
+          )}
+          {!isDeleteMode && index !== null && <span className="mini-index" style={{marginRight:'5px', fontWeight:'bold', flexShrink:0}}>{index}.</span>}
+          
+          <div className="mini-text-container">
+             <span className="mini-word" style={{ fontWeight: 'bold', color: '#334155' }}>{c.word}</span>
+             <span className="mini-meaning" style={{ fontSize: '13px', color: '#64748b' }}>{c.meaning}</span>
+          </div>
+
           {!isDeleteMode && (
             <div className="mini-icons" onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
               <button className="mini-icon-btn" onClick={(e) => {
@@ -1032,7 +1035,6 @@ function App() {
             </div>
           )}
         </div>
-        <div className="mini-meaning">{c.meaning}</div>
       </div>
     );
   };
@@ -1675,60 +1677,74 @@ function App() {
             display: flex !important;
             flex-direction: row !important;
             justify-content: space-between !important;
-            align-items: flex-start !important;
+            align-items: stretch !important; /* 両サイドと中央の高さを揃える */
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 auto !important;
             gap: 20px !important;
           }
           
-          /* Chromebook等の解像度にも対応するためサイドパネル幅を可変に */
-          .left-panel { flex: 0 0 clamp(260px, 25vw, 380px) !important; width: clamp(260px, 25vw, 380px) !important; max-width: 380px !important; }
-          .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 1200px !important; margin: 0 auto !important; min-width: 0 !important; }
-          .right-panel { flex: 0 0 clamp(260px, 25vw, 380px) !important; width: clamp(260px, 25vw, 380px) !important; max-width: 380px !important; }
+          /* Chromebook等の解像度にも対応するためサイドパネル幅を少しスリムに */
+          .left-panel, .right-panel { 
+             flex: 0 0 280px !important; 
+             width: 280px !important; 
+             max-width: 280px !important; 
+             display: flex !important;
+             flex-direction: column !important;
+          }
+          .center-panel { 
+             flex: 1 !important; 
+             display: flex; 
+             flex-direction: column; 
+             align-items: center; 
+             max-width: 1200px !important; 
+             margin: 0 auto !important; 
+             min-width: 0 !important; 
+          }
           
-          /* 中央カードが縦に伸びるのを防ぐ */
+          /* 中央カードが縦に伸びるのを防ぐため、aspect-ratioを解除してコンテンツの自然な高さを生かす */
           .center-panel:not(.fullscreen-active) .card-animation-wrapper { 
-            aspect-ratio: 16 / 10 !important;
             max-height: 65vh !important; 
             max-width: 820px !important; 
             width: 100% !important; 
+            min-height: 450px !important;
             height: auto !important;
-            min-height: 300px !important;
             margin: 0 auto !important; 
           }
           
-          /* カード拡大に伴うPCでのテキストサイズ拡張（画面幅に合わせて縮小させる） */
+          /* カード拡大に伴うPCでのテキストサイズ拡張（画面幅に合わせて自動縮小させる） */
           .center-panel:not(.fullscreen-active) .card-container .word-text { font-size: clamp(36px, 4vw, 72px) !important; }
           .center-panel:not(.fullscreen-active) .card-container .core-meaning-large { font-size: clamp(24px, 3vw, 48px) !important; }
           .center-panel:not(.fullscreen-active) .card-container .example-en { font-size: clamp(20px, 2.5vw, 36px) !important; line-height: 1.5 !important; }
           .center-panel:not(.fullscreen-active) .card-container .example-ja { font-size: clamp(16px, 2vw, 28px) !important; line-height: 1.6 !important; }
 
+          /* 例文モード時の下部の薄い単語表示の調整 */
           .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .word-text { font-size: clamp(18px, 2vw, 28px) !important; }
           .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .core-meaning-large { font-size: clamp(14px, 1.5vw, 20px) !important; }
 
-          /* PC用: 2列グリッド */
+          /* PC・Chromebookでは確実に1列で潰れないようにする */
           .mini-card-list { 
             display: grid !important; 
-            grid-template-columns: 1fr 1fr !important; 
+            grid-template-columns: 1fr !important; 
             gap: 8px !important; 
             align-content: start !important; 
           }
         }
 
-        /* サイドパネルのリスト自体の縦スクロール設定 */
+        /* サイドパネルのリスト自体の縦スクロールを完全に復活 */
         .mini-card-list {
           overflow-x: hidden !important;
           overflow-y: auto !important;
           padding-bottom: 12px !important;
-          display: grid;
-          gap: 8px;
+          flex-grow: 1 !important; /* パネルの高さいっぱいに広がる */
         }
         
         /* スマホ用: 1列 */
         @media(max-width: 1023px) {
           .mini-card-list {
+            display: grid !important;
             grid-template-columns: 1fr !important;
+            gap: 8px !important;
           }
         }
         
@@ -1754,10 +1770,10 @@ function App() {
           justify-content: center !important;
           background: white !important;
           overflow: hidden !important;
-          flex-shrink: 0 !important;
+          flex-shrink: 0 !important; /* 絶対に縦に潰れないための設定 */
           cursor: grab !important;
           padding: 8px 10px !important;
-          min-height: 60px !important; /* 絶対に縦に潰れないための設定 */
+          min-height: 65px !important; /* ペチャンコ防止 */
           border-radius: 8px !important;
           border: 1px solid #e2e8f0 !important;
           box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
@@ -1773,37 +1789,53 @@ function App() {
           justify-content: space-between !important;
           width: 100% !important;
           flex-wrap: nowrap !important;
-          gap: 5px !important;
+          gap: 8px !important;
         }
         
-        /* 文字が長すぎる場合は「...」と省略し、ボタンに干渉しないようにする */
-        .mini-word {
+        /* テキストと意味の縦並びコンテナ（ここで横スクロールさせる） */
+        .mini-text-container {
           flex: 1 1 0% !important;
           min-width: 0 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 2px !important;
+        }
+        
+        /* 横スクロール対応（ボタンには絶対に干渉しない） */
+        .mini-word, .mini-meaning {
+          width: 100% !important;
           white-space: nowrap !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
           display: block !important;
-          padding-bottom: 2px !important;
+          padding-bottom: 4px !important;
+        }
+        
+        /* スクロールバーを見やすく薄く表示する */
+        .mini-word::-webkit-scrollbar, .mini-meaning::-webkit-scrollbar {
+          height: 4px !important;
+          display: block !important;
+        }
+        .mini-word::-webkit-scrollbar-thumb, .mini-meaning::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1 !important;
+          border-radius: 4px !important;
+        }
+        .mini-word::-webkit-scrollbar-track, .mini-meaning::-webkit-scrollbar-track {
+          background: transparent !important;
+        }
+        
+        .mini-word {
           font-weight: bold !important;
           color: #334155 !important;
         }
         
         .mini-meaning {
-          white-space: nowrap !important;
-          overflow: hidden !important;
-          text-overflow: ellipsis !important;
-          display: block !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-          padding-top: 4px !important;
           color: #64748b !important;
           font-size: 13px !important;
         }
         
         .mini-icons {
           flex-shrink: 0 !important;
-          margin-left: 4px !important;
           display: flex !important;
           align-items: center !important;
           position: relative !important;
@@ -2148,7 +2180,7 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
-                  {/* 安定したuid(インデックス付き)を渡す */}
+                  {/* ★安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
@@ -2252,7 +2284,7 @@ function App() {
                       <div className="card-inner">
                         <div className="card-front">
                           <div className="ring-hole"></div>
-                          {/* メインカードの「✔」ボタン：オブジェクト参照(currentCardObj)で確実に操作 */}
+                          {/* メインカードの「✔」ボタン：オブジェクト参照で確実に操作 */}
                           <button className="memorize-check-btn" onClick={(e) => {
                               e.stopPropagation();
                               const currentCardObj = studyCards[currentIndex];
@@ -2356,7 +2388,7 @@ function App() {
               <div className="side-panel right-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCard) { toggleMemorize(null, draggedCard, true); setDraggedCard(null); } }}>
                 <h3 className="panel-title">{t.memorizedPanel} ({memorizedCards.length})</h3>
                 <div className="mini-card-list">
-                  {/* 安定したuid(インデックス付き)を渡す */}
+                  {/* ★安定したuid(インデックス付き)を渡す */}
                   {memorizedCards.length === 0 ? (<p className="empty-mini-msg">{t.dragHereMsg}</p>) : (memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`)))}
                 </div>
               </div>
