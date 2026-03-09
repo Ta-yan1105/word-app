@@ -379,18 +379,31 @@ function App() {
 
   const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
   
-  const deleteCard = () => {
+  // 単語名(word)ではなくカードのオブジェクト参照(wordOrCard)で特定する
+  const deleteSpecificCard = (e, wordOrCard) => {
+    if (e) e.stopPropagation(); 
     stopAutoPlayIfActive();
-    const wordToDelete = studyCards[currentIndex]?.word;
-    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: (d.cards || []).filter(c => c.word !== wordToDelete) } : d));
-    if (currentIndex >= studyCards.length - 1 && studyCards.length > 1) { setCurrentIndex(studyCards.length - 2); }
-    setIsFlipped(false); setHasRecorded(false);
-  };
+    
+    // 現在表示中のカードを削除する場合、表面に戻す
+    const currentCardObj = studyCards[currentIndex];
+    if (typeof wordOrCard === 'object' ? currentCardObj === wordOrCard : currentCardObj?.word === wordOrCard) {
+       setIsFlipped(false);
+    }
 
-  const deleteSpecificCard = (e, wordToDelete) => {
-    e.stopPropagation(); 
-    stopAutoPlayIfActive();
-    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: (d.cards || []).filter(c => c.word !== wordToDelete) } : d));
+    setDecks(prev => prev.map(d => {
+      if (d.id !== currentDeckId) return d;
+      let targetFound = false; // 1件だけ削除するため
+      return { ...d, cards: (d.cards || []).filter(c => {
+        if (!targetFound) {
+           if (typeof wordOrCard === 'object' && wordOrCard !== null) {
+              if (c === wordOrCard) { targetFound = true; return false; }
+           } else {
+              if (c.word === wordOrCard) { targetFound = true; return false; }
+           }
+        }
+        return true;
+      }) };
+    }));
   };
 
   const toggleDeleteSelection = (word) => {
@@ -589,11 +602,22 @@ function App() {
     return () => { if (autoPlayTimer) clearInterval(autoPlayTimer); };
   }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, isFrontOnlyAuto]);
 
-  const toggleMemorize = (e, wordToMark, isMemorized) => {
+  // 単語名(word)ではなくカードのオブジェクト参照(wordOrCard)で特定する
+  const toggleMemorize = (e, wordOrCard, isMemorized) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      return { ...d, cards: (d.cards || []).map(c => c.word === wordToMark ? { ...c, isMemorized: isMemorized } : c) };
+      let targetFound = false; // 同名単語があっても1件だけ処理する
+      return { ...d, cards: (d.cards || []).map(c => {
+        if (!targetFound) {
+           if (typeof wordOrCard === 'object' && wordOrCard !== null) {
+              if (c === wordOrCard) { targetFound = true; return { ...c, isMemorized: isMemorized }; }
+           } else {
+              if (c.word === wordOrCard && c.isMemorized !== isMemorized) { targetFound = true; return { ...c, isMemorized: isMemorized }; }
+           }
+        }
+        return c;
+      }) };
     }));
   };
 
@@ -610,19 +634,41 @@ function App() {
   };
 
   const saveNewCard = () => {
-    if (!newCardData.word.trim() || !newCardData.meaning.trim()) { alert(t.alertReq); return; }
+    const word = newCardData.word.trim();
+    const meaning = newCardData.meaning.trim();
+    if (!word || !meaning) { alert(t.alertReq); return; }
+    
+    // 重複チェック
+    const isDuplicate = allCards.some(c => c.word === word);
+    if (isDuplicate) {
+      const msg = lang === 'ja' 
+         ? `「${word}」はすでにこの束に登録されています。\n重複して追加してもよろしいですか？`
+         : `"${word}" is already in this deck.\nAre you sure you want to add it as a duplicate?`;
+      if (!window.confirm(msg)) {
+         return; // キャンセルされたら追加しない
+      }
+    }
+
     setDecks(prev => prev.map(d => {
-      if (d.id === currentDeckId) { return { ...d, cards: [...(d.cards || []), { word: newCardData.word.trim(), meaning: newCardData.meaning.trim(), example: newCardData.example.trim(), translation: newCardData.translation.trim(), pos: newCardData.pos, isMemorized: false }] }; }
+      if (d.id === currentDeckId) { return { ...d, cards: [...(d.cards || []), { word: word, meaning: meaning, example: newCardData.example.trim(), translation: newCardData.translation.trim(), pos: newCardData.pos, isMemorized: false }] }; }
       return d;
     }));
     setAddingCard(false); setNewCardData({ word: '', meaning: '', example: '', translation: '', pos: '' }); 
   };
 
+  // 編集保存時もオブジェクト参照で特定する
   const saveEditedCard = () => {
     if (!editingCard) return;
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      return { ...d, cards: (d.cards || []).map(c => c.word === editingCard.originalWord ? { ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation, pos: editingCard.pos } : c) };
+      let edited = false;
+      return { ...d, cards: (d.cards || []).map(c => {
+         if (!edited && (editingCard.originalCard ? c === editingCard.originalCard : c.word === editingCard.originalWord)) {
+            edited = true;
+            return { ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation, pos: editingCard.pos };
+         }
+         return c;
+      })};
     }));
     setEditingCard(null); 
   };
@@ -680,10 +726,29 @@ function App() {
     setLoading(true);
     try {
       const newCards = [];
+      const duplicateWords = []; // CSVインポート時の重複チェック
       for (const row of rows) {
         const targetWord = row[0] ? String(row[0]).trim() : ''; if (!targetWord) continue;
+        
+        if (allCards.some(c => c.word === targetWord) || newCards.some(c => c.word === targetWord)) {
+           if (!duplicateWords.includes(targetWord)) duplicateWords.push(targetWord);
+        }
+        
         newCards.push({ word: targetWord, meaning: row[1] ? cleanText(row[1]) : '', example: row[2] ? cleanText(row[2]) : '', translation: row[3] ? cleanText(row[3]) : '', pos: '', isMemorized: false });
       }
+      
+      if (duplicateWords.length > 0) {
+         const sample = duplicateWords.slice(0, 3).join(', ');
+         const more = duplicateWords.length > 3 ? (lang === 'ja' ? ' など' : ' etc.') : '';
+         const msg = lang === 'ja'
+            ? `インポートデータ内に、すでに登録されている単語（${sample}${more}）が ${duplicateWords.length}件 含まれています。\n重複して一括追加してもよろしいですか？`
+            : `The import data contains ${duplicateWords.length} duplicate words (e.g., ${sample}${more}).\nAre you sure you want to add them?`;
+         if (!window.confirm(msg)) {
+            setLoading(false);
+            return;
+         }
+      }
+
       setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...(d.cards || []), ...newCards] } : d));
       
       setToastMessage(`🎉 ${newCards.length}語追加されました！`);
@@ -913,10 +978,11 @@ function App() {
   const handleClick = () => { unlockAudio(); };
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
+  // 引数で「カードのオブジェクト参照(c)」をそのまま渡し、完全に1枚だけを特定して操作する
   const renderMiniCard = (c, isMemorizedList, index = null) => {
     const isSelected = selectedForDelete.has(c.word);
     return (
-      <div key={c.word} 
+      <div key={Math.random().toString(36).substr(2, 9)} 
         className={`mini-card ${draggedCardWord === c.word ? 'dragging-mini' : ''} ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
         style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y', ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
         draggable={!isDeleteMode && "true"}
@@ -946,10 +1012,22 @@ function App() {
             {c.word}
           </span>
           {!isDeleteMode && (
-            <div className="mini-icons">
-              <button className="mini-icon-btn" onClick={(e) => toggleMemorize(e, c.word, !isMemorizedList)} title={isMemorizedList ? t.markUnmem : t.markMem}>{isMemorizedList ? '↩️' : '✅'}</button>
-              <button className="mini-icon-btn" onClick={() => { stopAutoPlayIfActive(); setEditingCard({ originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '', pos: c.pos || '' }); }}>✏️</button>
-              <button className="mini-icon-btn delete-mini" onClick={(e) => deleteSpecificCard(e, c.word)}>✖</button>
+            /* スマホ操作時のドラッグ干渉を防ぐため、アイコン全体でイベントバブリングを止める */
+            <div className="mini-icons" onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+              <button className="mini-icon-btn" onClick={(e) => {
+                  e.stopPropagation();
+                  if (studyCards[currentIndex] === c) {
+                      setIsFlipped(false);
+                  }
+                  toggleMemorize(e, c, !isMemorizedList); // オブジェクト(c)を渡す
+              }} title={isMemorizedList ? t.markUnmem : t.markMem}>{isMemorizedList ? '↩️' : '✅'}</button>
+              
+              <button className="mini-icon-btn" onClick={(e) => { 
+                  e.stopPropagation(); stopAutoPlayIfActive(); 
+                  setEditingCard({ originalCard: c, originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '', pos: c.pos || '' }); 
+              }}>✏️</button>
+              
+              <button className="mini-icon-btn delete-mini" onClick={(e) => deleteSpecificCard(e, c)}>✖</button>
             </div>
           )}
         </div>
@@ -1602,8 +1680,11 @@ function App() {
             margin: 0 auto !important;
             gap: 20px !important;
           }
+          /* 左右パネルの幅を正常な状態に固定 */
           .left-panel { flex: 0 0 380px !important; width: 380px !important; max-width: 380px !important; }
           .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 1200px !important; margin: 0 auto !important; }
+          .right-panel { flex: 0 0 380px !important; width: 380px !important; max-width: 380px !important; }
+          
           .center-panel:not(.fullscreen-active) .card-animation-wrapper { 
             min-height: 520px !important; 
             max-width: 820px !important; 
@@ -1621,7 +1702,92 @@ function App() {
           .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .word-text { font-size: 28px !important; }
           .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .core-meaning-large { font-size: 20px !important; }
 
-          .mini-card-list { display: grid; grid-template-columns: 1fr 1fr !important; gap: 8px; align-content: start; }
+          /* PC用: 2列グリッドで、横幅が足りない時は広げて横スクロールさせる */
+          .mini-card-list { 
+            display: grid !important; 
+            grid-template-columns: 1fr 1fr !important; 
+            gap: 8px !important; 
+            align-content: start !important; 
+          }
+        }
+
+        /* サイドパネル（学習中・暗記済）のリスト自体の横・縦スクロール対応と幅の統一 */
+        .mini-card-list {
+          overflow-x: hidden !important;
+          overflow-y: auto !important;
+          padding-bottom: 12px !important;
+        }
+        
+        .mini-card-list::-webkit-scrollbar {
+          height: 10px !important;
+          width: 8px !important;
+          display: block !important;
+        }
+        .mini-card-list::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1 !important;
+          border-radius: 10px !important;
+        }
+        .mini-card-list::-webkit-scrollbar-track {
+          background: #f8fafc !important;
+          border-radius: 10px !important;
+        }
+
+        .mini-card {
+          width: 100% !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+
+        .mini-card-header {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          width: 100% !important;
+          flex-wrap: nowrap !important;
+          gap: 5px !important;
+        }
+        .mini-word {
+          flex: 1 1 0% !important;
+          min-width: 0 !important;
+          white-space: nowrap !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          display: flex !important;
+          align-items: center !important;
+          padding-bottom: 2px !important;
+        }
+        .mini-meaning {
+          white-space: nowrap !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          display: block !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          padding-bottom: 2px !important;
+        }
+        
+        /* スクロールバーを可視化して分かりやすくする */
+        .mini-word::-webkit-scrollbar, .mini-meaning::-webkit-scrollbar {
+          height: 4px !important;
+          display: block !important;
+        }
+        .mini-word::-webkit-scrollbar-thumb, .mini-meaning::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1 !important;
+          border-radius: 4px !important;
+        }
+        .mini-word::-webkit-scrollbar-track, .mini-meaning::-webkit-scrollbar-track {
+          background: transparent !important;
+        }
+        
+        .mini-icons {
+          flex-shrink: 0 !important;
+          margin-left: 4px !important;
+          display: flex !important;
+          align-items: center !important;
+          position: relative !important;
+          z-index: 10 !important;
         }
 
         .panel-top-action { width: 100%; box-sizing: border-box; }
@@ -1923,7 +2089,9 @@ function App() {
                   )}
                 </div>
 
-                <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}</div>
+                <div className="mini-card-list">
+                  {studyCards.map((c, i) => renderMiniCard(c, false, i + 1))}
+                </div>
               </div>
             )}
             
@@ -2024,7 +2192,16 @@ function App() {
                     <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
                       <div className="card-inner">
                         <div className="card-front">
-                          <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => toggleMemorize(e, studyCards[currentIndex]?.word, true)}>✔</button>
+                          <div className="ring-hole"></div>
+                          {/* メインカードの「✔」ボタン：オブジェクト参照(currentCardObj)で確実に操作 */}
+                          <button className="memorize-check-btn" onClick={(e) => {
+                              e.stopPropagation();
+                              const currentCardObj = studyCards[currentIndex];
+                              if (currentCardObj) {
+                                  setIsFlipped(false); // 表面に戻す
+                                  toggleMemorize(e, currentCardObj, true);
+                              }
+                          }}>✔</button>
                           {renderCardFront(studyCards[currentIndex], isFullscreen)}
                         </div>
                         <div className="card-back">
@@ -2120,7 +2297,7 @@ function App() {
               <div className="side-panel right-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCardWord) { toggleMemorize(null, draggedCardWord, true); setDraggedCardWord(null); } }}>
                 <h3 className="panel-title">{t.memorizedPanel} ({memorizedCards.length})</h3>
                 <div className="mini-card-list">
-                  {memorizedCards.length === 0 ? (<p className="empty-mini-msg">{t.dragHereMsg}</p>) : (memorizedCards.map(c => renderMiniCard(c, true)))}
+                  {memorizedCards.length === 0 ? (<p className="empty-mini-msg">{t.dragHereMsg}</p>) : (memorizedCards.map((c, i) => renderMiniCard(c, true, null)))}
                 </div>
               </div>
             )}
