@@ -1748,6 +1748,8 @@ function App() {
           flex-wrap: nowrap !important;
           gap: 5px !important;
         }
+        
+        /* ↓ここを変更しました。スクロールバー（謎の線）を消して、機能だけを残します */
         .mini-word {
           flex: 1 1 0% !important;
           min-width: 0 !important;
@@ -1757,6 +1759,8 @@ function App() {
           display: flex !important;
           align-items: center !important;
           padding-bottom: 2px !important;
+          -ms-overflow-style: none !important; /* IE, Edge対応 */
+          scrollbar-width: none !important; /* Firefox対応 */
         }
         .mini-meaning {
           white-space: nowrap !important;
@@ -1766,19 +1770,13 @@ function App() {
           width: 100% !important;
           box-sizing: border-box !important;
           padding-bottom: 2px !important;
+          -ms-overflow-style: none !important; /* IE, Edge対応 */
+          scrollbar-width: none !important; /* Firefox対応 */
         }
         
-        /* スクロールバーを可視化して分かりやすくする */
+        /* Chrome, Safari用のスクロールバー非表示設定 */
         .mini-word::-webkit-scrollbar, .mini-meaning::-webkit-scrollbar {
-          height: 4px !important;
-          display: block !important;
-        }
-        .mini-word::-webkit-scrollbar-thumb, .mini-meaning::-webkit-scrollbar-thumb {
-          background-color: #cbd5e1 !important;
-          border-radius: 4px !important;
-        }
-        .mini-word::-webkit-scrollbar-track, .mini-meaning::-webkit-scrollbar-track {
-          background: transparent !important;
+          display: none !important;
         }
         
         .mini-icons {
