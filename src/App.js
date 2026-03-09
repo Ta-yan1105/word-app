@@ -392,7 +392,7 @@ function App() {
 
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      let targetFound = false; 
+      let targetFound = false; // 1件だけ削除するため
       return { ...d, cards: (d.cards || []).filter(c => {
         if (!targetFound) {
            if (typeof wordOrCard === 'object' && wordOrCard !== null) {
@@ -1902,8 +1902,35 @@ function App() {
            box-sizing: border-box !important;
         }
         @media(min-width: 768px) {
-          .fullscreen-stealth-bottom { flex-direction: row !important; justify-content: center !important; }
-          .fullscreen-stealth-bottom .autoplay-controls { width: 100% !important; flex: 1 !important; margin-left: 0 !important; }
+          /* Chromebook・PC向け：全集中モードのパネルを横1列にして干渉を防ぐ */
+          .fullscreen-stealth-bottom { 
+             flex-direction: row !important; 
+             justify-content: center !important; 
+             width: auto !important; 
+             max-width: 95vw !important; 
+             border-radius: 50px !important; 
+             padding: 10px 30px !important; 
+          }
+          .fullscreen-stealth-bottom .autoplay-controls { 
+             display: flex !important; 
+             flex-direction: row !important; 
+             align-items: center !important; 
+             justify-content: center !important; 
+             width: auto !important; 
+             margin: 0 !important; 
+             gap: 30px !important; 
+          }
+          .fullscreen-stealth-bottom .speed-slider-container { 
+             margin-top: 0 !important; 
+             display: flex !important; 
+             flex-direction: row !important; 
+             align-items: center !important; 
+             gap: 15px !important; 
+             min-width: 320px !important; 
+          }
+          .fullscreen-stealth-bottom .speed-slider-container > div:first-child { 
+             margin-bottom: 0 !important; 
+          }
         }
         .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
         
@@ -2178,6 +2205,7 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
+                  {/* 安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
