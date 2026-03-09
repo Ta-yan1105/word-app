@@ -337,7 +337,7 @@ function App() {
   const [draggedDeckId, setDraggedDeckId] = useState(null); 
   const touchDragTimer = useRef(null);
   
-  // ★バグ修正：コンパイルエラーを解決するために draggedCard を定義
+  // ★ドラッグ中のカード情報を確実に保存し、エラーを防ぐ
   const [draggedCard, setDraggedCard] = useState(null); 
   const [ghostPos, setGhostPos] = useState(null); 
   
@@ -1668,8 +1668,8 @@ function App() {
         @media(min-width: 1024px) {
           .app-container {
             max-width: 100% !important;
-            padding-left: 1vw !important;
-            padding-right: 1vw !important;
+            padding-left: 2vw !important;
+            padding-right: 2vw !important;
           }
           .study-dashboard {
             display: flex !important;
@@ -1681,27 +1681,31 @@ function App() {
             margin: 0 auto !important;
             gap: 20px !important;
           }
-          /* 左右パネルの幅を正常な状態に固定 */
-          .left-panel { flex: 0 0 380px !important; width: 380px !important; max-width: 380px !important; }
-          .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 1200px !important; margin: 0 auto !important; }
-          .right-panel { flex: 0 0 380px !important; width: 380px !important; max-width: 380px !important; }
           
+          /* Chromebook等の解像度にも対応するためサイドパネル幅を可変に */
+          .left-panel { flex: 0 0 clamp(260px, 25vw, 380px) !important; width: clamp(260px, 25vw, 380px) !important; max-width: 380px !important; }
+          .center-panel { flex: 1 !important; display: flex; flex-direction: column; align-items: center; max-width: 1200px !important; margin: 0 auto !important; min-width: 0 !important; }
+          .right-panel { flex: 0 0 clamp(260px, 25vw, 380px) !important; width: clamp(260px, 25vw, 380px) !important; max-width: 380px !important; }
+          
+          /* 中央カードが縦に伸びるのを防ぐ */
           .center-panel:not(.fullscreen-active) .card-animation-wrapper { 
-            min-height: 520px !important; 
+            aspect-ratio: 16 / 10 !important;
+            max-height: 65vh !important; 
             max-width: 820px !important; 
             width: 100% !important; 
+            height: auto !important;
+            min-height: 300px !important;
             margin: 0 auto !important; 
           }
           
-          /* カード拡大に伴うPCでのテキストサイズ拡張 */
-          .center-panel:not(.fullscreen-active) .card-container .word-text { font-size: 72px !important; }
-          .center-panel:not(.fullscreen-active) .card-container .core-meaning-large { font-size: 48px !important; }
-          .center-panel:not(.fullscreen-active) .card-container .example-en { font-size: 36px !important; line-height: 1.5 !important; }
-          .center-panel:not(.fullscreen-active) .card-container .example-ja { font-size: 28px !important; line-height: 1.6 !important; }
+          /* カード拡大に伴うPCでのテキストサイズ拡張（画面幅に合わせて縮小させる） */
+          .center-panel:not(.fullscreen-active) .card-container .word-text { font-size: clamp(36px, 4vw, 72px) !important; }
+          .center-panel:not(.fullscreen-active) .card-container .core-meaning-large { font-size: clamp(24px, 3vw, 48px) !important; }
+          .center-panel:not(.fullscreen-active) .card-container .example-en { font-size: clamp(20px, 2.5vw, 36px) !important; line-height: 1.5 !important; }
+          .center-panel:not(.fullscreen-active) .card-container .example-ja { font-size: clamp(16px, 2vw, 28px) !important; line-height: 1.6 !important; }
 
-          /* 例文モード時の下部の薄い単語表示の調整 */
-          .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .word-text { font-size: 28px !important; }
-          .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .core-meaning-large { font-size: 20px !important; }
+          .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .word-text { font-size: clamp(18px, 2vw, 28px) !important; }
+          .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .core-meaning-large { font-size: clamp(14px, 1.5vw, 20px) !important; }
 
           /* PC用: 2列グリッド */
           .mini-card-list { 
@@ -1741,14 +1745,19 @@ function App() {
           background: transparent !important;
         }
 
-        /* ★PCでも確実にドラッグできるように修正し、絶対に潰れないようにする */
+        /* ★PC・Chromebookでも絶対に潰れず、確実にドラッグできるように修正 */
         .mini-card {
           width: 100% !important;
           box-sizing: border-box !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
           background: white !important;
           overflow: hidden !important;
+          flex-shrink: 0 !important;
           cursor: grab !important;
-          padding: 12px !important;
+          padding: 8px 10px !important;
+          min-height: 60px !important; /* 絶対に縦に潰れないための設定 */
           border-radius: 8px !important;
           border: 1px solid #e2e8f0 !important;
           box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
@@ -2139,6 +2148,7 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
+                  {/* 安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
