@@ -862,9 +862,12 @@ function App() {
   
   const onTouchStartDeck = (e, deck) => { 
     e.stopPropagation(); 
+    // ★スマホ長押し時のテキスト選択状態を強制的に解除する処理を追加
+    try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch(err) {}
     const touch = e.touches[0]; 
     touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     touchDragTimer.current = setTimeout(() => { 
+      try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch(err) {}
       setDraggedDeckId(deck.id); 
       setGhostPos({ x: touch.clientX, y: touch.clientY - 40, title: deck.name });
     }, 400); 
@@ -904,9 +907,12 @@ function App() {
   const onTouchStartCard = (e, card) => { 
     e.stopPropagation(); 
     if (isDeleteMode) return; 
+    // ★スマホ長押し時のテキスト選択状態を強制的に解除する処理を追加
+    try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch(err) {}
     const touch = e.touches[0]; 
     touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     touchDragTimer.current = setTimeout(() => { 
+      try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch(err) {}
       setDraggedCard(card); 
       draggedCardRef.current = card; 
       setGhostPos({ x: touch.clientX, y: touch.clientY - 40, word: card.word, meaning: card.meaning }); 

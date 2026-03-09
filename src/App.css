@@ -475,17 +475,16 @@ html, body {
 
 .panel-top-action { padding: 15px; background: #f8f9fa; border-bottom: 1px solid #eee; }
 
-.mini-card-list { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-
-/* 🟥🟥 スマホ等のドラッグ時の選択・拡大鏡（白い丸）無効化設定 🟥🟥 */
-.mini-card { 
-  background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 10px; 
-  font-size: 13px; position: relative; cursor: grab; transition: transform 0.2s; color: #333; 
-  -webkit-touch-callout: none !important; /* iOSの長押しメニュー・虫眼鏡を無効化 */
-  -webkit-user-select: none !important;   /* iOSのテキスト選択（白い丸/カーソル）を無効化 */
+/* 🟥🟥 スマホ等のドラッグ時の選択・拡大鏡（白い丸）無効化設定（子要素にも徹底適用） 🟥🟥 */
+.mini-card, .mini-card * { 
+  -webkit-touch-callout: none !important; 
+  -webkit-user-select: none !important; 
   user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
-.mini-card:active { cursor: grabbing; }
+.mini-card-list { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.mini-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 10px; font-size: 13px; position: relative; cursor: grab; transition: transform 0.2s; color: #333; }
+.mini-card:active { cursor: grabbing !important; }
 
 .mini-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
 .mini-word { font-weight: bold; color: #2c3e50; font-size: 14px; }
