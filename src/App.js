@@ -11,8 +11,8 @@ const DICT = {
     appTitle: "REDLINE VOCABULARY", appSubtitle: "〜 限界突破の英単語 〜", loginWithGoogle: "Googleでログインして始める", logout: "🚪 ログアウト",
     boxPlaceholder: "箱の名前を入力して追加", createBtn: "作る", manualLink: "📖 このアプリの使い方", langToggle: "🌐 English",
     tapToOpen: "👇 タップで開く", review: "🔥 復習！", backToHome: "◀ 箱(ホーム)に戻る", printPdfBtn: "🖨️ PDFで保存 / 印刷",
-    deckPlaceholder: "新しい暗記カードの束を入力", addBtn: "追加", unmemTitle: "📖 学習中・未修の束", unmemHint: "※暗記エリアにドロップすると、すべて暗記済みになります。",
-    noUnmem: "未修の束はありません。", memTitle: "🏆 暗記済の束", memHint: "※ここに束をドロップすると一発で暗記済みに！", noMem: "まだ暗記済みの束はありません。",
+    deckPlaceholder: "新しい暗記カードの束を入力", addBtn: "追加", unmemTitle: "📖 学習中・未修の束", unmemHint: "※すべての単語を覚えると、暗記済みに移動します。",
+    noUnmem: "未修の束はありません。", memTitle: "🏆 暗記済の束", memHint: "※完璧に覚えた束がここに並びます！", noMem: "まだ暗記済みの束はありません。",
     cardsCount: "枚", bestTime: "最速", statusPerfect: "🏆 暗記済", statusNew: "🆕 未学習", statusFresh: "✅ 学習中",
     statusReview: "🔥 復習推奨", statusWarning: "💤 放置気味", stampMem: "💮 暗記済", learningPanel: "📖 学習中",
     addManualBtn: "✏️ 手動で追加", addCsvBtn: "📂 CSVで追加", backBtn: "◀ 戻る", audioOn: "🔊 音声: オン", audioOff: "🔇 音声: オフ",
@@ -22,7 +22,7 @@ const DICT = {
     chatGptNote: "💡 ChatGPTへの指示コピペ用：\n「以下の英単語リストを学習アプリ用のCSVデータに変換してください。\n【絶対ルール】\n1. A列に英単語、B列に日本語訳、C列に英語例文、D列に例文和訳の4列構成にすること。1行目はヘッダーにすること。\n2. すべての値をダブルクォーテーション(\"\")で囲むこと。\n3. 英語例文と例文和訳の中にある「対象の単語・訳」は ** で囲むこと（例: I have an **apple**.）。\n4. 挨拶や解説文は一切出力せず、CSV形式のコードブロックのみを返すこと。\n【リスト】（ここに単語を貼る）」",
     closeBtn: "閉じる", allMemorizedMsg: "👏 全ての単語を覚えました！", resetBtn: "🔄 覚えた状態をリセットしてもう1回", discardBtn: "捨てる",
     autoPlayStart: "▶️ 自動めくり", autoPlayStop: "⏸ 停止", repeatBtn: "🔄 もう1回", fullScreenEnter: "全集中 🔥", fullScreenExit: "解除 ↘️",
-    intervalLabel: "表示間隔", sec: "秒", godspeed: "⚡️ 神速", fast: "速", slow: "遅", memorizedPanel: "✅ 暗記済", dragHereMsg: "左の単語をここにドラッグで移動！",
+    intervalLabel: "表示間隔", sec: "秒", godspeed: "⚡️ 神速", fast: "速", slow: "遅", memorizedPanel: "✅ 暗記済", dragHereMsg: "左の「✅」ボタンでここに移動！",
     markUnmem: "学習中に戻す", markMem: "覚えた！", editCardTitle: "カードを編集", newCardTitle: "新しいカードを作成", wordReq: "英単語 (必須)", meanReq: "意味 (必須)", posLabel: "品詞 (任意)",
     exHint: "英語例文 (**で囲むと黄色い線)", trHint: "例文和訳 (**で囲むと黄色い線)", cancelBtn: "キャンセル", saveBtn: "保存する",
     confirmDeleteDeck: "束を削除しますか？", confirmDeleteBox: "箱と中の束をすべて削除しますか？", confirmMemorizeAll: "この束をすべて「暗記済み」として完了しますか？",
@@ -37,7 +37,7 @@ const DICT = {
     m_s2_2: "📂 CSVから一括で追加", m_p2_2: "Excelやスプレッドシートで作ったデータを一気に読み込めます。ChatGPTに「以下の単語をCSV化して」と指示してコピペするのが一番簡単です！（※品詞は後から編集画面で追加できます）", m_p2_3: "※例文の中で黄色くマーカーを引きたい部分は **apple** のように **（アスタリスク2つ）で囲んでください。",
     m_s3: "3. 学習画面の操作", m_p3: "本物の紙のカードのように、めくって学習します。全画面アイコン（全集中🔥）を押すと、大迫力の巨大フォントで没入学習が可能です。", m_l3_1: "カードをめくる：カードの真ん中をクリック、またはキーボードの [スペースキー] / [上下矢印]", m_l3_2: "次の単語へ：右下の「▶」ボタン、またはキーボードの [右矢印] / [Enter]", m_l3_3: "前の単語へ：左下の「◀」ボタン、またはキーボードの [左矢印]", m_l3_4: "音声を聞く：表示されている「英単語の文字」を直接クリックするとネイティブ音声が流れます。",
     m_s4: "4. 自動めくり機能 ＆ 表示間隔（スピード）", m_p4: "画面下の「▶️ 自動めくり」を押すと、設定した秒数ごとに自動でカードがめくられ、音声が流れます。「表面のみ」をONにすると、意味を確認せず次々と高速フラッシュできます。", m_l4_1: "🐢 遅（4.0秒）：じっくり意味を確認したい時に。", m_l4_2: "🐇 標準（2.0秒）：テンポよく進めたい時に。", m_l4_3: "👼 神速（0.0秒）：脳に直接刷り込む超高速フラッシュモード！",
-    m_s5: "5. 暗記の管理（ドラッグ＆ドロップ）", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、リストから「✅ 暗記済」や「📖 学習中」エリアへドラッグ＆ドロップして移動させましょう！スマホでも長押しで移動可能です。", m_p5_1: "束（デッキ）を丸ごと「暗記済」エリアにドラッグして、一気に完了させることも可能です。",
+    m_s5: "5. 暗記の管理", m_p5: "覚えた単語は、カード右上の「✔」ボタンを押すか、リストの「✅」ボタンを押して移動させましょう！", m_p5_1: "すべての単語を覚えると、束が自動的に「暗記済」エリアに移動します。",
     m_s6: "6. テスト ＆ 印刷機能 ＆ 注意事項", m_l6_1: "📝 テスト：4択クイズに挑戦できます。連続正解でド派手な演出が待っています！", m_l6_2: "🖨️ プリント：実際の授業で配れる「紙の小テスト」として印刷できます。例文プリントでは対象単語が自動で穴埋め（＿＿＿）になります。", m_l6_3: "⚠️ ログイン注意：LINEやInstagram等のアプリ内ブラウザからはログインエラーになります。標準ブラウザ（Safari/Chrome）で開いてください。",
     box1Name: "中学レベル", box2Name: "資格・オリジナル箱", deck1Name: "基本の動詞", card1_mean: "輝く / 光る", card1_trans: "星が明るく**輝く**。", card2_mean: "持っている / 食べる", card2_trans: "私は本を**持っています**。", card3_mean: "作る", card3_trans: "彼女は夕食を**作ります**。", card4_mean: "攻撃する", card4_trans: "その犬はあなたを**攻撃し**ません。"
   },
@@ -45,8 +45,8 @@ const DICT = {
     appTitle: "REDLINE VOCABULARY", appSubtitle: "— Break Your Limits —", loginWithGoogle: "Login with Google", logout: "🚪 Logout",
     boxPlaceholder: "Enter box name to add", createBtn: "Create", manualLink: "📖 How to use this app", langToggle: "🌐 日本語",
     tapToOpen: "👇 Tap to open", review: "🔥 Review!", backToHome: "◀ Back to Home", printPdfBtn: "🖨️ Print / Save as PDF",
-    deckPlaceholder: "Enter new deck name", addBtn: "Add", unmemTitle: "📖 Learning Decks", unmemHint: "* Drop to Memorized area to complete all.",
-    noUnmem: "No learning decks.", memTitle: "🏆 Memorized Decks", memHint: "* Drop decks here to mark as memorized!", noMem: "No memorized decks yet.",
+    deckPlaceholder: "Enter new deck name", addBtn: "Add", unmemTitle: "📖 Learning Decks", unmemHint: "* Complete all cards to move here.",
+    noUnmem: "No learning decks.", memTitle: "🏆 Memorized Decks", memHint: "* Fully memorized decks appear here!", noMem: "No memorized decks yet.",
     cardsCount: "cards", bestTime: "Best", statusPerfect: "🏆 Memorized", statusNew: "🆕 New", statusFresh: "✅ Learning",
     statusReview: "🔥 Review", statusWarning: "💤 Neglected", stampMem: "💮 DONE", learningPanel: "📖 Learning",
     addManualBtn: "✏️ Add Manually", addCsvBtn: "📂 Add via CSV", backBtn: "◀ Back", audioOn: "🔊 Audio: ON", audioOff: "🔇 Audio: OFF",
@@ -57,7 +57,7 @@ const DICT = {
     chatGptNote: "💡 Prompt for ChatGPT:\n'Create a CSV for flashcards with 4 columns: Word, Meaning, Example, Translation. Wrap the target word in ** to highlight it. Output in code block.'",
     closeBtn: "Close", allMemorizedMsg: "👏 You've memorized all words!", resetBtn: "🔄 Reset and try again", discardBtn: "Discard",
     autoPlayStart: "▶️ Auto Play", autoPlayStop: "⏸ Stop", repeatBtn: "🔄 もう1回", fullScreenEnter: "Focus 🔥", fullScreenExit: "Exit ↘️",
-    intervalLabel: "Interval", sec: "sec", godspeed: "⚡️ Godspeed", fast: "Fast", slow: "Slow", memorizedPanel: "✅ Memorized", dragHereMsg: "Drag words here from the left!",
+    intervalLabel: "Interval", sec: "sec", godspeed: "⚡️ Godspeed", fast: "Fast", slow: "Slow", memorizedPanel: "✅ Memorized", dragHereMsg: "Click '✅' on the left to move words here!",
     markUnmem: "Move to Learning", markMem: "Memorized!", editCardTitle: "Edit Card", newCardTitle: "Create New Card", wordReq: "Word (Required)", meanReq: "Meaning (Required)", posLabel: "Part of Speech (Optional)",
     exHint: "Example (Wrap in ** to highlight)", trHint: "Translation (Wrap in ** to highlight)", cancelBtn: "Cancel", saveBtn: "Save",
     confirmDeleteDeck: "Delete this deck?", confirmDeleteBox: "Delete this box and all its decks?", confirmMemorizeAll: "Mark all cards in this deck as memorized?",
@@ -72,7 +72,7 @@ const DICT = {
     m_s2_2: "📂 Import from CSV", m_p2_2: "Import data from Excel/Spreadsheets. The easiest way is to ask ChatGPT to 'Create a CSV for flashcards' and paste it!", m_p2_3: "* Enclose the target word in ** (double asterisks) to highlight it in yellow.",
     m_s3: "3. Learning Controls", m_p3: "Flip and learn like real paper cards. Click the 'Focus 🔥' button for an immersive, large-font full-screen mode.", m_l3_1: "Flip Card: Click the center of the card, or press [Space] / [Up/Down Arrow].", m_l3_2: "Next Card: '▶' button, or [Right Arrow] / [Enter].", m_l3_3: "Prev Card: '◀' button, or [Left Arrow].", m_l3_4: "Play Audio: Click the English word itself to hear native pronunciation.",
     m_s4: "4. Auto Play & Speed", m_p4: "Click '▶️ Auto Play' to automatically flip cards. Turn on 'Front Only' to skip the back and flash through words quickly.", m_l4_1: "🐢 Slow (4.0s): When you want to carefully check the meaning.", m_l4_2: "🐇 Normal (2.0s): For a good learning tempo.", m_l4_3: "👼 Godspeed (0.0s): Ultra-fast flash mode to burn into your brain!",
-    m_s5: "5. Memorization (Drag & Drop)", m_p5: "Click the '✔' button on the card, or Long-Press & Drag the word to the '✅ Memorized' area on the right!", m_p5_1: "You can also drag an entire deck to the 'Memorized' area to complete it instantly.",
+    m_s5: "5. Memorization", m_p5: "Click the '✔' button on the card, or the '✅' button in the list to mark as memorized!", m_p5_1: "When all cards are memorized, the deck will automatically move to the 'Memorized' area.",
     m_s6: "6. Test, Print & Notes", m_l6_1: "📝 Test: Take a fast-paced 4-choice quiz. Incorrect answers will highlight the correct choice.", m_l6_2: "🖨️ Print: Print a paper quiz. In Example Print mode, target words automatically become blanks (___).", m_l6_3: "⚠️ Login Note: Google login is blocked in in-app browsers like LINE/Instagram. Please open in a standard browser (Safari/Chrome)."
   }
 };
@@ -303,7 +303,6 @@ function App() {
   const touchStartY = useRef(null); 
   const touchEndX = useRef(null); 
   const touchEndY = useRef(null);
-  const touchStartPos = useRef({x: 0, y: 0});
   
   const [pullDownY, setPullDownY] = useState(0); 
   const [isStoring, setIsStoring] = useState(false);
@@ -334,12 +333,6 @@ function App() {
   const [showTestResult, setShowTestResult] = useState(false); 
   const [printCards, setPrintCards] = useState([]);
   const [printMode, setPrintMode] = useState('word');
-  const [draggedDeckId, setDraggedDeckId] = useState(null); 
-  const touchDragTimer = useRef(null);
-  
-  const [draggedCard, setDraggedCard] = useState(null); 
-  const draggedCardRef = useRef(null);
-  const [ghostPos, setGhostPos] = useState(null); 
   
   const [openingBoxId, setOpeningBoxId] = useState(null);
   const [isDeleteMode, setIsDeleteMode] = useState(false);
@@ -821,7 +814,7 @@ function App() {
   };
   
   const openDeck = (id) => { 
-    if (draggedDeckId) return; unlockAudio();
+    unlockAudio();
     setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); 
     setIsDeleteMode(false); setSelectedForDelete(new Set());
     playedRef.current = { index: -1, flipped: false, lang: '', type: '' }; 
@@ -836,132 +829,14 @@ function App() {
 
   const deleteDeck = (e, id) => { e.stopPropagation(); if (window.confirm(t.confirmDeleteDeck)) setDecks(decks.filter(d => d.id !== id)); };
 
-  const onDragStart = (e, id) => { 
-    setDraggedDeckId(id); 
-    e.dataTransfer.effectAllowed = "move"; 
-    const emptyImage = new Image();
-    emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-    if (e.dataTransfer.setDragImage) {
-      e.dataTransfer.setDragImage(emptyImage, 0, 0);
-    }
-  };
-  const onDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; };
-  const onDropToArea = (e, targetArea) => {
-    e.preventDefault(); if (!draggedDeckId) return;
-    setDecks(prev => {
-      const newDecks = [...prev]; const index = newDecks.findIndex(d => d.id === draggedDeckId);
-      if (index !== -1) {
-        const d = newDecks[index];
-        if (targetArea === 'memorized') { newDecks[index] = { ...d, lastStudied: Date.now(), cards: (d.cards || []).map(c => ({...c, isMemorized: true})) }; } 
-        else if (targetArea === 'unmemorized') { newDecks[index] = { ...d, cards: (d.cards || []).map(c => ({...c, isMemorized: false})) }; }
-      }
-      return newDecks;
-    });
-    setDraggedDeckId(null);
-  };
-  
-  const onTouchStartDeck = (e, deck) => { 
-    e.stopPropagation(); 
-    // ★スマホ長押し時のテキスト選択状態を強制的に解除する処理を追加
-    try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch(err) {}
-    const touch = e.touches[0]; 
-    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
-    touchDragTimer.current = setTimeout(() => { 
-      try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch(err) {}
-      setDraggedDeckId(deck.id); 
-      setGhostPos({ x: touch.clientX, y: touch.clientY - 40, title: deck.name });
-    }, 400); 
-  };
-  const onTouchMoveDeck = (e) => { 
-    if (!draggedDeckId) { 
-      const touch = e.touches[0];
-      const dx = touch.clientX - touchStartPos.current.x;
-      const dy = touch.clientY - touchStartPos.current.y;
-      if (Math.sqrt(dx*dx + dy*dy) > 20) { clearTimeout(touchDragTimer.current); }
-      return; 
-    } 
-    e.preventDefault(); 
-    const touch = e.touches[0]; 
-    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY - 40 } : null);
-  };
-  const onTouchEndDeck = (e) => {
-    clearTimeout(touchDragTimer.current);
-    if (draggedDeckId) {
-      const touch = e.changedTouches[0];
-      if(touch) {
-         const elem = document.elementFromPoint(touch.clientX, touch.clientY - 20) || document.elementFromPoint(touch.clientX, touch.clientY);
-         const targetMemArea = elem?.closest('.decks-memorized-area'); const targetUnmemArea = elem?.closest('.decks-unmemorized-area');
-         setDecks(prev => {
-            let newDecks = [...prev]; const index = newDecks.findIndex(d => d.id === draggedDeckId);
-            if (index !== -1) {
-              if (targetMemArea) { newDecks[index] = { ...newDecks[index], lastStudied: Date.now(), cards: (newDecks[index].cards || []).map(c => ({...c, isMemorized: true})) }; } 
-              else if (targetUnmemArea) { newDecks[index] = { ...newDecks[index], cards: (newDecks[index].cards || []).map(c => ({...c, isMemorized: false})) }; }
-            }
-            return newDecks;
-         });
-      }
-      setTimeout(() => { setDraggedDeckId(null); setGhostPos(null); }, 100);
-    }
-  };
-
-  const onTouchStartCard = (e, card) => { 
-    e.stopPropagation(); 
-    if (isDeleteMode) return; 
-    // ★スマホ長押し時のテキスト選択状態を強制的に解除する処理を追加
-    try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch(err) {}
-    const touch = e.touches[0]; 
-    touchStartPos.current = { x: touch.clientX, y: touch.clientY };
-    touchDragTimer.current = setTimeout(() => { 
-      try { if (window.getSelection) window.getSelection().removeAllRanges(); } catch(err) {}
-      setDraggedCard(card); 
-      draggedCardRef.current = card; 
-      setGhostPos({ x: touch.clientX, y: touch.clientY - 40, word: card.word, meaning: card.meaning }); 
-    }, 400); 
-  };
-  
-  const onTouchMoveCard = (e) => { 
-    if (!draggedCard) { 
-      const touch = e.touches[0];
-      const dx = touch.clientX - touchStartPos.current.x;
-      const dy = touch.clientY - touchStartPos.current.y;
-      if (Math.sqrt(dx*dx + dy*dy) > 20) { clearTimeout(touchDragTimer.current); }
-      return; 
-    } 
-    e.preventDefault(); 
-    const touch = e.touches[0]; 
-    setGhostPos(prev => prev ? { ...prev, x: touch.clientX, y: touch.clientY - 40 } : null); 
-
-    const scrollMargin = 100;
-    if (touch.clientY < scrollMargin) {
-      window.scrollBy(0, -25);
-    } else if (window.innerHeight - touch.clientY < scrollMargin) {
-      window.scrollBy(0, 25);
-    }
-  };
-  
-  const onTouchEndCard = (e) => {
-    clearTimeout(touchDragTimer.current);
-    if (draggedCard) {
-      const touch = e.changedTouches[0];
-      if(touch) {
-         const elem = document.elementFromPoint(touch.clientX, touch.clientY - 20) || document.elementFromPoint(touch.clientX, touch.clientY);
-         const targetLeftPanel = elem?.closest('.left-panel'); 
-         const targetRightPanel = elem?.closest('.right-panel');
-         if (targetRightPanel) { toggleMemorize(null, draggedCardRef.current, true); } 
-         else if (targetLeftPanel) { toggleMemorize(null, draggedCardRef.current, false); }
-      }
-      setTimeout(() => { setDraggedCard(null); draggedCardRef.current = null; setGhostPos(null); }, 100);
-    }
-  };
-
   const handleTouchStart = (e) => {
     unlockAudio();
-    if (draggedDeckId || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes' || view === 'printPreview' || view === 'manual') return;
+    if (e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes' || view === 'printPreview' || view === 'manual') return;
     touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; touchEndX.current = null; touchEndY.current = null; 
   };
   
   const handleTouchMove = (e) => {
-    if (draggedDeckId || window.scrollY > 10) return;
+    if (window.scrollY > 10) return;
     if (!touchStartX.current || !touchStartY.current || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || view === 'boxes' || view === 'printPreview' || view === 'manual') return;
     touchEndX.current = e.touches[0].clientX; touchEndY.current = e.touches[0].clientY;
     const diffY = touchEndY.current - touchStartY.current; const diffX = touchStartX.current - touchEndX.current;
@@ -986,27 +861,9 @@ function App() {
     const isSelected = selectedForDelete.has(c.word);
     return (
       <div key={uid} 
-        className={`mini-card ${draggedCard === c ? 'dragging-mini' : ''} ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
+        className={`mini-card ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
         style={{ ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
-        draggable={!isDeleteMode && "true"}
         onClick={() => { if (isDeleteMode) toggleDeleteSelection(c.word); }}
-        onDragStart={(e) => { 
-          if(isDeleteMode) return; 
-          setDraggedCard(c); 
-          draggedCardRef.current = c;
-          e.dataTransfer.effectAllowed = "move"; 
-          const emptyImage = new Image();
-          emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-          if (e.dataTransfer.setDragImage) {
-            e.dataTransfer.setDragImage(emptyImage, 0, 0);
-          }
-        }} 
-        onDragEnd={(e) => {
-          setDraggedCard(null);
-          draggedCardRef.current = null;
-        }} 
-        title="PC:ドラッグ / スマホ:長押しで移動"
-        onTouchStart={(e) => onTouchStartCard(e, c)} onTouchMove={onTouchMoveCard} onTouchEnd={onTouchEndCard}
       >
         <div className="mini-card-header">
           {isDeleteMode && (
@@ -1043,12 +900,10 @@ function App() {
   };
 
   const renderDeckCard = (deck) => {
-    const status = getEbbinghausStatus(deck); const isDragging = draggedDeckId === deck.id; const isAllMemorized = (deck.cards || []).length > 0 && (deck.cards || []).every(c => c.isMemorized);
+    const status = getEbbinghausStatus(deck); const isAllMemorized = (deck.cards || []).length > 0 && (deck.cards || []).every(c => c.isMemorized);
     return (
-      <div key={deck.id} data-id={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''} ${isDragging ? 'dragging' : ''}`} 
-        style={{ userSelect: 'none', WebkitUserSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none', touchAction: 'pan-y' }}
-        onClick={() => openDeck(deck.id)} draggable="true" onDragStart={(e) => onDragStart(e, deck.id)} onDragEnd={() => setDraggedDeckId(null)}
-        onTouchStart={(e) => onTouchStartDeck(e, deck)} onTouchMove={onTouchMoveDeck} onTouchEnd={onTouchEndDeck} title="PC:ドラッグ / スマホ:長押しで並べ替え">
+      <div key={deck.id} data-id={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''}`} 
+        onClick={() => openDeck(deck.id)}>
         <div className="deck-paper stack-bottom"></div><div className="deck-paper stack-middle"></div>
         <div className="deck-paper top-cover">
           <h3 className="deck-name" title={deck.name}>{deck.name}<button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)}>✏️</button></h3>
@@ -1775,7 +1630,7 @@ function App() {
           background: white !important;
           overflow: hidden !important;
           flex-shrink: 0 !important; /* 絶対に縦に潰れないための設定 */
-          cursor: grab !important;
+          cursor: default !important;
           padding: 8px 10px !important;
           min-height: 60px !important; /* ペチャンコ防止 */
           border-radius: 8px !important;
@@ -1783,10 +1638,6 @@ function App() {
           box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
         }
         
-        .mini-card:active {
-          cursor: grabbing !important;
-        }
-
         .mini-card-header {
           display: flex !important;
           align-items: center !important;
@@ -1844,20 +1695,6 @@ function App() {
           align-items: center !important;
           position: relative !important;
           z-index: 10 !important;
-        }
-
-        /* ★元のカードが奥に沈み込むエフェクト */
-        .dragging-mini {
-          opacity: 0.3 !important;
-          transform: scale(0.96) !important;
-          background-color: #f8fafc !important;
-          transition: all 0.2s ease !important;
-        }
-        
-        .dragging {
-          opacity: 0.4 !important;
-          transform: scale(0.95) !important;
-          transition: all 0.2s ease !important;
         }
 
         .panel-top-action { width: 100%; box-sizing: border-box; }
@@ -2020,20 +1857,6 @@ function App() {
           }
         }
 
-        .drag-ghost {
-          position: fixed;
-          pointer-events: none !important;
-          z-index: 9999;
-          background: rgba(255, 255, 255, 0.95);
-          padding: 8px 16px;
-          border-radius: 8px;
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-          font-weight: bold;
-          color: #333;
-          transform: translate(-50%, -50%);
-          white-space: nowrap;
-        }
-
         @keyframes popInOut {
           0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
           10% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
@@ -2051,37 +1874,6 @@ function App() {
         .nav-btn-physical:hover { background: #f8fafc; border-color: #cbd5e1; }
         .nav-btn-physical:active { transform: scale(0.95); background: #f1f5f9; }
       `}} />
-      
-      {/* スマホ操作時にカード全体が持ち上がる美しいドラッグエフェクト（GPUアクセラレーションで滑らかに） */}
-      {ghostPos && (
-        <div className="drag-ghost" style={{ 
-          position: 'fixed',
-          left: 0, 
-          top: 0,
-          transform: `translate3d(calc(${ghostPos.x}px - 50%), calc(${ghostPos.y}px - 50%), 0) rotate(4deg)`,
-          willChange: 'transform',
-          pointerEvents: 'none',
-          zIndex: 9999,
-          background: 'white',
-          padding: draggedCard ? '10px 15px' : '12px 20px',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-          border: draggedCard ? '1px solid #e2e8f0' : '2px solid #cbd5e1',
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: draggedCard ? '150px' : 'auto',
-          maxWidth: '250px'
-        }}>
-          {draggedCard ? (
-            <>
-              <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#334155', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ghostPos.word}</div>
-              <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ghostPos.meaning}</div>
-            </>
-          ) : (
-            <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#334155', textAlign: 'center' }}>{ghostPos.title}</div>
-          )}
-        </div>
-      )}
       
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
@@ -2173,11 +1965,11 @@ function App() {
                 </div>
               </div>
               <div className="decks-split-layout">
-                <div className="decks-unmemorized-area" onDragOver={onDragOver} onDrop={(e) => onDropToArea(e, 'unmemorized')}>
+                <div className="decks-unmemorized-area">
                   <h3 className="area-title">{t.unmemTitle}</h3><p className="area-hint">{t.unmemHint}</p>
                   {unmemorizedDecks.length === 0 ? (<p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem}</p>) : (<div className="decks-grid">{unmemorizedDecks.map(d => renderDeckCard(d))}</div>)}
                 </div>
-                <div className="decks-memorized-area" onDragOver={onDragOver} onDrop={(e) => onDropToArea(e, 'memorized')}>
+                <div className="decks-memorized-area">
                   <h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle}</h3><p className="area-hint">{t.memHint}</p>
                   {memorizedDecks.length === 0 ? (<p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem}</p>) : (<div className="decks-grid memorized-grid">{memorizedDecks.map(d => renderDeckCard(d))}</div>)}
                 </div>
@@ -2191,7 +1983,7 @@ function App() {
         <div style={dynamicStyle}>
           <div className="study-dashboard">
             {!isFullscreen && (
-              <div className="side-panel left-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCard) { toggleMemorize(null, draggedCard, false); setDraggedCard(null); } }}>
+              <div className="side-panel left-panel">
                 <h3 className="panel-title">{t.learningPanel} ({studyCards.length})</h3>
                 
                 <div className="panel-top-action" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -2212,7 +2004,6 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
-                  {/* 安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
@@ -2411,10 +2202,9 @@ function App() {
               ) : null}
             </div>
             {!isFullscreen && (
-              <div className="side-panel right-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCard) { toggleMemorize(null, draggedCard, true); setDraggedCard(null); } }}>
+              <div className="side-panel right-panel">
                 <h3 className="panel-title">{t.memorizedPanel} ({memorizedCards.length})</h3>
                 <div className="mini-card-list">
-                  {/* 安定したuid(インデックス付き)を渡す */}
                   {memorizedCards.length === 0 ? (<p className="empty-mini-msg">{t.dragHereMsg}</p>) : (memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`)))}
                 </div>
               </div>

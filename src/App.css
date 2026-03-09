@@ -386,7 +386,6 @@ html, body {
 .memorized-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
 
 .deck-bundle { position: relative; width: 100%; aspect-ratio: 4 / 2.6; cursor: pointer; transition: transform 0.2s; display: flex; flex-direction: column; justify-content: flex-end; }
-.deck-bundle.dragging { opacity: 0.5; transform: scale(0.95); }
 .deck-bundle:hover { transform: translateY(-5px); }
 
 .deck-paper { position: absolute; width: 100%; background: #fff; border: 1px solid #dcdcdc; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); box-sizing: border-box; }
@@ -412,9 +411,6 @@ html, body {
 .deck-bundle:hover .delete-deck-btn-corner { opacity: 1; }
 
 .memorized-stamp { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 24px; color: #e74c3c; border: 3px solid #e74c3c; padding: 5px 15px; border-radius: 12px; font-weight: 900; z-index: 20; opacity: 0.85; pointer-events: none; background: rgba(255,255,255,0.9); }
-
-.drag-ghost { position: fixed; transform: translate(-50%, -50%); background-color: rgba(52, 152, 219, 0.95); color: white; padding: 10px 20px; border-radius: 8px; pointer-events: none; z-index: 9999; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-.dragging-mini { opacity: 0.4; transform: scale(0.95); border: 1px dashed #3498db; }
 
 .mute-toggle-btn {
   background: #fff; border: 1px solid #ddd; padding: 6px 12px; border-radius: 20px;
@@ -483,8 +479,7 @@ html, body {
   -webkit-tap-highlight-color: transparent !important;
 }
 .mini-card-list { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-.mini-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 10px; font-size: 13px; position: relative; cursor: grab; transition: transform 0.2s; color: #333; }
-.mini-card:active { cursor: grabbing !important; }
+.mini-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 8px; padding: 10px; font-size: 13px; position: relative; transition: transform 0.2s; color: #333; }
 
 .mini-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
 .mini-word { font-weight: bold; color: #2c3e50; font-size: 14px; }
