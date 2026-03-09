@@ -337,8 +337,8 @@ function App() {
   const [draggedDeckId, setDraggedDeckId] = useState(null); 
   const touchDragTimer = useRef(null);
   
-  // ★バグ修正：コンパイルエラーを解決するため、draggedCard を一元管理
   const [draggedCard, setDraggedCard] = useState(null); 
+  const draggedCardRef = useRef(null);
   const [ghostPos, setGhostPos] = useState(null); 
   
   const [openingBoxId, setOpeningBoxId] = useState(null);
@@ -381,7 +381,6 @@ function App() {
 
   const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
   
-  // オブジェクト参照で特定する
   const deleteSpecificCard = (e, wordOrCard) => {
     if (e) e.stopPropagation(); 
     stopAutoPlayIfActive();
@@ -393,7 +392,7 @@ function App() {
 
     setDecks(prev => prev.map(d => {
       if (d.id !== currentDeckId) return d;
-      let targetFound = false; // 1件だけ削除するため
+      let targetFound = false; 
       return { ...d, cards: (d.cards || []).filter(c => {
         if (!targetFound) {
            if (typeof wordOrCard === 'object' && wordOrCard !== null) {
@@ -603,7 +602,6 @@ function App() {
     return () => { if (autoPlayTimer) clearInterval(autoPlayTimer); };
   }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, isFrontOnlyAuto]);
 
-  // オブジェクト参照で確実に1枚だけを処理
   const toggleMemorize = (e, wordOrCard, isMemorized) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
     setDecks(prev => prev.map(d => {
@@ -639,7 +637,6 @@ function App() {
     const meaning = newCardData.meaning.trim();
     if (!word || !meaning) { alert(t.alertReq); return; }
     
-    // 重複チェック
     const isDuplicate = allCards.some(c => c.word === word);
     if (isDuplicate) {
       const msg = lang === 'ja' 
@@ -657,7 +654,6 @@ function App() {
     setAddingCard(false); setNewCardData({ word: '', meaning: '', example: '', translation: '', pos: '' }); 
   };
 
-  // 編集保存時もオブジェクト参照で特定する
   const saveEditedCard = () => {
     if (!editingCard) return;
     setDecks(prev => prev.map(d => {
@@ -727,7 +723,7 @@ function App() {
     setLoading(true);
     try {
       const newCards = [];
-      const duplicateWords = []; // CSVインポート時の重複チェック
+      const duplicateWords = []; 
       for (const row of rows) {
         const targetWord = row[0] ? String(row[0]).trim() : ''; if (!targetWord) continue;
         
@@ -905,7 +901,6 @@ function App() {
     }
   };
 
-  // ★D&D完全修正：安定したカードオブジェクトをセットし、再描画時のデータ消失を防ぐ
   const onTouchStartCard = (e, card) => { 
     e.stopPropagation(); 
     if (isDeleteMode) return; 
@@ -913,6 +908,7 @@ function App() {
     touchStartPos.current = { x: touch.clientX, y: touch.clientY };
     touchDragTimer.current = setTimeout(() => { 
       setDraggedCard(card); 
+      draggedCardRef.current = card; 
       setGhostPos({ x: touch.clientX, y: touch.clientY - 40, word: card.word, meaning: card.meaning }); 
     }, 400); 
   };
@@ -945,10 +941,10 @@ function App() {
          const elem = document.elementFromPoint(touch.clientX, touch.clientY - 20) || document.elementFromPoint(touch.clientX, touch.clientY);
          const targetLeftPanel = elem?.closest('.left-panel'); 
          const targetRightPanel = elem?.closest('.right-panel');
-         if (targetRightPanel) { toggleMemorize(null, draggedCard, true); } 
-         else if (targetLeftPanel) { toggleMemorize(null, draggedCard, false); }
+         if (targetRightPanel) { toggleMemorize(null, draggedCardRef.current, true); } 
+         else if (targetLeftPanel) { toggleMemorize(null, draggedCardRef.current, false); }
       }
-      setTimeout(() => { setDraggedCard(null); setGhostPos(null); }, 100);
+      setTimeout(() => { setDraggedCard(null); draggedCardRef.current = null; setGhostPos(null); }, 100);
     }
   };
 
@@ -980,7 +976,6 @@ function App() {
   const handleClick = () => { unlockAudio(); };
   const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
-  // ★「uid」をkeyにすることで、ドラッグや操作のバグを完全に防ぐ
   const renderMiniCard = (c, isMemorizedList, index = null, uid = null) => {
     const isSelected = selectedForDelete.has(c.word);
     return (
@@ -992,6 +987,7 @@ function App() {
         onDragStart={(e) => { 
           if(isDeleteMode) return; 
           setDraggedCard(c); 
+          draggedCardRef.current = c;
           e.dataTransfer.effectAllowed = "move"; 
           const emptyImage = new Image();
           emptyImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -1001,6 +997,7 @@ function App() {
         }} 
         onDragEnd={(e) => {
           setDraggedCard(null);
+          draggedCardRef.current = null;
         }} 
         title="PC:ドラッグ / スマホ:長押しで移動"
         onTouchStart={(e) => onTouchStartCard(e, c)} onTouchMove={onTouchMoveCard} onTouchEnd={onTouchEndCard}
@@ -1702,13 +1699,14 @@ function App() {
              min-width: 0 !important; 
           }
           
-          /* 中央カードが縦に伸びるのを防ぐため、aspect-ratioを解除してコンテンツの自然な高さを生かす */
+          /* 中央カードが縦に伸びるのを防ぐため、aspect-ratioを維持しつつ限界を設定 */
           .center-panel:not(.fullscreen-active) .card-animation-wrapper { 
+            aspect-ratio: 16 / 10 !important;
             max-height: 65vh !important; 
             max-width: 820px !important; 
             width: 100% !important; 
-            min-height: 450px !important;
             height: auto !important;
+            min-height: 300px !important;
             margin: 0 auto !important; 
           }
           
@@ -1773,7 +1771,7 @@ function App() {
           flex-shrink: 0 !important; /* 絶対に縦に潰れないための設定 */
           cursor: grab !important;
           padding: 8px 10px !important;
-          min-height: 65px !important; /* ペチャンコ防止 */
+          min-height: 60px !important; /* ペチャンコ防止 */
           border-radius: 8px !important;
           border: 1px solid #e2e8f0 !important;
           box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
@@ -2180,7 +2178,6 @@ function App() {
                 </div>
 
                 <div className="mini-card-list">
-                  {/* ★安定したuid(インデックス付き)を渡す */}
                   {studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}
                 </div>
               </div>
@@ -2388,7 +2385,7 @@ function App() {
               <div className="side-panel right-panel" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (draggedCard) { toggleMemorize(null, draggedCard, true); setDraggedCard(null); } }}>
                 <h3 className="panel-title">{t.memorizedPanel} ({memorizedCards.length})</h3>
                 <div className="mini-card-list">
-                  {/* ★安定したuid(インデックス付き)を渡す */}
+                  {/* 安定したuid(インデックス付き)を渡す */}
                   {memorizedCards.length === 0 ? (<p className="empty-mini-msg">{t.dragHereMsg}</p>) : (memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`)))}
                 </div>
               </div>
