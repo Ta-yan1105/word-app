@@ -863,7 +863,15 @@ function App() {
       <div key={uid} 
         className={`mini-card ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} 
         style={{ ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
-        onClick={() => { if (isDeleteMode) toggleDeleteSelection(c.word); }}
+        onClick={() => {
+          if (isDeleteMode) {
+            toggleDeleteSelection(c.word);
+          } else if (!isMemorizedList && index !== null) {
+            stopAutoPlayIfActive();
+            setIsFlipped(false);
+            setCurrentIndex(index - 1);
+          }
+        }}
       >
         <div className="mini-card-header">
           {isDeleteMode && (
@@ -1630,7 +1638,7 @@ function App() {
           background: white !important;
           overflow: hidden !important;
           flex-shrink: 0 !important; /* 絶対に縦に潰れないための設定 */
-          cursor: default !important;
+          cursor: pointer !important; /* CHANGED: クリックでのジャンプ操作のため */
           padding: 8px 10px !important;
           min-height: 60px !important; /* ペチャンコ防止 */
           border-radius: 8px !important;
@@ -1873,6 +1881,16 @@ function App() {
         }
         .nav-btn-physical:hover { background: #f8fafc; border-color: #cbd5e1; }
         .nav-btn-physical:active { transform: scale(0.95); background: #f1f5f9; }
+
+        /* CHANGED: 新規追加。インプットボックスのスピンボタンを非表示にする設定 */
+        .card-counter-input::-webkit-outer-spin-button,
+        .card-counter-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        .card-counter-input[type=number] {
+          -moz-appearance: textfield;
+        }
       `}} />
       
       {editingCard && (
@@ -2095,8 +2113,51 @@ function App() {
                         </button>
                       </div>
 
-                      <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px' }}>
-                        {currentIndex + 1} / {studyCards.length}
+                      {/* CHANGED: 新規追加。数値入力で直接ジャンプできるよう、既存のdivを再利用してinput化 */}
+                      <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <input
+                          type="number"
+                          className="card-counter-input"
+                          min="1"
+                          max={studyCards.length}
+                          key={currentIndex}
+                          defaultValue={currentIndex + 1}
+                          onBlur={(e) => {
+                            let val = parseInt(e.target.value, 10);
+                            if (!isNaN(val)) {
+                              if (val < 1) val = 1;
+                              if (val > studyCards.length) val = studyCards.length;
+                              if (val - 1 !== currentIndex) {
+                                stopAutoPlayIfActive();
+                                setIsFlipped(false);
+                                setCurrentIndex(val - 1);
+                              } else {
+                                e.target.value = currentIndex + 1;
+                              }
+                            } else {
+                              e.target.value = currentIndex + 1;
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.target.blur();
+                            }
+                            e.stopPropagation();
+                          }}
+                          style={{
+                            width: '2.5em',
+                            textAlign: 'center',
+                            background: 'transparent',
+                            border: 'none',
+                            borderBottom: '2px dashed #cbd5e1',
+                            color: 'inherit',
+                            font: 'inherit',
+                            outline: 'none',
+                            padding: '0 5px',
+                            marginRight: '5px'
+                          }}
+                        />
+                        / {studyCards.length}
                       </div>
 
                     </div>
