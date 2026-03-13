@@ -6,136 +6,8 @@ import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 import { DICT } from './locales';
-
-const initialBoxes = [ { id: 1, nameKey: 'box1Name', name: '中学レベル' }, { id: 2, nameKey: 'box2Name', name: '資格・オリジナル箱' } ];
-const initialDecks = [ { id: 1, boxId: 1, nameKey: 'deck1Name', name: '基本の動詞', lastStudied: null, lastRecordTime: null, cards: [ { word: 'shine', meaning: '輝く / 光る', example: 'The stars **shine** brightly.', translation: '星が明るく**輝く**。', isMemorized: false, pos: '動詞' }, { word: 'have', meaning: '持っている / 食べる', example: 'I **have** a book.', translation: '私は本を**持っています**。', isMemorized: false, pos: '動詞' }, { word: 'make', meaning: '作る', example: 'She **makes** dinner.', translation: '彼女は夕食を**作ります**。', isMemorized: false, pos: '動詞' }, { word: 'attack', meaning: '攻撃する', example: 'The dog will not **attack** you.', translation: 'その犬はあなたを**攻撃し**ません。', isMemorized: false, pos: '動詞' } ] } ];
-
-const parseCSV = (text) => {
-  text = text.replace(/^\uFEFF/, '');
-  const rows = [];
-  let row = [];
-  let currentVal = '';
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const nextChar = text[i+1];
-    if (inQuotes) {
-      if (char === '"' && nextChar === '"') {
-        currentVal += '"';
-        i++;
-      } else if (char === '"') {
-        inQuotes = false;
-      } else {
-        currentVal += char;
-      }
-    } else {
-      if (char === '"') {
-        inQuotes = true;
-      } else if (char === ',') {
-        row.push(currentVal);
-        currentVal = '';
-      } else if (char === '\n' || char === '\r') {
-        row.push(currentVal);
-        rows.push(row);
-        row = [];
-        currentVal = '';
-        if (char === '\r' && nextChar === '\n') i++;
-      } else {
-        currentVal += char;
-      }
-    }
-  }
-  if (currentVal || row.length > 0) {
-    row.push(currentVal);
-    rows.push(row);
-  }
-  return rows;
-};
-
-const chunkArray = (array, size) => {
-  const chunked = [];
-  if (!Array.isArray(array)) return chunked;
-  for (let i = 0; i < array.length; i += size) {
-    chunked.push(array.slice(i, i + size));
-  }
-  return chunked;
-};
-
-const cleanText = (text) => {
-  if (!text) return '';
-  return String(text).replace(/[\r\n]+/g, '').trim();
-};
-
-const cleanTranslation = (text) => {
-  if (!text) return '';
-  return cleanText(text).split(/\*\*(.*?)\*\*/g).join('');
-};
-
-const renderBlankExample = (text) => {
-  if (!text) return <span className="print-blank-line"></span>;
-  const cleanedText = cleanText(text);
-  if (!cleanedText.includes('**')) return <>{cleanedText} <span className="print-blank-line"></span></>;
-  
-  const parts = cleanedText.split(/\*\*(.*?)\*\*/g);
-  const elements = [];
-  
-  for (let i = 0; i < parts.length; i++) {
-    if (i % 2 === 1) {
-      const blank = <span key={`blank-${i}`} className="print-blank-line"></span>;
-      if (i + 1 < parts.length && /^[.,!?;:]/.test(parts[i + 1])) {
-        const match = parts[i + 1].match(/^[.,!?;:]+/);
-        const punc = match[0];
-        const rest = parts[i + 1].substring(punc.length);
-        elements.push(
-          <span key={`group-${i}`} style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
-            {blank}<span>{punc}</span>
-          </span>
-        );
-        parts[i + 1] = rest;
-      } else {
-        elements.push(blank);
-      }
-    } else {
-      if (parts[i]) {
-        elements.push(<span key={`text-${i}`}>{parts[i]}</span>);
-      }
-    }
-  }
-  return <>{elements}</>;
-};
-
-const renderHighlightedText = (text) => {
-  if (!text) return null;
-  try {
-    const parts = String(text).split(/\*\*(.*?)\*\*/g);
-    const elements = [];
-    for (let i = 0; i < parts.length; i++) {
-      if (i % 2 === 1) {
-        const highlight = <span key={`highlight-${i}`} className="highlight-word">{parts[i]}</span>;
-        if (i + 1 < parts.length && /^[.,!?;:]/.test(parts[i + 1])) {
-          const match = parts[i + 1].match(/^[.,!?;:]+/);
-          const punc = match[0];
-          const rest = parts[i + 1].substring(punc.length);
-          elements.push(
-            <span key={`group-${i}`} style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
-              {highlight}<span>{punc}</span>
-            </span>
-          );
-          parts[i + 1] = rest;
-        } else {
-          elements.push(highlight);
-        }
-      } else {
-        if (parts[i]) {
-          elements.push(<span key={`text-${i}`}>{parts[i]}</span>);
-        }
-      }
-    }
-    return <>{elements}</>;
-  } catch(e) {
-    return String(text);
-  }
-};
+import { initialBoxes, initialDecks } from './initialData';
+import { parseCSV, chunkArray, cleanText, cleanTranslation, renderBlankExample, renderHighlightedText } from './utils';
 
 function App() {
   const [lang, setLang] = useState('ja'); 
@@ -401,25 +273,23 @@ function App() {
       const utterance = new SpeechSynthesisUtterance(text); 
       utterance.lang = 'en-US'; 
       utterance.rate = rate; 
-      
-      // デバイス内でより高品質な英語音声を探す
       const voices = window.speechSynthesis.getVoices();
       const enVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || voices.find(v => v.lang.includes('en'));
       if (enVoice) utterance.voice = enVoice;
-
       window.speechSynthesis.speak(utterance);
     }
   }, []);
 
   const playAudio = useCallback((text) => {
     if (isMuted || !text) return; 
-    const cleanWord = String(text).replace(/[^a-zA-Z\s\-']/g, '').trim(); if (!cleanWord) return;
+    const cleanWord = String(text).replace(/\*\*/g, '').trim(); 
+    if (!cleanWord) return;
+    
     let rate = 1.0;
     if (displaySeconds < 2.0) { rate = 1.0 + ((2.0 - displaySeconds) / 2.0) * 0.5; } else if (displaySeconds > 2.0) { rate = 1.0 - ((displaySeconds - 2.0) / 2.0) * 0.2; }
     rate = rate > 1.5 ? 1.5 : (rate < 0.5 ? 0.5 : rate);
 
     try {
-      // 単語も複数語も綺麗に発音するGoogle翻訳の音声APIに変更
       const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=${encodeURIComponent(cleanWord)}`;
       const audio = new Audio(audioUrl); audio.playbackRate = rate;
       const playPromise = audio.play();
@@ -438,7 +308,8 @@ function App() {
 
     if (shouldPlay) {
       if (playedRef.current.index !== currentIndex || playedRef.current.flipped !== isFlipped || playedRef.current.lang !== qLang || playedRef.current.type !== qType) {
-        playAudio(currentCard.word);
+        const textToPlay = (qType === 'example' && currentCard.example) ? currentCard.example : currentCard.word;
+        playAudio(textToPlay);
         playedRef.current = { index: currentIndex, flipped: isFlipped, lang: qLang, type: qType };
       }
     }
@@ -908,7 +779,7 @@ function App() {
         ) : (
           qLang === 'en' ? (
             <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-              <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: fontSizeExEn, lineHeight: '1.8', fontWeight: 'bold', fontFamily: '"Times New Roman", Times, serif', width: '100%', display: 'inline-block'}}>
+              <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: fontSizeExEn, lineHeight: '1.8', fontWeight: 'bold', fontFamily: '"Times New Roman", Times, serif', width: '100%', display: 'inline-block', cursor: 'pointer'}} onClick={(e) => { e.stopPropagation(); playAudio(card.example); }}>
                 {renderHighlightedText(card.example || '')}
               </p>
             </div>
@@ -957,7 +828,7 @@ function App() {
             {showExOnBack && (
               <div className="example-section" style={{ borderTop: 'none', paddingTop: 0, marginTop: '20px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ display: 'inline-block', textAlign: 'left', maxWidth: '100%' }}>
-                  <p className="example-en" style={{ marginBottom: '8px', fontSize: fontSizeExEn, fontWeight: 'bold', textAlign: 'left' }}>{renderHighlightedText(card.example || '')}</p>
+                  <p className="example-en" style={{ marginBottom: '8px', fontSize: fontSizeExEn, fontWeight: 'bold', textAlign: 'left', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); playAudio(card.example); }}>{renderHighlightedText(card.example || '')}</p>
                   <p className="example-ja" style={{ margin: 0, fontSize: fontSizeExJa, fontWeight: 'bold', textAlign: 'left' }}>{renderHighlightedText(card.translation || '')}</p>
                 </div>
               </div>
@@ -974,7 +845,7 @@ function App() {
                   </div>
                 ) : (
                   <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}>
-                    <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: exModeExEnFontSize, fontWeight: 'bold', color: '#1e293b', lineHeight: 1.5, fontFamily: '"Times New Roman", Times, serif' }}>
+                    <p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: exModeExEnFontSize, fontWeight: 'bold', color: '#1e293b', lineHeight: 1.5, fontFamily: '"Times New Roman", Times, serif', cursor: 'pointer' }} onClick={(e) => { e.stopPropagation(); playAudio(card.example); }}>
                       {renderHighlightedText(card.example || '')}
                     </p>
                   </div>
@@ -1094,65 +965,6 @@ function App() {
   if (view === 'test') {
     return (
       <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes superCorrect {
-            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-            20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
-            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
-          }
-          @keyframes superWrong {
-            0% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-            20% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
-          }
-          @keyframes correctOutline {
-            0% { box-shadow: 0 0 0px transparent; }
-            50% { box-shadow: 0 0 15px rgba(39, 174, 96, 0.6); }
-            100% { box-shadow: 0 0 5px rgba(39, 174, 96, 0.4); }
-          }
-          .test-effect-overlay {
-            position: absolute;
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 1000;
-            text-align: center;
-            width: 100%;
-          }
-          .effect-correct-super { animation: superCorrect 0.8s ease-out forwards; }
-          .effect-wrong-super { animation: superWrong 1.2s ease-out forwards; }
-          .effect-text-main {
-            font-size: clamp(50px, 8vw, 100px);
-            font-weight: 900;
-            text-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            margin-bottom: 5px;
-          }
-          .effect-text-sub {
-            font-size: clamp(20px, 4vw, 36px);
-            font-weight: bold;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-          }
-          .effect-correct-super .effect-text-main, .effect-correct-super .effect-text-sub { color: #27ae60; }
-          .effect-wrong-super .effect-text-main { color: #e74c3c; }
-          .test-btn-show-correct {
-            box-shadow: 0 0 0 4px #27ae60 inset, 0 4px 15px rgba(39, 174, 96, 0.4) !important;
-            background-color: #eafff0 !important;
-            color: #27ae60 !important;
-            font-weight: 900 !important;
-            transform: scale(1.02) !important;
-            transition: all 0.2s ease !important;
-            animation: correctOutline 0.8s ease-out forwards !important;
-            z-index: 10;
-            position: relative;
-          }
-          .test-btn-dimmed {
-            opacity: 0.3 !important;
-            transition: opacity 0.2s ease !important;
-          }
-        `}} />
         <div className="test-container" style={{ position: 'relative' }}>
           
           {testEffect === 'correct' && (
@@ -1244,45 +1056,6 @@ function App() {
           <button className="add-btn" onClick={shufflePrintCards} style={{ backgroundColor: '#8e44ad', margin: 0 }}>{t.shuffleBtn}</button>
           <button className="add-btn" onClick={() => window.print()} style={{ backgroundColor: '#e74c3c', margin: 0 }}>{t.printPdfBtn}</button>
         </div>
-
-        <style dangerouslySetInnerHTML={{ __html: `
-          @media print {
-            @page { size: A4; margin: 0; }
-            body { background: white !important; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
-            .no-print, .ep-landing-wrapper, .top-right-actions, .study-controls-top { display: none !important; }
-            .app-container { background: white !important; padding: 0 !important; overflow: visible !important; height: auto !important; }
-            .print-area-wrapper { padding: 0 !important; margin: 0 !important; display: block !important; }
-            .print-page { page-break-after: always; margin: 0 !important; padding: 12mm 15mm !important; width: 210mm !important; height: 297mm !important; box-shadow: none !important; box-sizing: border-box; overflow: hidden; }
-            .print-page:last-child { page-break-after: auto; }
-          }
-          
-          .print-area-wrapper { display: flex; flex-direction: column; align-items: center; width: 100%; padding-bottom: 50px; background: #f1f5f9; }
-          .print-page { background: white; width: 210mm; height: 297mm; margin: 0 0 30px 0; padding: 12mm 15mm; box-shadow: 0 10px 30px rgba(0,0,0,0.1); box-sizing: border-box; color: #000; overflow: hidden; position: relative; }
-
-          .print-header-compact { position: relative; border-bottom: none; padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
-          .print-date-compact { position: absolute; top: -12px; right: 0; font-size: 10px; color: #555; font-weight: bold; }
-          .print-title-compact { font-size: 22px; font-weight: 900; margin: 0; white-space: nowrap; max-width: 45%; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
-          .print-name-compact { font-size: 16px; font-weight: bold; flex-grow: 1; padding-bottom: 2px; }
-          .print-score-compact { font-size: 16px; font-weight: bold; white-space: nowrap; padding-bottom: 2px; }
-          .print-score-large-compact { font-size: 26px; font-weight: 900; margin-left: 5px; }
-
-          .print-columns-container { display: flex; gap: 40px; width: 100%; height: calc(100% - 60px); }
-          .print-column { flex: 1; display: flex; flex-direction: column; }
-          .print-column-single { display: flex; flex-direction: column; width: 100%; height: calc(100% - 60px); }
-
-          .print-q-item { display: flex; flex-direction: column; justify-content: space-between; height: 58px; margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; } 
-          .print-q-top { display: flex; align-items: flex-start; flex-grow: 1; }
-          .print-q-num { width: 45px; font-weight: bold; flex-shrink: 0; font-size: 14px; }
-          .print-q-ja { font-size: 14px; line-height: 1.2; word-break: keep-all; overflow-wrap: anywhere; }
-          .print-q-bottom { padding-left: 45px; width: 100%; box-sizing: border-box; flex-shrink: 0; padding-bottom: 4px; }
-          .print-q-ans { width: 100%; border-bottom: 1px solid #000; height: 6px; }
-
-          .print-q-item-example { display: flex; flex-direction: column; justify-content: space-between; min-height: 65px; margin-bottom: 30px; page-break-inside: avoid; break-inside: avoid; }
-          .print-q-ja-example { font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
-          .print-q-example-en { font-size: 16px; line-height: 1.6; padding-left: 5px; font-family: "Times New Roman", Times, serif; flex-shrink: 0; }
-          
-          .print-blank-line { display: inline-block; width: 150px; border-bottom: 1.5px solid #000; margin: 0 10px; vertical-align: text-bottom; }
-        `}} />
 
         <div className="print-area-wrapper">
           
@@ -1472,367 +1245,6 @@ function App() {
           {toastMessage}
         </div>
       )}
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media(min-width: 1024px) {
-          .app-container {
-            max-width: 100% !important;
-            padding-left: 2vw !important;
-            padding-right: 2vw !important;
-          }
-          .study-dashboard {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            align-items: stretch !important; /* 両サイドと中央の高さを揃える */
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 auto !important;
-            gap: 20px !important;
-          }
-          
-          /* Chromebook等の解像度にも対応するためサイドパネル幅を少しスリムに */
-          .left-panel, .right-panel { 
-             flex: 0 0 280px !important; 
-             width: 280px !important; 
-             max-width: 280px !important; 
-             display: flex !important;
-             flex-direction: column !important;
-          }
-          .center-panel { 
-             flex: 1 !important; 
-             display: flex; 
-             flex-direction: column; 
-             align-items: center; 
-             max-width: 1200px !important; 
-             margin: 0 auto !important; 
-             min-width: 0 !important; 
-          }
-          
-          /* 中央カードが縦に伸びるのを防ぐため、aspect-ratioを維持しつつ限界を設定 */
-          .center-panel:not(.fullscreen-active) .card-animation-wrapper { 
-            aspect-ratio: 16 / 10 !important;
-            max-height: 65vh !important; 
-            max-width: 820px !important; 
-            width: 100% !important; 
-            height: auto !important;
-            min-height: 300px !important;
-            margin: 0 auto !important; 
-          }
-          
-          /* カード拡大に伴うPCでのテキストサイズ拡張（画面幅に合わせて自動縮小させる） */
-          .center-panel:not(.fullscreen-active) .card-container .word-text { font-size: clamp(36px, 4vw, 72px) !important; }
-          .center-panel:not(.fullscreen-active) .card-container .core-meaning-large { font-size: clamp(24px, 3vw, 48px) !important; }
-          .center-panel:not(.fullscreen-active) .card-container .example-en { font-size: clamp(20px, 2.5vw, 36px) !important; line-height: 1.5 !important; }
-          .center-panel:not(.fullscreen-active) .card-container .example-ja { font-size: clamp(16px, 2vw, 28px) !important; line-height: 1.6 !important; }
-
-          /* 例文モード時の下部の薄い単語表示の調整 */
-          .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .word-text { font-size: clamp(18px, 2vw, 28px) !important; }
-          .center-panel:not(.fullscreen-active) .card-container div[style*="opacity: 0.7"] .core-meaning-large { font-size: clamp(14px, 1.5vw, 20px) !important; }
-
-          /* PC・Chromebookでは確実に1列で潰れないようにする */
-          .mini-card-list { 
-            display: grid !important; 
-            grid-template-columns: 1fr !important; 
-            gap: 8px !important; 
-            align-content: start !important; 
-          }
-        }
-
-        /* サイドパネルのリスト自体の縦スクロールを完全に復活 */
-        .mini-card-list {
-          overflow-x: hidden !important;
-          overflow-y: auto !important;
-          padding-bottom: 12px !important;
-          flex-grow: 1 !important; /* パネルの高さいっぱいに広がる */
-        }
-        
-        /* スマホ用: 1列 */
-        @media(max-width: 1023px) {
-          .mini-card-list {
-            display: grid !important;
-            grid-template-columns: 1fr !important;
-            gap: 8px !important;
-          }
-        }
-        
-        .mini-card-list::-webkit-scrollbar {
-          height: 8px !important;
-          width: 8px !important;
-          display: block !important;
-        }
-        .mini-card-list::-webkit-scrollbar-thumb {
-          background-color: #cbd5e1 !important;
-          border-radius: 8px !important;
-        }
-        .mini-card-list::-webkit-scrollbar-track {
-          background: transparent !important;
-        }
-
-        /* ★PC・Chromebookでも絶対に潰れず、確実にドラッグできるように修正 */
-        .mini-card {
-          width: 100% !important;
-          box-sizing: border-box !important;
-          display: flex !important;
-          flex-direction: column !important;
-          justify-content: center !important;
-          background: white !important;
-          overflow: hidden !important;
-          flex-shrink: 0 !important; /* 絶対に縦に潰れないための設定 */
-          cursor: pointer !important; /* CHANGED: クリックでのジャンプ操作のため */
-          padding: 8px 10px !important;
-          min-height: 60px !important; /* ペチャンコ防止 */
-          border-radius: 8px !important;
-          border: 1px solid #e2e8f0 !important;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
-        }
-        
-        .mini-card-header {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: space-between !important;
-          width: 100% !important;
-          flex-wrap: nowrap !important;
-          gap: 8px !important;
-        }
-        
-        /* テキストと意味の縦並びコンテナ（ここで横スクロールさせる） */
-        .mini-text-container {
-          flex: 1 1 0% !important;
-          min-width: 0 !important;
-          display: flex !important;
-          flex-direction: column !important;
-          gap: 2px !important;
-        }
-        
-        /* 横スクロール対応（ボタンには絶対に干渉しない） */
-        .mini-word, .mini-meaning {
-          width: 100% !important;
-          white-space: nowrap !important;
-          overflow-x: auto !important;
-          -webkit-overflow-scrolling: touch !important;
-          display: block !important;
-          padding-bottom: 4px !important;
-        }
-        
-        /* スクロールバーを見やすく薄く表示する */
-        .mini-word::-webkit-scrollbar, .mini-meaning::-webkit-scrollbar {
-          height: 4px !important;
-          display: block !important;
-        }
-        .mini-word::-webkit-scrollbar-thumb, .mini-meaning::-webkit-scrollbar-thumb {
-          background-color: #cbd5e1 !important;
-          border-radius: 4px !important;
-        }
-        .mini-word::-webkit-scrollbar-track, .mini-meaning::-webkit-scrollbar-track {
-          background: transparent !important;
-        }
-        
-        .mini-word {
-          font-weight: bold !important;
-          color: #334155 !important;
-        }
-        
-        .mini-meaning {
-          color: #64748b !important;
-          font-size: 13px !important;
-        }
-        
-        .mini-icons {
-          flex-shrink: 0 !important;
-          display: flex !important;
-          align-items: center !important;
-          position: relative !important;
-          z-index: 10 !important;
-        }
-
-        .panel-top-action { width: 100%; box-sizing: border-box; }
-        .panel-top-action button { white-space: normal !important; word-break: keep-all !important; overflow-wrap: anywhere !important; line-height: 1.4 !important; height: auto !important; min-height: 44px !important; box-sizing: border-box !important; width: 100%; max-width: 100%; }
-        .bulk-file-actions { width: 100%; box-sizing: border-box; }
-        .bulk-file-actions button, .bulk-file-actions label { box-sizing: border-box; width: 100%; max-width: 100%; }
-
-        .setting-badge-btn { background: white; border: 2px solid #e2e8f0; border-radius: 50px; padding: 6px 12px; font-size: 13px; font-weight: 900; color: #64748b; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); white-space: nowrap; }
-        .setting-badge-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .setting-badge-btn.active { background: #e0e7ff; border-color: #818cf8; color: #4338ca; }
-        
-        .toggle-tab-btn { background: transparent; border: none; padding: 6px 16px; font-size: 13px; font-weight: 900; color: #94a3b8; border-radius: 50px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-        .toggle-tab-btn.active { background: white; color: #4338ca; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-
-        .fullscreen-active {
-           position: fixed !important; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
-           height: 100dvh !important;
-           background: #f1f5f9 !important; z-index: 9999 !important;
-           display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important;
-           max-width: none !important;
-           padding: 0 !important; 
-           box-sizing: border-box !important;
-        }
-        
-        .fullscreen-active .card-animation-wrapper {
-           width: 90vw !important; 
-           max-width: 1100px !important; 
-           height: auto !important;
-           min-height: 40vh !important;
-           margin: 0 auto !important; 
-        }
-        
-        .fullscreen-stealth-top {
-           position: absolute !important; top: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
-           opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
-           background: white !important; padding: 10px 20px !important; border-radius: 50px !important;
-           box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; margin: 0 !important; width: auto !important;
-        }
-        .fullscreen-active:hover .fullscreen-stealth-top, .fullscreen-stealth-top:hover, .fullscreen-stealth-top:active { opacity: 1; }
-
-        .fullscreen-stealth-bottom {
-           position: absolute !important; bottom: 20px !important; left: 50% !important; transform: translateX(-50%) !important;
-           opacity: 0.15; transition: opacity 0.3s; z-index: 10000;
-           background: white !important; padding: 10px 25px !important; border-radius: 20px !important;
-           box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; 
-           width: 90% !important; max-width: 500px !important;
-           display: flex; flex-direction: column; gap: 5px; align-items: center; justify-content: center;
-           box-sizing: border-box !important;
-        }
-        @media(min-width: 768px) {
-          /* ★Chromebook・PC向け：全集中モードのパネルを完全な横1列にして干渉を防ぐ */
-          .fullscreen-stealth-bottom { 
-             flex-direction: row !important; 
-             justify-content: center !important; 
-             width: max-content !important; /* 中身の要素に合わせて背景枠を広げる */
-             max-width: 95vw !important; /* 画面幅は超えないように制限 */
-             border-radius: 50px !important; 
-             padding: 10px 30px !important; 
-          }
-          .fullscreen-stealth-bottom .autoplay-controls { 
-             display: flex !important; 
-             flex-direction: row !important; 
-             align-items: center !important; 
-             justify-content: center !important; 
-             width: auto !important; 
-             margin: 0 !important; 
-             gap: 30px !important; 
-          }
-          .fullscreen-stealth-bottom .speed-slider-container { 
-             margin-top: 0 !important; 
-             display: flex !important; 
-             flex-direction: row !important; 
-             align-items: center !important; 
-             gap: 15px !important; 
-             min-width: 320px !important; 
-          }
-          .fullscreen-stealth-bottom .speed-slider-container > div:first-child { 
-             margin-bottom: 0 !important; 
-          }
-        }
-        .fullscreen-active:hover .fullscreen-stealth-bottom, .fullscreen-stealth-bottom:hover, .fullscreen-stealth-bottom:active { opacity: 1; }
-        
-        @media (max-width: 900px) and (orientation: portrait) {
-           .fullscreen-active {
-              padding: 0 !important; 
-              justify-content: center !important;
-           }
-           .fullscreen-stealth-top {
-              position: absolute !important; top: 10px !important; left: 50% !important; transform: translateX(-50%) scale(0.85) !important;
-              transform-origin: top center !important;
-              width: 95% !important; opacity: 1 !important;
-           }
-           .fullscreen-stealth-bottom {
-              position: absolute !important; bottom: 10px !important; left: 50% !important; transform: translateX(-50%) scale(0.85) !important;
-              transform-origin: bottom center !important;
-              width: 95% !important; opacity: 1 !important;
-           }
-           .fullscreen-active .card-animation-wrapper {
-              flex: none !important; 
-              height: 50vh !important; 
-              margin: 0 !important;
-              display: flex; align-items: center; justify-content: center;
-           }
-        }
-        
-        @media (max-width: 900px) and (orientation: landscape) {
-          .fullscreen-stealth-top {
-            top: 5px !important;
-            transform: translateX(-50%) scale(0.7) !important;
-            transform-origin: top center !important;
-            opacity: 1 !important;
-          }
-          .fullscreen-stealth-bottom {
-            bottom: 5px !important;
-            transform: translateX(-50%) scale(0.7) !important;
-            transform-origin: bottom center !important;
-            width: 95% !important;
-            opacity: 1 !important;
-          }
-          .fullscreen-active .card-animation-wrapper {
-            min-height: 40vh !important;
-            height: 60vh !important;
-          }
-        }
-
-        .top-right-actions {
-          width: 100% !important;
-          position: absolute !important;
-          top: 15px !important;
-          left: 0 !important;
-          right: 0 !important;
-          display: flex !important;
-          justify-content: center !important;
-          align-items: flex-start !important;
-          flex-wrap: wrap !important;
-          padding: 0 15px !important;
-          box-sizing: border-box !important;
-          gap: 8px !important;
-          pointer-events: none !important;
-          z-index: 100 !important;
-        }
-        .top-right-actions > * {
-          pointer-events: auto !important;
-        }
-        .top-right-actions > .logout-btn {
-          position: absolute !important;
-          left: 15px !important;
-          top: 0 !important;
-          margin: 0 !important;
-        }
-        .top-right-actions > .lang-toggle-btn:not(.logout-btn) {
-          position: absolute !important;
-          right: 15px !important;
-          top: 0 !important;
-          margin: 0 !important;
-        }
-        @media(max-width: 768px) {
-          .top-right-actions {
-            padding-top: 45px !important;
-          }
-        }
-
-        @keyframes popInOut {
-          0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-          10% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-          15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-          85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-          100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-        }
-
-        .nav-btn-physical {
-          background: white; border: 1px solid #e2e8f0; border-radius: 12px;
-          width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-          font-size: 18px; color: #64748b; cursor: pointer; transition: all 0.2s;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .nav-btn-physical:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .nav-btn-physical:active { transform: scale(0.95); background: #f1f5f9; }
-
-        /* CHANGED: 新規追加。インプットボックスのスピンボタンを非表示にする設定 */
-        .card-counter-input::-webkit-outer-spin-button,
-        .card-counter-input::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-        .card-counter-input[type=number] {
-          -moz-appearance: textfield;
-        }
-      `}} />
       
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)}>
@@ -2133,7 +1545,10 @@ function App() {
                             className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} 
                             onClick={(e) => { 
                               e.stopPropagation(); 
-                              if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } 
+                              if (!isAutoPlaying) {
+                                const textToPlay = (qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word;
+                                playAudio(textToPlay); 
+                              } 
                               setIsAutoPlaying(!isAutoPlaying); 
                             }}
                           >
@@ -2167,7 +1582,10 @@ function App() {
                           className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} 
                           onClick={(e) => { 
                             e.stopPropagation(); 
-                            if (!isAutoPlaying) { playAudio(studyCards[currentIndex]?.word); } 
+                            if (!isAutoPlaying) {
+                              const textToPlay = (qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word;
+                              playAudio(textToPlay); 
+                            } 
                             setIsAutoPlaying(!isAutoPlaying); 
                           }}
                         >
