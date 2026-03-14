@@ -14,16 +14,16 @@ import PrintPreview from './PrintPreview';
 import TestMode from './TestMode';
 
 const DICTIONARIES = [
-  { id: 'weblio', name: 'Weblio', icon: '📖' },
-  { id: 'eijiro', name: 'Eijiro', icon: '📘' },
-  { id: 'goo', name: 'goo Dict', icon: '📗' },
-  { id: 'cambridge', name: 'Cambridge', icon: '🇬🇧' },
-  { id: 'oxford', name: 'Oxford', icon: '🎓' },
-  { id: 'longman', name: 'Longman', icon: '🦁' },
-  { id: 'google', name: 'Google', icon: '🌐' },
-  { id: 'images', name: 'Images', icon: '🖼️' },
-  { id: 'youglish', name: 'YouGlish', icon: '🎬' },
-  { id: 'monokakido', name: 'Monokakido', icon: '📱' }
+  { id: 'weblio', name: 'Weblio英和', icon: '📖' },
+  { id: 'eijiro', name: '英辞郎', icon: '📘' },
+  { id: 'goo', name: 'goo辞書', icon: '📗' },
+  { id: 'cambridge', name: 'Cambridge(英英)', icon: '🇬🇧' },
+  { id: 'oxford', name: 'Oxford(英英)', icon: '🎓' },
+  { id: 'longman', name: 'Longman(英英)', icon: '🦁' },
+  { id: 'google', name: 'Google翻訳', icon: '🌐' },
+  { id: 'images', name: '画像検索', icon: '🖼️' },
+  { id: 'youglish', name: 'YouGlish(動画)', icon: '🎬' },
+  { id: 'monokakido', name: '物書堂(アプリ)', icon: '📱' }
 ];
 
 function App() {
@@ -236,7 +236,6 @@ function App() {
 
   const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
 
-  // ★ 復活！ 全画面モードの切り替え関数 ★
   const toggleFullScreen = () => {
     const isDocFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
     if (!isDocFullscreen) {
@@ -744,7 +743,6 @@ function App() {
       <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
         
-        {/* カードのメインコンテンツ */}
         {qType === 'word' ? (
           <>
             {qLang === 'en' ? <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}><div className="core-meaning-large" style={{ textAlign: 'left', fontSize: fMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line" style={{textAlign: 'left'}}>{cleanText(m)}</div>)}</div></div>
@@ -773,14 +771,13 @@ function App() {
           </div>
         )}
         
-        {/* メモ欄 */}
         {showMemoOnBack && card.memo && (
           <div style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '8px', width: '100%', maxWidth: '800px', fontSize: isFullscreen ? 'clamp(18px, 4vw, 24px)' : '14px', color: '#475569', textAlign: 'left', lineHeight: '1.5', wordBreak: 'break-word' }}>
             <span style={{ fontWeight: 'bold', marginRight: '5px' }}>{lang==='ja'?'💡 メモ:':'💡 Memo:'}</span> {card.memo}
           </div>
         )}
 
-        {/* ★ スッキリした折りたたみ式 Deep Dive ボタン（カード右下に固定配置） */}
+        {/* ★ 折りたたみ式 Deep Dive ボタン（カード右下に固定配置） */}
         {activeDicts.length > 0 && (
           <div style={{ position: 'absolute', bottom: '15px', right: '15px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }} onClick={e => e.stopPropagation()}>
             {showDeepDive && (
@@ -844,15 +841,16 @@ function App() {
 
   if (view === 'boxes') return (
     <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={unlockAudio} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      {/* ★ スマホで重ならないように配置を完全修復したヘッダーボタン群 */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '10px 15px', width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.2)', marginBottom: '15px', borderRadius: '8px' }}>
-        <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent', margin: 0}}>{t.logout || (lang==='ja'?'ログアウト':'Logout')}</button>
-        <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold', margin: 0}}>🌐 Blog</button>
-        <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold', margin: 0}}>📊 Log</button>
-        <div style={{width: '2px', height: '24px', backgroundColor: 'rgba(255,255,255,0.4)', margin: '0 5px'}}></div>
-        <button className="manual-link-btn" onClick={() => setShowDictSettings(true)} style={{backgroundColor: '#0f172a', color: 'white', borderColor: 'transparent', fontWeight: 'bold', margin: 0}}>{lang === 'ja' ? '⚙️ 辞書設定' : '⚙️ Dict Settings'}</button>
-        <button className="manual-link-btn" onClick={() => setView('manual')} style={{margin: 0}}>{lang === 'ja' ? '📖 使い方' : '📖 Guide'}</button>
-        <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')} style={{margin: 0}}>{lang === 'ja' ? '🌐 English' : '🌐 日本語'}</button>
+      
+      {/* ★ スマホで重ならないように元のクラス指定に完全修復したヘッダーボタン群 ★ */}
+      <div className="top-right-actions">
+        <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout || (lang==='ja'?'ログアウト':'Logout')}</button>
+        <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
+        <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>📊 Log</button>
+        <div style={{width: '2px', height: '24px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 5px'}}></div>
+        <button className="manual-link-btn" onClick={() => setShowDictSettings(true)} style={{backgroundColor: '#0f172a', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>{lang === 'ja' ? '⚙️ 辞書設定' : '⚙️ Dict Settings'}</button>
+        <button className="manual-link-btn" onClick={() => setView('manual')}>{lang === 'ja' ? '📖 使い方' : '📖 Guide'}</button>
+        <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{lang === 'ja' ? '🌐 English' : '🌐 日本語'}</button>
       </div>
 
       {showDictSettings && (
@@ -884,7 +882,7 @@ function App() {
       
       <div className="hero-section">
         <h1 className="burning-text">{t.appTitle}</h1><h2 className="burning-subtitle">{t.appSubtitle}</h2>
-        <div className="creation-header-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
+        <div className="creation-header-row">
           <span className="creation-label" title="Box" style={{color: '#fff'}}>📦</span>
           <input type="text" placeholder={t.boxPlaceholder || (lang==='ja'?'箱の名前を入力':'Box Name')} value={newBoxName} onChange={(e) => setNewBoxName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewBox()} />
           <button onClick={createNewBox} className="add-btn mini-btn">{t.createBtn || (lang==='ja'?'作る':'Create')}</button>
@@ -1000,7 +998,7 @@ function App() {
             <textarea className="modal-input" value={editingCard.example} onChange={(e) => setEditingCard({...editingCard, example: e.target.value})} rows="2" />
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint || (lang==='ja'?'例文和訳':'Translation')}</label>
             <textarea className="modal-input" value={editingCard.translation} onChange={(e) => setEditingCard({...editingCard, translation: e.target.value})} rows="2" />
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{lang === 'ja' ? '💡 メモ (語源や注意点など)' : '💡 Memo'}</label>
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold' }}>{lang === 'ja' ? '💡 メモ (語源や注意点など)' : '💡 Memo'}</label>
             <input className="modal-input" value={editingCard.memo || ''} onChange={(e) => setEditingCard({...editingCard, memo: e.target.value})} />
             <div className="modal-actions">
               <button className="cancel-btn" onClick={() => setEditingCard(null)}>{t.cancelBtn || (lang==='ja'?'キャンセル':'Cancel')}</button><button className="add-btn" onClick={saveEditedCard}>{t.saveBtn || (lang==='ja'?'保存':'Save')}</button>
@@ -1051,211 +1049,202 @@ function App() {
         const unmemorizedDecks = boxDecks.filter(d => !(d.cards.length > 0 && d.cards.every(c => c.isMemorized)));
         const memorizedDecks = boxDecks.filter(d => d.cards.length > 0 && d.cards.every(c => c.isMemorized));
         return (
-          <div style={{ width: '100%' }}>
-            <div className="inner-view-wrapper">
-              <div className="study-header">
-                <button className="back-to-desk-btn" onClick={() => setView('boxes')}>{t.backToHome || (lang==='ja'?'◀ ホームに戻る':'◀ Home')}</button>
-                <h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2><div style={{width: '80px'}}></div>
+          <div className="inner-view-wrapper">
+            <div className="study-header">
+              <button className="back-to-desk-btn" onClick={() => setView('boxes')}>{t.backToHome || (lang==='ja'?'◀ ホームに戻る':'◀ Home')}</button>
+              <h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2><div style={{width: '80px'}}></div>
+            </div>
+            
+            <div className="integrated-creation-area">
+              <div className="creation-row">
+                <span className="creation-label" title="Deck">🔖</span>
+                <input type="text" placeholder={t.deckPlaceholder || (lang==='ja'?'新しい束の名前':'New Deck Name')} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
+                <button onClick={createNewDeckInsideBox} className="add-btn mini-btn">{t.addBtn || (lang==='ja'?'追加':'Add')}</button>
+                <button onClick={importDeckByCode} className="add-btn mini-btn" style={{ backgroundColor: '#8e44ad', marginLeft: '5px' }} disabled={loading}>{lang === 'ja' ? '🔗 共有コード' : '🔗 Share'}</button>
               </div>
-              
-              <div className="integrated-creation-area">
-                {/* ★ 束作成枠が潰れないように flexWrap と width を調整 */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', padding: '15px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                  <div style={{ display: 'flex', flex: '1 1 200px', gap: '8px', alignItems: 'center' }}>
-                    <span className="creation-label" title="Deck" style={{ background: '#f1f5f9', padding: '10px', borderRadius: '8px' }}>🔖</span>
-                    <input type="text" placeholder={t.deckPlaceholder || (lang==='ja'?'新しい束の名前':'New Deck Name')} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} style={{ flexGrow: 1, width: '100%', border: 'none', borderBottom: '2px solid #e2e8f0', padding: '10px', outline: 'none' }} />
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px', flexShrink: 0, margin: 'auto' }}>
-                    <button onClick={createNewDeckInsideBox} className="add-btn mini-btn" style={{ padding: '10px 20px', margin: 0 }}>{t.addBtn || (lang==='ja'?'追加':'Add')}</button>
-                    {/* ★ 共有ボタンの文字を短くしてスマホで綺麗に収める */}
-                    <button onClick={importDeckByCode} className="add-btn mini-btn" style={{ backgroundColor: '#8e44ad', padding: '10px 20px', margin: 0, whiteSpace: 'nowrap' }} disabled={loading}>{lang === 'ja' ? '🔗 共有コード' : '🔗 Share'}</button>
-                  </div>
-                </div>
-              </div>
+            </div>
 
-              {/* ★ 束（デッキ）が全画面に伸びるバグを解消し、横に綺麗に並べるための強力なフレックス指定 */}
-              <div className="decks-split-layout">
-                <div className="decks-unmemorized-area"><h3 className="area-title">{t.unmemTitle || (lang==='ja'?'📖 学習中・未修の束':'📖 To Study')}</h3><p className="area-hint">{t.unmemHint || (lang==='ja'?'※すべての単語を覚えると、暗記済みに移動します。':'Words move to Mastered when memorized.')}</p>{unmemorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem || (lang==='ja'?'束がありません':'No Decks')}</p> : <div className="decks-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'flex-start', width: '100%' }}>{unmemorizedDecks.map(deck => <div key={deck.id} style={{ width: '100%', maxWidth: '220px', flex: '1 1 200px' }}>{renderDeckCard(deck)}</div>)}</div>}</div>
-                <div className="decks-memorized-area"><h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle || (lang==='ja'?'🏆 暗記済の束':'🏆 Mastered')}</h3><p className="area-hint">{t.memHint || (lang==='ja'?'※完璧に覚えた束がここに並びます！':'Perfectly memorized decks appear here!')}</p>{memorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem || (lang==='ja'?'まだ暗記済みの束はありません。':'No mastered decks yet.')}</p> : <div className="decks-grid memorized-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'flex-start', width: '100%' }}>{memorizedDecks.map(deck => <div key={deck.id} style={{ width: '100%', maxWidth: '220px', flex: '1 1 200px' }}>{renderDeckCard(deck)}</div>)}</div>}</div>
-              </div>
+            {/* ★ 束（デッキ）が全画面に伸びるバグを解消し、横に綺麗に並べる元のCSSを信じる */}
+            <div className="decks-split-layout">
+              <div className="decks-unmemorized-area"><h3 className="area-title">{t.unmemTitle || (lang==='ja'?'📖 学習中・未修の束':'📖 To Study')}</h3><p className="area-hint">{t.unmemHint || (lang==='ja'?'※すべての単語を覚えると、暗記済みに移動します。':'Words move to Mastered when memorized.')}</p>{unmemorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem || (lang==='ja'?'束がありません':'No Decks')}</p> : <div className="decks-grid">{unmemorizedDecks.map(renderDeckCard)}</div>}</div>
+              <div className="decks-memorized-area"><h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle || (lang==='ja'?'🏆 暗記済の束':'🏆 Mastered')}</h3><p className="area-hint">{t.memHint || (lang==='ja'?'※完璧に覚えた束がここに並びます！':'Perfectly memorized decks appear here!')}</p>{memorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem || (lang==='ja'?'まだ暗記済みの束はありません。':'No mastered decks yet.')}</p> : <div className="decks-grid memorized-grid">{memorizedDecks.map(renderDeckCard)}</div>}</div>
             </div>
           </div>
         );
       })()}
 
       {view === 'study' && (
-        <div style={{ width: '100%' }}>
-          <div className="study-dashboard">
+        <div className="study-dashboard">
+          {!isFullscreen && (
+            <div className="side-panel left-panel">
+              <h3 className="panel-title">{t.learningPanel || (lang==='ja'?'📖 学習中':'📖 Learning')} ({studyCards.length})</h3>
+              {/* ★ サイドバーのボタンを完璧な配置に復元！余計なインラインスタイル削除 */}
+              <div className="panel-top-action">
+                {!isDeleteMode ? (
+                  <>
+                    <div style={{display: 'flex', gap: '8px', marginBottom: '8px'}}>
+                      <button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '13px', backgroundColor: '#27ae60', margin: 0}}>{lang === 'ja' ? '✏️ 手動で追加' : '✏️ Add'}</button>
+                      <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '13px', backgroundColor: '#e67e22', margin: 0}}>{lang === 'ja' ? '📂 CSVで追加' : '📂 Add CSV'}</button>
+                    </div>
+                    <button onClick={() => setIsDeleteMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#94a3b8', margin: 0}}>{lang === 'ja' ? '🗑️ 一括削除' : '🗑️ Bulk Delete'}</button>
+                  </>
+                ) : (
+                  <div style={{display: 'flex', gap: '8px'}}>
+                    <button onClick={() => {setIsDeleteMode(false); setSelectedForDelete(new Set());}} className="cancel-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', margin: 0}}>{t.cancelBulkDelete || (lang==='ja'?'キャンセル':'Cancel')}</button>
+                    <button onClick={executeBulkDelete} className="add-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', backgroundColor: '#e74c3c', margin: 0}}>{t.executeBulkDelete || (lang==='ja'?'実行':'Delete')} ({selectedForDelete.size})</button>
+                  </div>
+                )}
+              </div>
+              <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}</div>
+            </div>
+          )}
+          
+          {/* ★ センターズレの元凶だったインラインスタイルを完全削除し、真ん中に配置する */}
+          <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`}>
             {!isFullscreen && (
-              <div className="side-panel left-panel">
-                <h3 className="panel-title">{t.learningPanel || (lang==='ja'?'📖 学習中':'📖 Learning')} ({studyCards.length})</h3>
-                {/* ★ サイドバーのボタンを「上が横2つ、下が1つ」の完璧な配置に復元！ */}
-                <div className="panel-top-action" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  {!isDeleteMode ? (
-                    <>
-                      <div style={{display: 'flex', gap: '8px'}}>
-                        <button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '13px', backgroundColor: '#27ae60', margin: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px'}}>{lang === 'ja' ? '✏️ 手動で追加' : '✏️ Add'}</button>
-                        <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '13px', backgroundColor: '#e67e22', margin: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px'}}>{lang === 'ja' ? '📂 CSVで追加' : '📂 Add CSV'}</button>
-                      </div>
-                      <button onClick={() => setIsDeleteMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#94a3b8', margin: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px'}}>{lang === 'ja' ? '🗑️ 一括削除' : '🗑️ Bulk Delete'}</button>
-                    </>
-                  ) : (
-                    <div style={{display: 'flex', gap: '8px'}}>
-                      <button onClick={() => {setIsDeleteMode(false); setSelectedForDelete(new Set());}} className="cancel-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', margin: 0}}>{t.cancelBulkDelete || (lang==='ja'?'キャンセル':'Cancel')}</button>
-                      <button onClick={executeBulkDelete} className="add-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', backgroundColor: '#e74c3c', margin: 0}}>{t.executeBulkDelete || (lang==='ja'?'実行':'Delete')} ({selectedForDelete.size})</button>
+              <>
+                <div className="study-controls-top">
+                  <button className="back-to-desk-btn" onClick={closeDeck} style={{color: '#7f8c8d', textShadow: 'none', background: 'none'}}>{t.backBtn || (lang==='ja'?'◀ 戻る':'◀ Back')}</button>
+                  <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+                    <button className="mute-toggle-btn" onClick={() => setIsMuted(!isMuted)}>
+                      {isMuted ? (lang === 'ja' ? '🔇 音声: オフ' : '🔇 Audio: OFF') : (lang === 'ja' ? '🔊 音声: オン' : '🔊 Audio: ON')}
+                    </button>
+                    <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible', background: '#fff', color: '#333', textShadow: 'none' }}>⏱ {formatTime(studyTime)}</div>
+                  </div>
+                </div>
+                <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
+                  <h2 className="study-deck-title" style={{ margin: 0, fontSize: 'clamp(24px, 6vw, 36px)', fontWeight: '800', color: '#34495e', letterSpacing: '0.1em', textShadow: '1px 2px 4px rgba(0,0,0,0.1)', fontStyle: 'normal', fontFamily: '"Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif', textAlign: 'center' }}>{activeDeck?.name}</h2>
+                  
+                  {allCards.length >= 4 && (
+                    <div ref={actionMenuRef} style={{ position: 'relative', marginTop: '10px' }}>
+                      <button onClick={() => setShowActionMenu(!showActionMenu)} style={{ backgroundColor: '#34495e', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '30px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {lang === 'ja' ? '🎯 テスト ＆ プリント ▼' : '🎯 Test & Print ▼'}
+                      </button>
+                      {showActionMenu && (
+                        <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '10px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 100, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <button onClick={() => { setView('test'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '📝 アプリでテストする' : '📝 Take a Test'}</button>
+                          <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '2px 0' }}></div>
+                          <button onClick={() => { openPrintPreview('word'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '🖨️ 単語プリントを作る' : '🖨️ Print Word List'}</button>
+                          <button onClick={() => { openPrintPreview('example'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '🖨️ 例文プリントを作る' : '🖨️ Print Example List'}</button>
+                          <button onClick={() => { openPrintPreview('choice'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '🖨️ 4択プリント (英検形式)' : '🖨️ 4-Choice Quiz'}</button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-                <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}</div>
+              </>
+            )}
+            
+            {!isFullscreen && isBulkMode && (
+              <div className="bulk-input-section" style={{ marginTop: '0px', width: '100%', maxWidth: '600px' }}>
+                <p className="bulk-hint" style={{fontSize:'16px', color:'#333'}}>{t.csvHint}</p>
+                <div className="bulk-file-actions" style={{ display: 'flex', flexDirection: 'column', gap: '15px', justifyContent: 'center', marginBottom: '20px', width: '100%' }}>
+                  <button onClick={downloadTemplate} style={{ backgroundColor: '#f39c12', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0 }}>{lang === 'ja' ? '📥 テンプレート(CSV)をダウンロード' : '📥 Download CSV Template'}</button>
+                  <label style={{ backgroundColor: '#27ae60', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0, textAlign: 'center' }}>
+                    {loading ? (t.loading || 'Loading...') : (lang === 'ja' ? '📂 CSVファイルをインポートする' : '📂 Import CSV File')}
+                    <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
+                  </label>
+                </div>
+                <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5', whiteSpace: 'pre-wrap', textAlign: 'left', padding: '15px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '14px' }}>
+                  {chatGptPrompt}
+                </p>
+                <div className="bulk-actions" style={{ marginTop: '15px' }}><button onClick={() => setIsBulkMode(false)} className="cancel-btn" disabled={loading}>{t.closeBtn || (lang==='ja'?'閉じる':'Close')}</button></div>
               </div>
             )}
             
-            <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ flex: 1, minWidth: 0, padding: '0 15px' }}>
-              {!isFullscreen && (
-                <>
-                  <div className="study-controls-top" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
-                    <button className="back-to-desk-btn" onClick={closeDeck} style={{color: '#7f8c8d', textShadow: 'none', background: 'none'}}>{t.backBtn || (lang==='ja'?'◀ 戻る':'◀ Back')}</button>
-                    <div style={{display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center'}}>
-                      <button className="mute-toggle-btn" onClick={() => setIsMuted(!isMuted)}>
-                        {isMuted ? (lang === 'ja' ? '🔇 音声: オフ' : '🔇 Audio: OFF') : (lang === 'ja' ? '🔊 音声: オン' : '🔊 Audio: ON')}
-                      </button>
-                      <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible', background: '#fff', color: '#333', textShadow: 'none' }}>⏱ {formatTime(studyTime)}</div>
-                    </div>
-                  </div>
-                  <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
-                    <h2 className="study-deck-title" style={{ margin: 0, fontSize: 'clamp(24px, 6vw, 36px)', fontWeight: '800', color: '#34495e', letterSpacing: '0.1em', textShadow: '1px 2px 4px rgba(0,0,0,0.1)', fontStyle: 'normal', fontFamily: '"Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif', textAlign: 'center' }}>{activeDeck?.name}</h2>
+            {allCards.length > 0 && studyCards.length === 0 ? (
+              <div className="empty-deck-msg" style={{marginTop: '60px'}}><h2 style={{color: '#27ae60'}}>{t.allMemorizedMsg || (lang==='ja'?'🎉 すべて暗記しました！':'🎉 All Mastered!')}</h2><button onClick={resetMemorized} className="add-btn" style={{marginTop: '20px', padding: '15px 30px', fontSize: '18px'}}>{t.resetBtn || (lang==='ja'?'最初からやり直す':'Reset & Study Again')}</button></div>
+            ) : studyCards.length > 0 && !isBulkMode ? (
+              <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
+                
+                <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', width: '100%', gap: '15px' }}>
                     
-                    {allCards.length >= 4 && (
-                      <div ref={actionMenuRef} style={{ position: 'relative', marginTop: '10px' }}>
-                        <button onClick={() => setShowActionMenu(!showActionMenu)} style={{ backgroundColor: '#34495e', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '30px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {lang === 'ja' ? '🎯 テスト ＆ プリント ▼' : '🎯 Test & Print ▼'}
-                        </button>
-                        {showActionMenu && (
-                          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '10px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 100, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <button onClick={() => { setView('test'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '📝 アプリでテストする' : '📝 Take a Test'}</button>
-                            <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '2px 0' }}></div>
-                            <button onClick={() => { openPrintPreview('word'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '🖨️ 単語プリントを作る' : '🖨️ Print Word List'}</button>
-                            <button onClick={() => { openPrintPreview('example'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '🖨️ 例文プリントを作る' : '🖨️ Print Example List'}</button>
-                            <button onClick={() => { openPrintPreview('choice'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '🖨️ 4択プリント (英検形式)' : '🖨️ 4-Choice Quiz'}</button>
-                          </div>
-                        )}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="Toggle Language">{qLang === 'en' ? (lang === 'ja' ? '🇺🇸 英→日' : '🇺🇸 En→Jp') : (lang === 'ja' ? '🇯🇵 日→英' : '🇯🇵 Jp→En')}</button>
+                      <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
+                        <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>{lang === 'ja' ? '🔤 単語' : '🔤 Word'}</button>
+                        <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>{lang === 'ja' ? '📝 例文' : '📝 Example'}</button>
                       </div>
-                    )}
+                    </div>
+
+                    <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <input type="number" className="card-counter-input" min="1" max={studyCards.length} key={currentIndex} defaultValue={currentIndex + 1}
+                        onBlur={(e) => {
+                          let val = parseInt(e.target.value, 10);
+                          if (!isNaN(val)) { val = Math.max(1, Math.min(val, studyCards.length)); if (val - 1 !== currentIndex) { stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex(val - 1); } else e.target.value = currentIndex + 1; } else e.target.value = currentIndex + 1;
+                        }}
+                        onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); e.stopPropagation(); }}
+                        style={{ width: '2.5em', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '2px dashed #cbd5e1', color: 'inherit', font: 'inherit', outline: 'none', padding: '0 5px', marginRight: '5px' }}
+                      /> / {studyCards.length}
+                    </div>
+
+                    <div ref={settingsRef} style={{ position: 'relative' }}>
+                      <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="setting-badge-btn" style={{ backgroundColor: showSettingsMenu ? '#e2e8f0' : '#fff' }}>{lang === 'ja' ? '⚙️ 表示オプション ▼' : '⚙️ Options ▼'}</button>
+                      {showSettingsMenu && (
+                        <div style={{ position: 'absolute', top: '100%', right: '50%', transform: 'translateX(50%)', marginTop: '8px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {qType === 'word' ? (
+                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '例文を表示' : 'Show Examples'}</span><input type="checkbox" checked={showExOnBack} onChange={() => setShowExOnBack(!showExOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                          ) : (
+                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '単語を表示' : 'Show Words'}</span><input type="checkbox" checked={showWordOnExMode} onChange={() => setShowWordOnExMode(!showWordOnExMode)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                          )}
+                          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? 'メモを表示' : 'Show Memos'}</span><input type="checkbox" checked={showMemoOnBack} onChange={() => setShowMemoOnBack(!showMemoOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                          <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
+                          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '自動めくり: 表面のみ' : 'Auto-play: Front only'}</span><input type="checkbox" checked={isFrontOnlyAuto} onChange={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                        </div>
+                      )}
+                    </div>
+
                   </div>
-                </>
-              )}
-              
-              {!isFullscreen && isBulkMode && (
-                <div className="bulk-input-section" style={{ marginTop: '0px', width: '100%', maxWidth: '600px' }}>
-                  <p className="bulk-hint" style={{fontSize:'16px', color:'#333'}}>{t.csvHint}</p>
-                  <div className="bulk-file-actions" style={{ display: 'flex', flexDirection: 'column', gap: '15px', justifyContent: 'center', marginBottom: '20px', width: '100%' }}>
-                    <button onClick={downloadTemplate} style={{ backgroundColor: '#f39c12', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0 }}>{lang === 'ja' ? '📥 テンプレート(CSV)をダウンロード' : '📥 Download CSV Template'}</button>
-                    <label style={{ backgroundColor: '#27ae60', color: '#ffffff', border: 'none', padding: '16px 20px', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', boxSizing: 'border-box', margin: 0, textAlign: 'center' }}>
-                      {loading ? (t.loading || 'Loading...') : (lang === 'ja' ? '📂 CSVファイルをインポートする' : '📂 Import CSV File')}
-                      <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
-                    </label>
-                  </div>
-                  <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5', whiteSpace: 'pre-wrap', textAlign: 'left', padding: '15px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0', fontSize: '14px' }}>
-                    {chatGptPrompt}
-                  </p>
-                  <div className="bulk-actions" style={{ marginTop: '15px' }}><button onClick={() => setIsBulkMode(false)} className="cancel-btn" disabled={loading}>{t.closeBtn || (lang==='ja'?'閉じる':'Close')}</button></div>
                 </div>
-              )}
-              
-              {allCards.length > 0 && studyCards.length === 0 ? (
-                <div className="empty-deck-msg" style={{marginTop: '60px'}}><h2 style={{color: '#27ae60'}}>{t.allMemorizedMsg || (lang==='ja'?'🎉 すべて暗記しました！':'🎉 All Mastered!')}</h2><button onClick={resetMemorized} className="add-btn" style={{marginTop: '20px', padding: '15px 30px', fontSize: '18px'}}>{t.resetBtn || (lang==='ja'?'最初からやり直す':'Reset & Study Again')}</button></div>
-              ) : studyCards.length > 0 && !isBulkMode ? (
-                <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
-                  
-                  <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: isFullscreen ? 0 : '20px', width: '100%', gap: '10px' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', width: '100%', gap: '15px' }}>
-                      
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="Toggle Language">{qLang === 'en' ? (lang === 'ja' ? '🇺🇸 英→日' : '🇺🇸 En→Jp') : (lang === 'ja' ? '🇯🇵 日→英' : '🇯🇵 Jp→En')}</button>
-                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
-                          <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>{lang === 'ja' ? '🔤 単語' : '🔤 Word'}</button>
-                          <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>{lang === 'ja' ? '📝 例文' : '📝 Example'}</button>
-                        </div>
-                      </div>
 
-                      <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <input type="number" className="card-counter-input" min="1" max={studyCards.length} key={currentIndex} defaultValue={currentIndex + 1}
-                          onBlur={(e) => {
-                            let val = parseInt(e.target.value, 10);
-                            if (!isNaN(val)) { val = Math.max(1, Math.min(val, studyCards.length)); if (val - 1 !== currentIndex) { stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex(val - 1); } else e.target.value = currentIndex + 1; } else e.target.value = currentIndex + 1;
-                          }}
-                          onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); e.stopPropagation(); }}
-                          style={{ width: '2.5em', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '2px dashed #cbd5e1', color: 'inherit', font: 'inherit', outline: 'none', padding: '0 5px', marginRight: '5px' }}
-                        /> / {studyCards.length}
+                {/* ★ カードのリアルなアスペクト比（1.5:1）を適用し、スマホで巨大化するのを防ぐ ★ */}
+                <div className="card-animation-wrapper" key={currentIndex} style={isFullscreen ? { width: '100%', height: '100vh' } : { width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: '450px' }}>
+                  <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped); setShowDeepDive(false);}} style={{ height: '100%' }}>
+                    <div className="card-inner">
+                      <div className="card-front">
+                        <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => { e.stopPropagation(); if (studyCards[currentIndex]) { setIsFlipped(false); setShowDeepDive(false); toggleMemorize(e, studyCards[currentIndex], true); } }}>✔</button>
+                        {renderCardFront(studyCards[currentIndex], isFullscreen)}
                       </div>
-
-                      <div ref={settingsRef} style={{ position: 'relative' }}>
-                        <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="setting-badge-btn" style={{ backgroundColor: showSettingsMenu ? '#e2e8f0' : '#fff' }}>{lang === 'ja' ? '⚙️ 表示オプション ▼' : '⚙️ Options ▼'}</button>
-                        {showSettingsMenu && (
-                          <div style={{ position: 'absolute', top: '100%', right: '50%', transform: 'translateX(50%)', marginTop: '8px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {qType === 'word' ? (
-                              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '例文を表示' : 'Show Examples'}</span><input type="checkbox" checked={showExOnBack} onChange={() => setShowExOnBack(!showExOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
-                            ) : (
-                              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '単語を表示' : 'Show Words'}</span><input type="checkbox" checked={showWordOnExMode} onChange={() => setShowWordOnExMode(!showWordOnExMode)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
-                            )}
-                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? 'メモを表示' : 'Show Memos'}</span><input type="checkbox" checked={showMemoOnBack} onChange={() => setShowMemoOnBack(!showMemoOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
-                            <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
-                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '自動めくり: 表面のみ' : 'Auto-play: Front only'}</span><input type="checkbox" checked={isFrontOnlyAuto} onChange={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
-                          </div>
-                        )}
-                      </div>
-
+                      <div className="card-back">{renderCardBack(studyCards[currentIndex], isFullscreen)}</div>
                     </div>
                   </div>
-
-                  {/* ★ カードのリアルなアスペクト比（1.5:1）を適用し、スマホで巨大化するのを防ぐ ★ */}
-                  <div className="card-animation-wrapper" key={currentIndex} style={isFullscreen ? { width: '100%', height: '100vh' } : { width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: '450px' }}>
-                    <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped); setShowDeepDive(false);}} style={{ height: '100%' }}>
-                      <div className="card-inner">
-                        <div className="card-front">
-                          <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => { e.stopPropagation(); if (studyCards[currentIndex]) { setIsFlipped(false); setShowDeepDive(false); toggleMemorize(e, studyCards[currentIndex], true); } }}>✔</button>
-                          {renderCardFront(studyCards[currentIndex], isFullscreen)}
-                        </div>
-                        <div className="card-back">{renderCardBack(studyCards[currentIndex], isFullscreen)}</div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className={isFullscreen ? "fullscreen-stealth-bottom" : "autoplay-controls"} style={isFullscreen ? {} : {background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
-                    <div className="autoplay-actions-row">
-                      <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>
-                      <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio((qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>
-                        {isAutoPlaying ? (lang === 'ja' ? '■ 停止' : '■ Stop') : (lang === 'ja' ? '▶ 自動めくり' : '▶ Auto Play')}
-                      </button>
-                      <button className="nav-btn-physical" onClick={handleNextCard}>▶</button>
-                      <button className="repeat-btn" onClick={handleRepeat} style={isFullscreen ? {} : {background: '#f8f9fa', color: '#555'}}>{lang === 'ja' ? '🔄 もう1回' : '🔄 Restart'}</button>
-                      <button className="fullscreen-btn" onClick={toggleFullScreen} style={isFullscreen ? {} : {background: '#f8f9fa', color: '#555'}}>{isFullscreen ? (lang==='ja'?'元に戻す':'Exit') : (lang==='ja'?'全集中 🔥':'Focus 🔥')}</button>
-                    </div>
-                    <div className="speed-slider-container" style={isFullscreen ? {} : {marginTop: '15px'}}>
-                      <div className={isFullscreen ? "speed-slider-label" : ""} style={isFullscreen ? {} : {fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center', whiteSpace: 'nowrap'}}>
-                        {lang === 'ja' ? '表示間隔: ' : 'Interval: '}{displaySeconds === 0 ? (lang==='ja'?`${t.godspeed || '神速'} (0.0 ${t.sec||'秒'})`:`Godspeed (0.0 sec)`) : `${displaySeconds.toFixed(1)} ${lang==='ja'?'秒':'sec'}`}
-                      </div>
-                      <div className="speed-slider-wrapper" style={isFullscreen ? {} : { display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
-                        <span className="speed-min-max" style={isFullscreen ? {} : { fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{lang === 'ja' ? '速 🐇' : 'Fast 🐇'}</span>
-                        <div style={isFullscreen ? {} : { flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                          {!isFullscreen && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>}
-                          <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={isFullscreen ? {} : { width: '100%', margin: 0 }} />
-                        </div>
-                        <span className="speed-min-max" style={isFullscreen ? {} : { fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>{lang === 'ja' ? '🐢 遅' : '🐢 Slow'}</span>
-                      </div>
-                    </div>
-                  </div>
-
                 </div>
-              ) : null}
-            </div>
-            {!isFullscreen && (
-              <div className="side-panel right-panel">
-                <h3 className="panel-title">{t.memorizedPanel || (lang==='ja'?'🏆 暗記済':'🏆 Mastered')} ({memorizedCards.length})</h3>
-                <div className="mini-card-list">{memorizedCards.length === 0 ? <p className="empty-mini-msg">{t.dragHereMsg || (lang==='ja'?'左の ✅ ボタンでここに移動！':'Click ✅ to move words here!')}</p> : memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`))}</div>
+                
+                <div className={isFullscreen ? "fullscreen-stealth-bottom" : "autoplay-controls"} style={isFullscreen ? {} : {background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
+                  <div className="autoplay-actions-row">
+                    <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>
+                    <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio((qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>
+                      {isAutoPlaying ? (lang === 'ja' ? '■ 停止' : '■ Stop') : (lang === 'ja' ? '▶ 自動めくり' : '▶ Auto Play')}
+                    </button>
+                    <button className="nav-btn-physical" onClick={handleNextCard}>▶</button>
+                    <button className="repeat-btn" onClick={handleRepeat} style={isFullscreen ? {} : {background: '#f8f9fa', color: '#555'}}>{lang === 'ja' ? '🔄 もう1回' : '🔄 Restart'}</button>
+                    <button className="fullscreen-btn" onClick={toggleFullScreen} style={isFullscreen ? {} : {background: '#f8f9fa', color: '#555'}}>{isFullscreen ? (lang==='ja'?'元に戻す':'Exit') : (lang==='ja'?'全集中 🔥':'Focus 🔥')}</button>
+                  </div>
+                  <div className="speed-slider-container" style={isFullscreen ? {} : {marginTop: '15px'}}>
+                    <div className={isFullscreen ? "speed-slider-label" : ""} style={isFullscreen ? {} : {fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center', whiteSpace: 'nowrap'}}>
+                      {lang === 'ja' ? '表示間隔: ' : 'Interval: '}{displaySeconds === 0 ? (lang==='ja'?`${t.godspeed || '神速'} (0.0 ${t.sec||'秒'})`:`Godspeed (0.0 sec)`) : `${displaySeconds.toFixed(1)} ${lang==='ja'?'秒':'sec'}`}
+                    </div>
+                    <div className="speed-slider-wrapper" style={isFullscreen ? {} : { display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
+                      <span className="speed-min-max" style={isFullscreen ? {} : { fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{lang === 'ja' ? '速 🐇' : 'Fast 🐇'}</span>
+                      <div style={isFullscreen ? {} : { flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                        {!isFullscreen && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>}
+                        <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={isFullscreen ? {} : { width: '100%', margin: 0 }} />
+                      </div>
+                      <span className="speed-min-max" style={isFullscreen ? {} : { fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>{lang === 'ja' ? '🐢 遅' : '🐢 Slow'}</span>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-            )}
+            ) : null}
           </div>
+          {!isFullscreen && (
+            <div className="side-panel right-panel">
+              <h3 className="panel-title">{t.memorizedPanel || (lang==='ja'?'🏆 暗記済':'🏆 Mastered')} ({memorizedCards.length})</h3>
+              <div className="mini-card-list">{memorizedCards.length === 0 ? <p className="empty-mini-msg">{t.dragHereMsg || (lang==='ja'?'左の ✅ ボタンでここに移動！':'Click ✅ to move words here!')}</p> : memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`))}</div>
+            </div>
+          )}
         </div>
       )}
     </div>
