@@ -94,14 +94,17 @@ export const renderBlankExample = (text) => {
   return <>{elements}</>;
 };
 
-export const renderHighlightedText = (text) => {
+export const renderHighlightedText = (text, markerColor = null) => {
   if (!text) return null;
   try {
     const parts = String(text).split(/\*\*(.*?)\*\*/g);
     const elements = [];
     for (let i = 0; i < parts.length; i++) {
       if (i % 2 === 1) {
-        const highlight = <span key={`highlight-${i}`} className="highlight-word">{parts[i]}</span>;
+        // ★ マーカー色が指定されていれば、CSSを上書きして品詞カラーのマーカーを引く
+        const customStyle = markerColor ? { background: `linear-gradient(transparent 50%, ${markerColor} 50%)` } : {};
+        const highlight = <span key={`highlight-${i}`} className="highlight-word" style={customStyle}>{parts[i]}</span>;
+        
         if (i + 1 < parts.length && /^[.,!?;:]/.test(parts[i + 1])) {
           const match = parts[i + 1].match(/^[.,!?;:]+/);
           const punc = match[0];
