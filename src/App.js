@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { auth, provider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
@@ -28,8 +28,6 @@ function App() {
     try { const saved = localStorage.getItem('redline_decks'); return saved ? JSON.parse(saved) : initialDecks; } catch(e) { return initialDecks; }
   });
 
-  const [pullDownY, setPullDownY] = useState(0); 
-  const [isStoring, setIsStoring] = useState(false);
   const [view, setView] = useState('boxes'); 
   const [currentBoxId, setCurrentBoxId] = useState(null); 
   const [currentDeckId, setCurrentDeckId] = useState(null);
@@ -81,6 +79,47 @@ function App() {
   const studyCards = allCards.filter(c => !c.isMemorized);
   const memorizedCards = allCards.filter(c => c.isMemorized);
   const isCompleted = studyCards.length > 0 && currentIndex === studyCards.length - 1 && isFlipped;
+
+  const totalMemorizedWords = useMemo(() => {
+    return decks.reduce((sum, deck) => sum + (deck.cards || []).filter(c => c.isMemorized).length, 0);
+  }, [decks]);
+
+  const VOCAB_LEVELS = [
+    { threshold: 0, eng: 'Starter', jp: 'スタート' },
+    { threshold: 1200, eng: 'Basic', jp: '基礎 (中学〜英検3級)' },
+    { threshold: 3000, eng: 'Standard', jp: '日常会話 (高校〜英検2級)' },
+    { threshold: 5000, eng: 'Advanced', jp: '応用 (難関大〜英検準1級)' },
+    { threshold: 8000, eng: 'Professional', jp: 'プロ (英検1級〜)' },
+    { threshold: 12000, eng: 'Expert', jp: '海外大レベル' },
+    { threshold: 20000, eng: 'Native', jp: 'ネイティブレベル' },
+    { threshold: 30000, eng: 'Legend', jp: '限界突破' }
+  ];
+
+  const totalSections = VOCAB_LEVELS.length - 1;
+
+  let currentLevelIdx = 0;
+  for (let i = VOCAB_LEVELS.length - 1; i >= 0; i--) {
+    if (totalMemorizedWords >= VOCAB_LEVELS[i].threshold) {
+      currentLevelIdx = i;
+      break;
+    }
+  }
+
+  const currentLvl = VOCAB_LEVELS[currentLevelIdx];
+  const nextLvl = currentLevelIdx < totalSections ? VOCAB_LEVELS[currentLevelIdx + 1] : VOCAB_LEVELS[totalSections];
+
+  let progressWithinLevel = 0;
+  if (currentLevelIdx < totalSections) {
+    const range = nextLvl.threshold - currentLvl.threshold;
+    const progress = totalMemorizedWords - currentLvl.threshold;
+    progressWithinLevel = Math.max(0, Math.min(1, progress / range));
+  } else {
+    progressWithinLevel = 1;
+  }
+
+  const overallProgressPercent = currentLevelIdx === totalSections 
+    ? 100 
+    : ((currentLevelIdx + progressWithinLevel) / totalSections) * 100;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -176,6 +215,62 @@ function App() {
   };
 
   const deleteDeck = (e, id) => { e.stopPropagation(); if (window.confirm(t.confirmDeleteDeck)) setDecks(decks.filter(d => d.id !== id)); };
+
+  const shareDeck = async (e, deckId) => {
+    e.stopPropagation();
+    if (!currentUser) return alert("共有機能を使うにはログインが必要です。");
+    const deckToShare = decks.find(d => d.id === deckId);
+    if (!deckToShare || !deckToShare.cards || deckToShare.cards.length === 0) return alert("空のデッキは共有できません。");
+    
+    setLoading(true);
+    try {
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      await setDoc(doc(db, "sharedDecks", code), {
+        name: deckToShare.name,
+        cards: deckToShare.cards,
+        authorUid: currentUser.uid,
+        createdAt: Date.now()
+      });
+      navigator.clipboard.writeText(code).catch(() => {});
+      alert(`【共有コードを発行しました】\n\n${code}\n\n※コードはクリップボードにコピーされました。\n生徒にこのコードを伝えてください。`);
+    } catch(err) {
+      alert("共有コードの発行に失敗しました。通信環境を確認してください。");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const importDeckByCode = async () => {
+    const code = window.prompt("先生から教わった「6桁の共有コード」を入力してください");
+    if (!code || !code.trim()) return;
+    
+    setLoading(true);
+    try {
+      const docRef = doc(db, "sharedDecks", code.trim().toUpperCase());
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const sharedData = docSnap.data();
+        const importedCards = (sharedData.cards || []).map(c => ({ ...c, isMemorized: false }));
+        const newDeck = {
+          id: Date.now(),
+          boxId: currentBoxId,
+          name: `${sharedData.name} (共有)`,
+          lastStudied: null,
+          lastRecordTime: null,
+          cards: importedCards
+        };
+        setDecks(prev => [...prev, newDeck]);
+        setToastMessage(`🎉 「${sharedData.name}」をダウンロードしました！`);
+        setTimeout(() => setToastMessage(''), 3000);
+      } else {
+        alert("コードが見つかりません。入力ミスがないか確認してください。");
+      }
+    } catch(err) {
+      alert("ダウンロードに失敗しました。通信環境を確認してください。");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getEbbinghausStatus = (deck) => {
     const cards = Array.isArray(deck.cards) ? deck.cards : [];
@@ -398,7 +493,7 @@ function App() {
   const shufflePrintCards = () => setPrintCards([...printCards].sort(() => Math.random() - 0.5));
 
   const openBox = (boxId) => { 
-    if (openingBoxId) return; unlockAudio(); setOpeningBoxId(boxId); 
+    unlockAudio(); setOpeningBoxId(boxId); 
     setTimeout(() => { setCurrentBoxId(boxId); setView('decks'); setOpeningBoxId(null); }, 450);
   };
   
@@ -413,30 +508,41 @@ function App() {
     setIsAutoPlaying(false); setCurrentDeckId(null); setView('decks'); setIsDeleteMode(false); setSelectedForDelete(new Set());
   }, [currentDeckId]);
 
+  // ★ スマホのスクロールバグ修正：スワイプは「カードの上」だけで検知し、他は普通にスクロールさせる
   const handleTouchStart = (e) => {
     unlockAudio();
-    if (e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || ['boxes', 'printPreview', 'manual'].includes(view)) return;
-    touchStartX.current = e.touches[0].clientX; touchStartY.current = e.touches[0].clientY; 
-  };
-  const handleTouchMove = (e) => {
-    if (window.scrollY > 10 || !touchStartX.current || e.target.closest('.side-panel') || e.target.closest('.modal-overlay') || ['boxes', 'printPreview', 'manual'].includes(view)) return;
-    touchEndX.current = e.touches[0].clientX; touchEndY.current = e.touches[0].clientY;
-    const diffY = touchEndY.current - touchStartY.current;
-    if (diffY > 10 && diffY > Math.abs(touchStartX.current - touchEndX.current) && ['study', 'decks'].includes(view)) setPullDownY(diffY);
-  };
-  const handleTouchEnd = () => {
-    if (['boxes', 'printPreview', 'manual'].includes(view)) return;
-    if (pullDownY > 120) {
-      setIsStoring(true); setPullDownY(window.innerHeight);
-      setTimeout(() => { if (view === 'study') closeDeck(); else { setView('boxes'); setCurrentBoxId(null); } setIsStoring(false); setPullDownY(0); }, 400);
+    const card = e.target.closest('.card-container');
+    if (card) {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
     } else {
-      setPullDownY(0); const diffX = touchStartX.current - (touchEndX.current || touchStartX.current);
-      if (Math.abs(diffX) > 50 && view === 'study') diffX > 0 ? handleNextCard() : handlePrevCard();
+      touchStartX.current = null;
+      touchStartY.current = null;
     }
+  };
+  
+  const handleTouchMove = (e) => {
+    if (!touchStartX.current) return;
+    touchEndX.current = e.touches[0].clientX;
+    touchEndY.current = e.touches[0].clientY;
+  };
+  
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const diffX = touchStartX.current - touchEndX.current;
+    const diffY = touchStartY.current - touchEndY.current;
+    
+    // 横スクロールが縦スクロールより大きい場合のみカードをめくる
+    if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) handleNextCard();
+      else handlePrevCard();
+    }
+    
+    touchStartX.current = null;
+    touchEndX.current = null;
   };
 
   const handleClick = () => unlockAudio(); 
-  const dynamicStyle = { transform: `translateY(${pullDownY}px) scale(${1 - pullDownY / 2000})`, opacity: 1 - pullDownY / 800, transition: isStoring ? 'all 0.4s' : (pullDownY === 0 ? '0.3s' : 'none'), width: '100%', height: '100%' };
 
   // ============================
   // UIレンダリング用関数・コンポーネント
@@ -444,13 +550,13 @@ function App() {
 
   const getPosColors = (pos) => {
     switch (pos) {
-      case '名詞': return { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' }; // 青
-      case '動詞': return { color: '#dc2626', bg: '#fef2f2', border: '#fecaca' }; // 赤
-      case '形容詞': return { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' }; // 緑
-      case '副詞': return { color: '#d97706', bg: '#fffbeb', border: '#fde68a' }; // オレンジ
-      case '代名詞': return { color: '#0891b2', bg: '#ecfeff', border: '#a5f3fc' }; // 水色
-      case '前置詞': case '接続詞': return { color: '#9333ea', bg: '#faf5ff', border: '#e9d5ff' }; // 紫
-      case '熟語': return { color: '#4f46e5', bg: '#e0e7ff', border: '#c7d2fe' }; // 藍色
+      case '名詞': return { color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' }; 
+      case '動詞': return { color: '#dc2626', bg: '#fef2f2', border: '#fecaca' }; 
+      case '形容詞': return { color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' }; 
+      case '副詞': return { color: '#d97706', bg: '#fffbeb', border: '#fde68a' }; 
+      case '代名詞': return { color: '#0891b2', bg: '#ecfeff', border: '#a5f3fc' }; 
+      case '前置詞': case '接続詞': return { color: '#9333ea', bg: '#faf5ff', border: '#e9d5ff' }; 
+      case '熟語': return { color: '#4f46e5', bg: '#e0e7ff', border: '#c7d2fe' }; 
       default: return null; 
     }
   };
@@ -491,7 +597,11 @@ function App() {
       <div key={deck.id} data-id={deck.id} className={`deck-bundle ${status.shake ? 'polite-shake-once' : ''}`} onClick={() => openDeck(deck.id)}>
         <div className="deck-paper stack-bottom"></div><div className="deck-paper stack-middle"></div>
         <div className="deck-paper top-cover">
-          <h3 className="deck-name" title={deck.name}>{deck.name}<button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)}>✏️</button></h3>
+          <h3 className="deck-name" title={deck.name}>
+            {deck.name}
+            <button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)} title="名前を変更">✏️</button>
+            <button className="inline-edit-btn" onClick={(e) => shareDeck(e, deck.id)} title="このデッキを共有する" style={{ marginLeft: '5px' }}>🔗</button>
+          </h3>
           <button className="delete-deck-btn-corner" onClick={e => deleteDeck(e, deck.id)}>×</button>
           <div className="deck-info-bottom">
             <span className={`status-badge ${status.className}`}>{status.label}</span>
@@ -564,6 +674,7 @@ function App() {
              )}
           </div>
         )}
+        
         {showMemoOnBack && card.memo && (
           <div style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '8px', width: '100%', maxWidth: '800px', fontSize: isFullscreen ? 'clamp(18px, 4vw, 24px)' : '14px', color: '#475569', textAlign: 'left', lineHeight: '1.5', wordBreak: 'break-word' }}>
             <span style={{ fontWeight: 'bold', marginRight: '5px' }}>💡 メモ:</span> {card.memo}
@@ -573,7 +684,12 @@ function App() {
     );
   };
 
+  // ============================
+  // メインの描画
+  // ============================
+
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
+  
   if (!currentUser) return (
     <div className="login-screen-bg">
       <div className="login-top-right"><button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button><button className="login-lang-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button></div>
@@ -599,14 +715,46 @@ function App() {
         <button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button>
         <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
       </div>
+      
+      {/* ★ ここは元のカッコいい「光るエフェクト」の看板を完全復元 */}
       <div className="hero-section">
-        <h1 className="burning-text">{t.appTitle}</h1><h2 className="burning-subtitle">{t.appSubtitle}</h2>
+        <h1 className="burning-text">{t.appTitle}</h1>
+        <h2 className="burning-subtitle">{t.appSubtitle}</h2>
         <div className="creation-header-row">
           <span className="creation-label" title="Box" style={{color: '#fff'}}>📦</span>
           <input type="text" placeholder={t.boxPlaceholder} value={newBoxName} onChange={(e) => setNewBoxName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewBox()} />
           <button onClick={createNewBox} className="add-btn mini-btn">{t.createBtn}</button>
         </div>
       </div>
+
+      {/* ★Apple風の美しい「語彙力ステータスバー」は残す */}
+      <div style={{ width: '90%', maxWidth: '800px', margin: '0 auto 40px auto', background: '#ffffff', borderRadius: '24px', padding: 'clamp(20px, 5vw, 32px)', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', position: 'relative', zIndex: 10 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', gap: '10px' }}>
+          <div>
+            <div style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px', fontFamily: 'Inter, sans-serif' }}>Current Level</div>
+            <div style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>
+              {currentLvl.eng} <span style={{ fontSize: '14px', fontWeight: '600', color: '#64748b', marginLeft: '8px' }}>{currentLvl.jp}</span>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px', fontFamily: 'Inter, sans-serif' }}>Total Words</div>
+            <div style={{ fontSize: 'clamp(28px, 6vw, 36px)', fontWeight: '900', color: '#0f172a', lineHeight: '1', fontFamily: 'Inter, -apple-system, sans-serif', letterSpacing: '-0.03em' }}>{totalMemorizedWords}</div>
+          </div>
+        </div>
+
+        {currentLevelIdx < totalSections && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '700', color: '#64748b', fontFamily: 'Inter, sans-serif' }}>
+              <span>To <span style={{ color: '#0f172a', fontWeight: '900' }}>{nextLvl.eng}</span></span>
+              <span>{totalMemorizedWords} <span style={{ color: '#cbd5e1', fontWeight: '500', margin: '0 4px' }}>/</span> {nextLvl.threshold}</span>
+            </div>
+            <div style={{ width: '100%', height: '8px', background: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
+              <div style={{ width: `${progressWithinLevel * 100}%`, height: '100%', background: '#0f172a', borderRadius: '999px', transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="boxes-grid">
         {boxes.map(box => {
           const hasReview = decks.filter(d => d.boxId === box.id).some(d => { 
@@ -635,7 +783,7 @@ function App() {
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {toastMessage && <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(39, 174, 96, 0.95)', color: '#fff', padding: '20px 40px', borderRadius: '16px', fontWeight: 'bold', zIndex: 10001, fontSize: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', animation: 'popInOut 3s forwards', textAlign: 'center', whiteSpace: 'nowrap' }}>{toastMessage}</div>}
       
-      {/* 編集・新規作成モーダル */}
+      {/* 編集モーダル */}
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)} onTouchStart={e => e.stopPropagation()}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
@@ -664,6 +812,7 @@ function App() {
         </div>
       )}
 
+      {/* 新規作成モーダル */}
       {addingCard && (
         <div className="modal-overlay" onClick={() => setAddingCard(false)} onTouchStart={e => e.stopPropagation()}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
@@ -698,7 +847,7 @@ function App() {
         const unmemorizedDecks = boxDecks.filter(d => !(d.cards.length > 0 && d.cards.every(c => c.isMemorized)));
         const memorizedDecks = boxDecks.filter(d => d.cards.length > 0 && d.cards.every(c => c.isMemorized));
         return (
-          <div style={dynamicStyle}>
+          <div style={{ width: '100%', height: '100%' }}>
             <div className="inner-view-wrapper">
               <div className="study-header">
                 <button className="back-to-desk-btn" onClick={() => setView('boxes')}>{t.backToHome}</button>
@@ -709,6 +858,7 @@ function App() {
                   <span className="creation-label" title="Deck">🔖</span>
                   <input type="text" placeholder={t.deckPlaceholder} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
                   <button onClick={createNewDeckInsideBox} className="add-btn mini-btn">{t.addBtn}</button>
+                  <button onClick={importDeckByCode} className="add-btn mini-btn" style={{ backgroundColor: '#8e44ad', marginLeft: '8px' }} disabled={loading}>🔗 共有コードで追加</button>
                 </div>
               </div>
               <div className="decks-split-layout">
@@ -720,8 +870,9 @@ function App() {
         );
       })()}
 
+      {/* ★ ここから下が「元の完成された美しい学習画面」の完全復元です */}
       {view === 'study' && (
-        <div style={dynamicStyle}>
+        <div style={{ width: '100%', height: '100%' }}>
           <div className="study-dashboard">
             {!isFullscreen && (
               <div className="side-panel left-panel">
@@ -746,7 +897,6 @@ function App() {
                   <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
                     <h2 className="study-deck-title" style={{ margin: 0, fontSize: 'clamp(28px, 6vw, 36px)', fontWeight: '800', color: '#34495e', letterSpacing: '0.1em', textShadow: '1px 2px 4px rgba(0,0,0,0.1)', fontStyle: 'normal', fontFamily: '"Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif' }}>{activeDeck?.name}</h2>
                     
-                    {/* ★ 4択プリント作成を追加した統合メニュー */}
                     {allCards.length >= 4 && (
                       <div ref={actionMenuRef} style={{ position: 'relative', marginTop: '10px' }}>
                         <button onClick={() => setShowActionMenu(!showActionMenu)} style={{ backgroundColor: '#34495e', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '30px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
