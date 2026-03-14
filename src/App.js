@@ -94,7 +94,6 @@ function App() {
   const [podIndex, setPodIndex] = useState(0);
   const podIndexRef = useRef(0);
   const isPodPlayingRef = useRef(false);
-  const podAudioRef = useRef(new Audio());
 
   const touchStartX = useRef(null); 
   const touchStartY = useRef(null); 
@@ -137,8 +136,7 @@ function App() {
   const currentLvl = VOCAB_LEVELS[currentLevelIdx];
   const nextLvl = currentLevelIdx < totalSections ? VOCAB_LEVELS[currentLevelIdx + 1] : VOCAB_LEVELS[totalSections];
 
-  const MAX_WORDS = 30000;
-  const overallProgressPercent = Math.min(100, (totalMemorizedWords / MAX_WORDS) * 100);
+  const overallProgressPercent = Math.min(100, (totalMemorizedWords / 30000) * 100);
 
   const chatGptPrompt = lang === 'ja' ? `💡 ChatGPTへの指示コピペ用：
 「以下の英単語リストを学習アプリ用のCSVデータに変換してください。
@@ -244,7 +242,6 @@ function App() {
 
   const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
 
-  // ★ 堅牢な全画面トグル（iOS等でのバグを防ぐため、状態の切り替えのみでも動くように）
   const toggleFullScreen = () => {
     if (!isFullscreen) {
       const docElm = document.documentElement;
@@ -454,52 +451,48 @@ function App() {
     } catch(e) { alert(t.alertCsvError); } finally { setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false); }
   };
 
+  // ★ 音声の完全復旧：最もクリアな端末内蔵Siri/Premium音声を優先使用 ★
   const unlockAudio = useCallback(() => {
     if ('speechSynthesis' in window && !isMuted) { const dummy = new SpeechSynthesisUtterance(''); dummy.volume = 0; window.speechSynthesis.speak(dummy); }
-    if (podAudioRef.current) { podAudioRef.current.play().catch(()=>{}); }
   }, [isMuted]);
 
   const playAudio = useCallback((text) => {
     if (isMuted || !text) return; 
-    const cleanWord = String(text).replace(/\*\*/g, '').replace(/[〜…~]/g, '').trim(); if (!cleanWord) return;
+    const cleanWord = String(text).replace(/\*\*/g, '').replace(/[〜…~]/g, '').trim(); 
+    if (!cleanWord) return;
+
     let rate = 1.0;
     if (displaySeconds < 2.0) rate = 1.0 + ((2.0 - displaySeconds) / 2.0) * 0.5; else if (displaySeconds > 2.0) rate = 1.0 - ((displaySeconds - 2.0) / 2.0) * 0.2;
     rate = Math.max(0.5, Math.min(rate, 1.5));
     
-    const isJapaneseText = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/.test(cleanWord);
-    const shortLang = isJapaneseText ? 'ja' : 'en';
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanWord);
+      
+      const isJapaneseText = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/.test(cleanWord);
+      utterance.lang = isJapaneseText ? 'ja-JP' : 'en-US';
+      utterance.rate = rate;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const targetVoices = voices.filter(v => v.lang.startsWith(isJapaneseText ? 'ja' : 'en'));
+      const premiumVoice = targetVoices.find(v => 
+        v.name.includes('Premium') || v.name.includes('Enhanced') || 
+        v.name.includes('Siri') || v.name.includes('Samantha') || 
+        v.name.includes('Alex') || v.name.includes('Kyoko') || 
+        v.name.includes('Otoya') || v.name.includes('Google US English') || 
+        v.name.includes('Google 日本語')
+      );
+      
+      if (premiumVoice) utterance.voice = premiumVoice;
+      else if (targetVoices.length > 0) utterance.voice = targetVoices[0];
 
-    try {
-      const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${shortLang}&q=${encodeURIComponent(cleanWord)}`;
-      const audio = new Audio(audioUrl); 
-      audio.playbackRate = rate;
-      audio.play().catch(() => {
-         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(cleanWord);
-            u.lang = isJapaneseText ? 'ja-JP' : 'en-US';
-            u.rate = rate;
-            window.speechSynthesis.speak(u);
-         }
-      });
-    } catch (e) {
-      if ('speechSynthesis' in window) {
-         window.speechSynthesis.cancel();
-         const u = new SpeechSynthesisUtterance(cleanWord);
-         u.lang = isJapaneseText ? 'ja-JP' : 'en-US';
-         u.rate = rate;
-         window.speechSynthesis.speak(u);
-      }
+      window.speechSynthesis.speak(utterance);
     }
   }, [displaySeconds, isMuted]);
 
   const stopPodcast = useCallback(() => {
     isPodPlayingRef.current = false;
     setIsPodPlaying(false);
-    if(podAudioRef.current) {
-        podAudioRef.current.pause();
-        podAudioRef.current.src = '';
-    }
     window.speechSynthesis.cancel();
   }, []);
 
@@ -514,32 +507,20 @@ function App() {
 
     const speakAndWait = (text, langStr) => new Promise(resolve => {
       if (!isPodPlayingRef.current) return resolve();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = langStr;
+      u.rate = 0.9;
       
-      const shortLang = langStr.substring(0, 2);
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${shortLang}&q=${encodeURIComponent(text)}`;
+      const voices = window.speechSynthesis.getVoices();
+      const targetVoices = voices.filter(v => v.lang.startsWith(langStr.substring(0, 2)));
+      const premiumVoice = targetVoices.find(v => v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Siri') || v.name.includes('Samantha') || v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Google US English') || v.name.includes('Google 日本語'));
       
-      const audio = podAudioRef.current || new Audio();
-      audio.src = url;
-      audio.playbackRate = 0.9;
-      
-      audio.onended = resolve;
-      audio.onerror = () => {
-         const u = new SpeechSynthesisUtterance(text);
-         u.lang = langStr;
-         u.rate = 0.9;
-         u.onend = resolve;
-         u.onerror = resolve;
-         window.speechSynthesis.speak(u);
-      };
-      
-      audio.play().catch(() => {
-         const u = new SpeechSynthesisUtterance(text);
-         u.lang = langStr;
-         u.rate = 0.9;
-         u.onend = resolve;
-         u.onerror = resolve;
-         window.speechSynthesis.speak(u);
-      });
+      if (premiumVoice) u.voice = premiumVoice;
+      else if (targetVoices.length > 0) u.voice = targetVoices[0];
+
+      u.onend = resolve;
+      u.onerror = resolve;
+      window.speechSynthesis.speak(u);
     });
 
     const wait = (ms) => new Promise(res => setTimeout(res, ms));
@@ -570,7 +551,6 @@ function App() {
 
   const startPodcast = () => {
     if(studyCards.length === 0) return alert(lang === 'ja' ? '学習する単語がありません。' : 'No words to study.');
-    if(!podAudioRef.current) podAudioRef.current = new Audio();
     window.speechSynthesis.cancel();
     podIndexRef.current = 0;
     isPodPlayingRef.current = true;
@@ -961,14 +941,16 @@ function App() {
 
   if (view === 'boxes') return (
     <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={unlockAudio} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      <div className="top-right-actions">
-        <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout || (lang==='ja'?'ログアウト':'Logout')}</button>
-        <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
-        <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>📊 Log</button>
-        <div style={{width: '2px', height: '24px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 5px'}}></div>
-        <button className="manual-link-btn" onClick={() => setShowDictSettings(true)} style={{backgroundColor: '#0f172a', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>{lang === 'ja' ? '⚙️ 辞書設定' : '⚙️ Dict Settings'}</button>
-        <button className="manual-link-btn" onClick={() => setView('manual')}>{lang === 'ja' ? '📖 使い方' : '📖 Guide'}</button>
-        <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{lang === 'ja' ? '🌐 English' : '🌐 日本語'}</button>
+      
+      {/* ★ 【修正】トップのヘッダー帯でボタンの重なり・被りを完全に防止 */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '15px', width: '100%', boxSizing: 'border-box', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', marginBottom: '15px' }}>
+        <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent', margin: 0}}>{t.logout || (lang==='ja'?'ログアウト':'Logout')}</button>
+        <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold', margin: 0}}>🌐 Blog</button>
+        <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold', margin: 0}}>📊 Log</button>
+        <div style={{width: '2px', height: '24px', backgroundColor: '#cbd5e1', margin: '0 5px'}}></div>
+        <button className="manual-link-btn" onClick={() => setShowDictSettings(true)} style={{backgroundColor: '#0f172a', color: 'white', borderColor: 'transparent', fontWeight: 'bold', margin: 0}}>{lang === 'ja' ? '⚙️ 辞書設定' : '⚙️ Dict Settings'}</button>
+        <button className="manual-link-btn" onClick={() => setView('manual')} style={{margin: 0}}>{lang === 'ja' ? '📖 使い方' : '📖 Guide'}</button>
+        <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')} style={{margin: 0}}>{lang === 'ja' ? '🌐 English' : '🌐 日本語'}</button>
       </div>
 
       {showDictSettings && (
@@ -1231,12 +1213,17 @@ function App() {
               <h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2><div style={{width: '80px'}}></div>
             </div>
             
+            {/* ★ 【修正】共有コード入力欄の「潰れ」を修復 */}
             <div className="integrated-creation-area">
-              <div className="creation-row">
-                <span className="creation-label" title="Deck">🔖</span>
-                <input type="text" placeholder={t.deckPlaceholder || (lang==='ja'?'新しい束の名前':'New Deck Name')} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
-                <button onClick={createNewDeckInsideBox} className="add-btn mini-btn">{t.addBtn || (lang==='ja'?'追加':'Add')}</button>
-                <button onClick={importDeckByCode} className="add-btn mini-btn" style={{ backgroundColor: '#8e44ad', marginLeft: '5px' }} disabled={loading}>{lang === 'ja' ? '🔗 共有コード' : '🔗 Share'}</button>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%', maxWidth: '600px', margin: '0 auto', background: '#fff', padding: '15px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                <div style={{ display: 'flex', flex: '1 1 100%', gap: '8px', alignItems: 'center' }}>
+                  <span className="creation-label" title="Deck" style={{ background: '#f1f5f9', padding: '10px', borderRadius: '8px' }}>🔖</span>
+                  <input type="text" placeholder={t.deckPlaceholder || (lang==='ja'?'新しい束の名前':'New Deck Name')} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} style={{ flexGrow: 1, width: '100%', border: 'none', borderBottom: '2px solid #e2e8f0', padding: '10px', outline: 'none' }} />
+                </div>
+                <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-end' }}>
+                  <button onClick={createNewDeckInsideBox} className="add-btn mini-btn" style={{ padding: '12px 20px', margin: 0, flex: 1 }}>{t.addBtn || (lang==='ja'?'追加':'Add')}</button>
+                  <button onClick={importDeckByCode} className="add-btn mini-btn" style={{ backgroundColor: '#8e44ad', padding: '12px 20px', margin: 0, flex: 1 }} disabled={loading}>{lang === 'ja' ? '🔗 共有コード' : '🔗 Share'}</button>
+                </div>
               </div>
             </div>
 
@@ -1269,17 +1256,18 @@ function App() {
                   </div>
                 )}
               </div>
-              <div className="mini-card-list" style={{ flex: 1, minHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>{studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}</div>
+              {/* ★ 【修正】高さをしっかり確保し、4枚見えるように復元 */}
+              <div className="mini-card-list" style={{ flex: 1, height: '400px', minHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>{studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}</div>
             </div>
           )}
           
-          <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`} style={isFullscreen ? {position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box'} : { flex: 1, minWidth: 0, padding: '0 15px' }}>
+          <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`} style={isFullscreen ? {position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', padding: '15px'} : { flex: 1, minWidth: 0, padding: '0 15px' }}>
             
-            {/* ★ 全集中モード解除用 ✖ボタン（右上固定） */}
+            {/* ★ 【修正】全集中モード用の✖ボタン（確実に押せるように配置） */}
             {isFullscreen && (
               <button 
                 onClick={toggleFullScreen} 
-                style={{ position: 'absolute', top: '20px', right: '20px', width: '44px', height: '44px', borderRadius: '50%', background: '#ef4444', color: '#fff', border: 'none', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10001, boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}
+                style={{ position: 'absolute', top: '15px', right: '15px', width: '40px', height: '40px', borderRadius: '50%', background: '#ef4444', color: '#fff', border: 'none', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.2)' }}
               >
                 ✖
               </button>
@@ -1395,7 +1383,8 @@ function App() {
                   </div>
                 )}
 
-                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '90%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: isFullscreen ? '50vh' : '450px' }}>
+                {/* ★ 【修正】全集中モードでもカードが1.5:1の比率を保ち、縦に伸びないようにする */}
+                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: isFullscreen ? '60vh' : '450px' }}>
                   <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped); setShowDeepDive(false);}} style={{ height: '100%' }}>
                     <div className="card-inner">
                       <div className="card-front">
@@ -1407,7 +1396,8 @@ function App() {
                   </div>
                 </div>
                 
-                <div style={isFullscreen ? { position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '500px', background: 'rgba(255,255,255,0.95)', padding: '20px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', boxSizing: 'border-box', zIndex: 10000, backdropFilter: 'blur(10px)' } : { background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box' }} className={isFullscreen ? "" : "autoplay-controls"}>
+                {/* ★ 全集中モード時は操作パネルを下部に美しく配置 */}
+                <div style={isFullscreen ? { width: '100%', maxWidth: '500px', background: 'rgba(255,255,255,0.95)', padding: '15px', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', boxSizing: 'border-box', marginTop: '20px' } : { background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box' }} className={isFullscreen ? "" : "autoplay-controls"}>
                   <div className="autoplay-actions-row">
                     <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>
                     <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio((qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>
@@ -1438,7 +1428,7 @@ function App() {
           {!isFullscreen && (
             <div className="side-panel right-panel">
               <h3 className="panel-title">{t.memorizedPanel || (lang==='ja'?'🏆 暗記済':'🏆 Mastered')} ({memorizedCards.length})</h3>
-              <div className="mini-card-list" style={{ flex: 1, minHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>{memorizedCards.length === 0 ? <p className="empty-mini-msg">{t.dragHereMsg || (lang==='ja'?'左の ✅ ボタンでここに移動！':'Click ✅ to move words here!')}</p> : memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`))}</div>
+              <div className="mini-card-list" style={{ flex: 1, height: '400px', minHeight: '400px', overflowY: 'auto', paddingRight: '4px' }}>{memorizedCards.length === 0 ? <p className="empty-mini-msg">{t.dragHereMsg || (lang==='ja'?'左の ✅ ボタンでここに移動！':'Click ✅ to move words here!')}</p> : memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`))}</div>
             </div>
           )}
         </div>
