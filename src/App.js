@@ -28,6 +28,8 @@ function App() {
     try { const saved = localStorage.getItem('redline_decks'); return saved ? JSON.parse(saved) : initialDecks; } catch(e) { return initialDecks; }
   });
 
+  const [pullDownY, setPullDownY] = useState(0); 
+  const [isStoring, setIsStoring] = useState(false);
   const [view, setView] = useState('boxes'); 
   const [currentBoxId, setCurrentBoxId] = useState(null); 
   const [currentDeckId, setCurrentDeckId] = useState(null);
@@ -108,18 +110,32 @@ function App() {
   const currentLvl = VOCAB_LEVELS[currentLevelIdx];
   const nextLvl = currentLevelIdx < totalSections ? VOCAB_LEVELS[currentLevelIdx + 1] : VOCAB_LEVELS[totalSections];
 
-  let progressWithinLevel = 0;
-  if (currentLevelIdx < totalSections) {
-    const range = nextLvl.threshold - currentLvl.threshold;
-    const progress = totalMemorizedWords - currentLvl.threshold;
-    progressWithinLevel = Math.max(0, Math.min(1, progress / range));
-  } else {
-    progressWithinLevel = 1;
-  }
+  // 3万語（MAX_WORDS）に対する全体進捗を計算
+  const MAX_WORDS = 30000;
+  const overallProgressPercent = Math.min(100, (totalMemorizedWords / MAX_WORDS) * 100);
 
-  const overallProgressPercent = currentLevelIdx === totalSections 
-    ? 100 
-    : ((currentLevelIdx + progressWithinLevel) / totalSections) * 100;
+  const chatGptPrompt = lang === 'ja' ? `💡 ChatGPTへの指示コピペ用：
+「以下の英単語リストを学習アプリ用のCSVデータに変換してください。
+【絶対ルール】
+1. A列に英単語、B列に日本語訳、C列に英語例文、D列に例文和訳、E列に品詞の5列構成にすること。1行目はヘッダーにすること。
+2. すべての値をダブルクォーテーション("")で囲むこと。
+3. 英語例文と例文和訳の中にある「対象の単語・訳」は ** で囲むこと（例: I have an **apple**.）。
+4. 挨拶や解説文は一切出力せず、CSV形式のコードブロックのみを返すこと。
+【リスト】（ここに単語を貼る）」` : t.chatGptNote;
+
+  // ESCキー等でフルスクリーンを抜けた時の状態同期（エラー回避）
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isDocFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+      setIsFullscreen(!!isDocFullscreen);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -327,12 +343,15 @@ function App() {
   const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
   
   const toggleFullScreen = () => {
-    if (!isFullscreen) {
+    const isDocFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!isDocFullscreen) {
       const docElm = document.documentElement;
-      if (docElm.requestFullscreen) docElm.requestFullscreen(); else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
+      if (docElm.requestFullscreen) docElm.requestFullscreen().catch(err => console.error(err));
+      else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
       setIsFullscreen(true);
     } else {
-      if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      if (document.exitFullscreen) document.exitFullscreen().catch(err => console.error(err));
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       setIsFullscreen(false);
     }
   };
@@ -503,12 +522,17 @@ function App() {
   };
   
   const closeDeck = useCallback(() => {
-    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+    const isDocFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
+    if (isDocFullscreen) {
+      if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+    setIsFullscreen(false);
     setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, lastStudied: Date.now() } : d));
     setIsAutoPlaying(false); setCurrentDeckId(null); setView('decks'); setIsDeleteMode(false); setSelectedForDelete(new Set());
   }, [currentDeckId]);
 
-  // ★ スマホのスクロールバグ修正：スワイプは「カードの上」だけで検知し、他は普通にスクロールさせる
+  // ★ スマホのスクロールバグ修正（カードの横スワイプだけを検知）
   const handleTouchStart = (e) => {
     unlockAudio();
     const card = e.target.closest('.card-container');
@@ -520,24 +544,19 @@ function App() {
       touchStartY.current = null;
     }
   };
-  
   const handleTouchMove = (e) => {
     if (!touchStartX.current) return;
     touchEndX.current = e.touches[0].clientX;
     touchEndY.current = e.touches[0].clientY;
   };
-  
   const handleTouchEnd = () => {
     if (!touchStartX.current || !touchEndX.current) return;
     const diffX = touchStartX.current - touchEndX.current;
     const diffY = touchStartY.current - touchEndY.current;
-    
-    // 横スクロールが縦スクロールより大きい場合のみカードをめくる
     if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
       if (diffX > 0) handleNextCard();
       else handlePrevCard();
     }
-    
     touchStartX.current = null;
     touchEndX.current = null;
   };
@@ -591,6 +610,7 @@ function App() {
     );
   };
 
+  // ★ 余計なインラインスタイルを全削除し、元のApp.cssが100%効くように復元
   const renderDeckCard = (deck) => {
     const status = getEbbinghausStatus(deck);
     return (
@@ -599,8 +619,8 @@ function App() {
         <div className="deck-paper top-cover">
           <h3 className="deck-name" title={deck.name}>
             {deck.name}
-            <button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)} title="名前を変更">✏️</button>
-            <button className="inline-edit-btn" onClick={(e) => shareDeck(e, deck.id)} title="このデッキを共有する" style={{ marginLeft: '5px' }}>🔗</button>
+            <button className="inline-edit-btn" onClick={(e) => renameDeck(e, deck.id, deck.name)}>✏️</button>
+            <button className="inline-edit-btn" onClick={(e) => shareDeck(e, deck.id)} style={{ marginLeft: '5px' }}>🔗</button>
           </h3>
           <button className="delete-deck-btn-corner" onClick={e => deleteDeck(e, deck.id)}>×</button>
           <div className="deck-info-bottom">
@@ -689,7 +709,6 @@ function App() {
   // ============================
 
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
-  
   if (!currentUser) return (
     <div className="login-screen-bg">
       <div className="login-top-right"><button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button><button className="login-lang-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button></div>
@@ -707,6 +726,7 @@ function App() {
 
   if (view === 'boxes') return (
     <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={unlockAudio} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+      {/* ★ スマホで重ならないように元のクラス名で配置を完全復元したヘッダーボタン群 */}
       <div className="top-right-actions">
         <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout}</button>
         <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
@@ -716,10 +736,9 @@ function App() {
         <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
       </div>
       
-      {/* ★ ここは元のカッコいい「光るエフェクト」の看板を完全復元 */}
+      {/* ★ 元の光る看板と入力欄 */}
       <div className="hero-section">
-        <h1 className="burning-text">{t.appTitle}</h1>
-        <h2 className="burning-subtitle">{t.appSubtitle}</h2>
+        <h1 className="burning-text">{t.appTitle}</h1><h2 className="burning-subtitle">{t.appSubtitle}</h2>
         <div className="creation-header-row">
           <span className="creation-label" title="Box" style={{color: '#fff'}}>📦</span>
           <input type="text" placeholder={t.boxPlaceholder} value={newBoxName} onChange={(e) => setNewBoxName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewBox()} />
@@ -727,32 +746,46 @@ function App() {
         </div>
       </div>
 
-      {/* ★Apple風の美しい「語彙力ステータスバー」は残す */}
-      <div style={{ width: '90%', maxWidth: '800px', margin: '0 auto 40px auto', background: '#ffffff', borderRadius: '24px', padding: 'clamp(20px, 5vw, 32px)', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', position: 'relative', zIndex: 10 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px', gap: '10px' }}>
+      {/* ★ わかりやすい説明入りの「3万語」語彙力ステータスバー */}
+      <div style={{ width: '90%', maxWidth: '800px', margin: '0 auto 30px auto', background: '#fff', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '12px', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
           <div>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px', fontFamily: 'Inter, sans-serif' }}>Current Level</div>
-            <div style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em', fontFamily: 'Inter, sans-serif' }}>
-              {currentLvl.eng} <span style={{ fontSize: '14px', fontWeight: '600', color: '#64748b', marginLeft: '8px' }}>{currentLvl.jp}</span>
+            <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase' }}>CURRENT LEVEL</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#2c3e50' }}>
+              {currentLvl.eng} <span style={{ fontSize: '13px', fontWeight: '500', color: '#7f8c8d', marginLeft: '6px' }}>{currentLvl.jp}</span>
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px', fontFamily: 'Inter, sans-serif' }}>Total Words</div>
-            <div style={{ fontSize: 'clamp(28px, 6vw, 36px)', fontWeight: '900', color: '#0f172a', lineHeight: '1', fontFamily: 'Inter, -apple-system, sans-serif', letterSpacing: '-0.03em' }}>{totalMemorizedWords}</div>
+            <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '0.1em', textTransform: 'uppercase' }}>TOTAL WORDS</div>
+            <div style={{ fontSize: '28px', fontWeight: '900', color: '#2c3e50', lineHeight: '1' }}>{totalMemorizedWords}</div>
           </div>
         </div>
 
         {currentLevelIdx < totalSections && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: '700', color: '#64748b', fontFamily: 'Inter, sans-serif' }}>
-              <span>To <span style={{ color: '#0f172a', fontWeight: '900' }}>{nextLvl.eng}</span></span>
-              <span>{totalMemorizedWords} <span style={{ color: '#cbd5e1', fontWeight: '500', margin: '0 4px' }}>/</span> {nextLvl.threshold}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 'bold', color: '#7f8c8d' }}>
+              <span>次の目標: {nextLvl.eng}</span>
+              <span>{totalMemorizedWords} / 30,000 (教養あるネイティブ)</span>
             </div>
             <div style={{ width: '100%', height: '8px', background: '#f1f5f9', borderRadius: '999px', overflow: 'hidden' }}>
-              <div style={{ width: `${progressWithinLevel * 100}%`, height: '100%', background: '#0f172a', borderRadius: '999px', transition: 'width 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+              <div style={{ width: `${overallProgressPercent}%`, height: '100%', background: 'linear-gradient(90deg, #3498db, #2ecc71)', borderRadius: '999px', transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
             </div>
           </div>
         )}
+        
+        {/* ★ 生徒のモチベーションを上げる「目安表」を追加 */}
+        <div style={{ marginTop: '10px', padding: '15px', background: '#f8fafc', borderRadius: '12px', fontSize: '13px', color: '#475569', lineHeight: '1.8' }}>
+          <div style={{ fontWeight: 'bold', color: '#2c3e50', marginBottom: '8px' }}>💡 語彙力マスターの目安（最終目標：30,000語）</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px' }}>
+            <span style={{ fontWeight: 'bold', textAlign: 'right' }}>1,200語</span><span>中学卒業・英検3級レベル</span>
+            <span style={{ fontWeight: 'bold', textAlign: 'right' }}>3,000語</span><span>高校卒業・英検2級レベル（日常会話）</span>
+            <span style={{ fontWeight: 'bold', textAlign: 'right' }}>5,000語</span><span>難関大入試・英検準1級レベル</span>
+            <span style={{ fontWeight: 'bold', textAlign: 'right' }}>8,000語</span><span>TOEIC高得点・英検1級（プロレベル）</span>
+            <span style={{ fontWeight: 'bold', textAlign: 'right' }}>12,000語</span><span>海外大学進学レベル</span>
+            <span style={{ fontWeight: 'bold', textAlign: 'right' }}>20,000語</span><span>一般的なネイティブスピーカー</span>
+            <span style={{ fontWeight: 'bold', textAlign: 'right', color: '#e74c3c' }}>30,000語</span><span style={{ fontWeight: 'bold', color: '#e74c3c' }}>教養あるネイティブ・限界突破！</span>
+          </div>
+        </div>
       </div>
 
       <div className="boxes-grid">
@@ -783,7 +816,6 @@ function App() {
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {toastMessage && <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(39, 174, 96, 0.95)', color: '#fff', padding: '20px 40px', borderRadius: '16px', fontWeight: 'bold', zIndex: 10001, fontSize: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', animation: 'popInOut 3s forwards', textAlign: 'center', whiteSpace: 'nowrap' }}>{toastMessage}</div>}
       
-      {/* 編集モーダル */}
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)} onTouchStart={e => e.stopPropagation()}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
@@ -812,7 +844,6 @@ function App() {
         </div>
       )}
 
-      {/* 新規作成モーダル */}
       {addingCard && (
         <div className="modal-overlay" onClick={() => setAddingCard(false)} onTouchStart={e => e.stopPropagation()}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
@@ -847,21 +878,23 @@ function App() {
         const unmemorizedDecks = boxDecks.filter(d => !(d.cards.length > 0 && d.cards.every(c => c.isMemorized)));
         const memorizedDecks = boxDecks.filter(d => d.cards.length > 0 && d.cards.every(c => c.isMemorized));
         return (
-          <div style={{ width: '100%', height: '100%' }}>
+          <div style={{ width: '100%' }}>
             <div className="inner-view-wrapper">
               <div className="study-header">
                 <button className="back-to-desk-btn" onClick={() => setView('boxes')}>{t.backToHome}</button>
                 <h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2><div style={{width: '80px'}}></div>
               </div>
               <div className="integrated-creation-area">
+                {/* ★ 入力枠が潰れないように元のシンプルな配置に復元 */}
                 <div className="creation-row">
                   <span className="creation-label" title="Deck">🔖</span>
                   <input type="text" placeholder={t.deckPlaceholder} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
                   <button onClick={createNewDeckInsideBox} className="add-btn mini-btn">{t.addBtn}</button>
-                  <button onClick={importDeckByCode} className="add-btn mini-btn" style={{ backgroundColor: '#8e44ad', marginLeft: '8px' }} disabled={loading}>🔗 共有コードで追加</button>
+                  <button onClick={importDeckByCode} className="add-btn mini-btn" style={{ backgroundColor: '#8e44ad', marginLeft: '5px' }} disabled={loading}>🔗 共有</button>
                 </div>
               </div>
               <div className="decks-split-layout">
+                {/* ★ 元の App.css に書かれている .decks-grid が確実に効くように完全復元 */}
                 <div className="decks-unmemorized-area"><h3 className="area-title">{t.unmemTitle}</h3><p className="area-hint">{t.unmemHint}</p>{unmemorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem}</p> : <div className="decks-grid">{unmemorizedDecks.map(renderDeckCard)}</div>}</div>
                 <div className="decks-memorized-area"><h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle}</h3><p className="area-hint">{t.memHint}</p>{memorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem}</p> : <div className="decks-grid memorized-grid">{memorizedDecks.map(renderDeckCard)}</div>}</div>
               </div>
@@ -870,9 +903,9 @@ function App() {
         );
       })()}
 
-      {/* ★ ここから下が「元の完成された美しい学習画面」の完全復元です */}
+      {/* ★ ここから下も「元の完成された美しい学習画面」の完全復元です */}
       {view === 'study' && (
-        <div style={{ width: '100%', height: '100%' }}>
+        <div style={{ width: '100%' }}>
           <div className="study-dashboard">
             {!isFullscreen && (
               <div className="side-panel left-panel">
@@ -927,7 +960,10 @@ function App() {
                       <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
                     </label>
                   </div>
-                  <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>{t.chatGptNote}</p>
+                  {/* ★ 品詞を追加した指示文に修正 */}
+                  <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5', whiteSpace: 'pre-wrap', textAlign: 'left', padding: '15px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                    {chatGptPrompt}
+                  </p>
                   <div className="bulk-actions" style={{ marginTop: '15px' }}><button onClick={() => setIsBulkMode(false)} className="cancel-btn" disabled={loading}>{t.closeBtn}</button></div>
                 </div>
               )}
