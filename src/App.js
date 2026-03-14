@@ -13,6 +13,19 @@ import Manual from './Manual';
 import PrintPreview from './PrintPreview';
 import TestMode from './TestMode';
 
+const DICTIONARIES = [
+  { id: 'weblio', name: 'Weblio英和', icon: '📖' },
+  { id: 'eijiro', name: '英辞郎', icon: '📘' },
+  { id: 'goo', name: 'goo辞書', icon: '📗' },
+  { id: 'cambridge', name: 'Cambridge(英英)', icon: '🇬🇧' },
+  { id: 'oxford', name: 'Oxford(英英)', icon: '🎓' },
+  { id: 'longman', name: 'Longman(英英)', icon: '🦁' },
+  { id: 'google', name: 'Google翻訳', icon: '🌐' },
+  { id: 'images', name: '画像検索', icon: '🖼️' },
+  { id: 'youglish', name: 'YouGlish(動画)', icon: '🎬' },
+  { id: 'monokakido', name: '物書堂(アプリ)', icon: '📱' }
+];
+
 function App() {
   const [lang, setLang] = useState('ja'); 
   const t = DICT[lang];
@@ -28,8 +41,16 @@ function App() {
     try { const saved = localStorage.getItem('redline_decks'); return saved ? JSON.parse(saved) : initialDecks; } catch(e) { return initialDecks; }
   });
 
-  const [pullDownY, setPullDownY] = useState(0); 
-  const [isStoring, setIsStoring] = useState(false);
+  const [activeDicts, setActiveDicts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('redline_dicts');
+      return saved ? JSON.parse(saved) : ['weblio', 'images', 'youglish'];
+    } catch(e) { return ['weblio', 'images', 'youglish']; }
+  });
+  const [showDictSettings, setShowDictSettings] = useState(false);
+  
+  const [showDeepDive, setShowDeepDive] = useState(false);
+
   const [view, setView] = useState('boxes'); 
   const [currentBoxId, setCurrentBoxId] = useState(null); 
   const [currentDeckId, setCurrentDeckId] = useState(null);
@@ -110,7 +131,6 @@ function App() {
   const currentLvl = VOCAB_LEVELS[currentLevelIdx];
   const nextLvl = currentLevelIdx < totalSections ? VOCAB_LEVELS[currentLevelIdx + 1] : VOCAB_LEVELS[totalSections];
 
-  // 3万語（MAX_WORDS）に対する全体進捗を計算
   const MAX_WORDS = 30000;
   const overallProgressPercent = Math.min(100, (totalMemorizedWords / MAX_WORDS) * 100);
 
@@ -123,7 +143,10 @@ function App() {
 4. 挨拶や解説文は一切出力せず、CSV形式のコードブロックのみを返すこと。
 【リスト】（ここに単語を貼る）」` : t.chatGptNote;
 
-  // ESCキー等でフルスクリーンを抜けた時の状態同期（エラー回避）
+  useEffect(() => {
+    try { localStorage.setItem('redline_dicts', JSON.stringify(activeDicts)); } catch (e) {}
+  }, [activeDicts]);
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isDocFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
@@ -195,6 +218,45 @@ function App() {
       return d;
     }));
   }, [lang, t]);
+
+  const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
+
+  const handleOpenDict = (e, dictId, word) => {
+    e.stopPropagation(); 
+    stopAutoPlayIfActive(); 
+    
+    const cleanWord = String(word).replace(/\*\*/g, '').replace(/[〜…~]/g, '').trim();
+    if (!cleanWord) return;
+
+    let url = '';
+    const encoded = encodeURIComponent(cleanWord);
+    switch(dictId) {
+      case 'weblio': url = `https://ejje.weblio.jp/content/${encoded}`; break;
+      case 'eijiro': url = `https://eow.alc.co.jp/search?q=${encoded}`; break;
+      case 'goo': url = `https://dictionary.goo.ne.jp/word/en/${encoded}/`; break;
+      case 'cambridge': url = `https://dictionary.cambridge.org/dictionary/english/${encoded}`; break;
+      case 'oxford': url = `https://www.oxfordlearnersdictionaries.com/definition/english/${encoded}`; break;
+      case 'longman': url = `https://www.ldoceonline.com/dictionary/${encoded}`; break;
+      case 'google': url = `https://translate.google.com/?sl=en&tl=ja&text=${encoded}`; break;
+      case 'images': url = `https://www.google.com/search?tbm=isch&q=${encoded}`; break;
+      case 'youglish': url = `https://youglish.com/pronounce/${encoded}/english`; break;
+      case 'monokakido': url = `mkdictionaries://?text=${encoded}`; break;
+      default: return;
+    }
+
+    if (dictId === 'monokakido') {
+       window.location.href = url;
+    } else {
+       window.open(url, '_blank');
+    }
+  };
+
+  const toggleDictSelection = (dictId) => {
+    setActiveDicts(prev => {
+      if (prev.includes(dictId)) return prev.filter(id => id !== dictId);
+      return [...prev, dictId];
+    });
+  };
 
   const handleLogin = () => {
     if (isInAppBrowser) return alert("【ログインエラーの回避】\nLINE等の「アプリ内ブラウザ」ではログインできません。「Safari/ブラウザで開く」を選択してください。");
@@ -339,8 +401,6 @@ function App() {
       setToastMessage(`🎉 ${newCards.length}語追加されました！`); setTimeout(() => setToastMessage(''), 3000);
     } catch(e) { alert(t.alertCsvError); } finally { setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false); }
   };
-
-  const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
   
   const toggleFullScreen = () => {
     const isDocFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
@@ -385,6 +445,10 @@ function App() {
     } catch (e) { fallbackTTS(cleanWord, rate); }
   }, [displaySeconds, isMuted, fallbackTTS]);
 
+  const handleNextCard = useCallback((e) => { if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex((currentIndex + 1) % studyCards.length); }, [currentIndex, studyCards]);
+  const handlePrevCard = useCallback((e) => { if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex((currentIndex - 1 + studyCards.length) % studyCards.length); }, [currentIndex, studyCards]);
+  const handleRepeat = () => { stopAutoPlayIfActive(); setCurrentIndex(0); setIsFlipped(false); setShowDeepDive(false); setStudyTime(0); setHasRecorded(false); playedRef.current = { index: -1, flipped: false, lang: '', type: '' }; };
+
   useEffect(() => {
     if (studyCards.length === 0 || isCompleted || view !== 'study' || isBulkMode) return;
     const currentCard = studyCards[currentIndex];
@@ -395,10 +459,6 @@ function App() {
       playedRef.current = { index: currentIndex, flipped: isFlipped, lang: qLang, type: qType };
     }
   }, [currentIndex, isFlipped, qLang, qType, studyCards, isCompleted, view, isBulkMode, playAudio]);
-
-  const handleNextCard = useCallback((e) => { if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false); setCurrentIndex((currentIndex + 1) % studyCards.length); }, [currentIndex, studyCards]);
-  const handlePrevCard = useCallback((e) => { if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false); setCurrentIndex((currentIndex - 1 + studyCards.length) % studyCards.length); }, [currentIndex, studyCards]);
-  const handleRepeat = () => { stopAutoPlayIfActive(); setCurrentIndex(0); setIsFlipped(false); setStudyTime(0); setHasRecorded(false); playedRef.current = { index: -1, flipped: false, lang: '', type: '' }; };
 
   useEffect(() => {
     let timer = null;
@@ -425,7 +485,7 @@ function App() {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || view !== 'study' || isBulkMode) return;
       unlockAudio();
-      if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); stopAutoPlayIfActive(); setIsFlipped(p => !p); } 
+      if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); stopAutoPlayIfActive(); setIsFlipped(p => !p); setShowDeepDive(false); } 
       else if (e.code === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); handleNextCard(); } 
       else if (e.key === 'ArrowLeft') { e.preventDefault(); handlePrevCard(); }
     };
@@ -443,8 +503,8 @@ function App() {
         const now = Date.now(); elapsedRef.current += now - lastTickRef.current; lastTickRef.current = now;
         if (elapsedRef.current >= (displaySeconds === 0 ? 150 : displaySeconds * 1000)) {
           elapsedRef.current = 0; 
-          if (!isFlipped && displaySeconds !== 0 && !isFrontOnlyAuto) setIsFlipped(true); 
-          else if (currentIndex < studyCards.length - 1) { setCurrentIndex(currentIndex + 1); setIsFlipped(false); } 
+          if (!isFlipped && displaySeconds !== 0 && !isFrontOnlyAuto) { setIsFlipped(true); setShowDeepDive(false); } 
+          else if (currentIndex < studyCards.length - 1) { setCurrentIndex(currentIndex + 1); setIsFlipped(false); setShowDeepDive(false); } 
           else setIsAutoPlaying(false);
         }
       }, 50); 
@@ -462,7 +522,7 @@ function App() {
   
   const deleteSpecificCard = (e, wordOrCard) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
-    if (studyCards[currentIndex] === wordOrCard || studyCards[currentIndex]?.word === wordOrCard) setIsFlipped(false);
+    if (studyCards[currentIndex] === wordOrCard || studyCards[currentIndex]?.word === wordOrCard) { setIsFlipped(false); setShowDeepDive(false); }
     setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => c !== wordOrCard && c.word !== wordOrCard) } : d));
   };
 
@@ -501,7 +561,7 @@ function App() {
   const executeBulkDelete = () => {
     if (selectedForDelete.size === 0) return setIsDeleteMode(false);
     setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.filter(c => !selectedForDelete.has(c.word)) } : d));
-    setSelectedForDelete(new Set()); setIsDeleteMode(false); setCurrentIndex(0); setIsFlipped(false);
+    setSelectedForDelete(new Set()); setIsDeleteMode(false); setCurrentIndex(0); setIsFlipped(false); setShowDeepDive(false);
   };
 
   const openPrintPreview = (mode) => {
@@ -517,7 +577,7 @@ function App() {
   };
   
   const openDeck = (id) => { 
-    unlockAudio(); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); 
+    unlockAudio(); setCurrentIndex(0); setIsFlipped(false); setShowDeepDive(false); setHasRecorded(false); setIsAutoPlaying(false); setCurrentDeckId(id); setView('study'); 
     setIsDeleteMode(false); setSelectedForDelete(new Set()); playedRef.current = { index: -1, flipped: false, lang: '', type: '' }; 
   };
   
@@ -529,10 +589,9 @@ function App() {
     }
     setIsFullscreen(false);
     setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, lastStudied: Date.now() } : d));
-    setIsAutoPlaying(false); setCurrentDeckId(null); setView('decks'); setIsDeleteMode(false); setSelectedForDelete(new Set());
+    setIsAutoPlaying(false); setCurrentDeckId(null); setView('decks'); setIsDeleteMode(false); setSelectedForDelete(new Set()); setShowDeepDive(false);
   }, [currentDeckId]);
 
-  // ★ スマホのスクロールバグ修正（カードの横スワイプだけを検知）
   const handleTouchStart = (e) => {
     unlockAudio();
     const card = e.target.closest('.card-container');
@@ -544,11 +603,13 @@ function App() {
       touchStartY.current = null;
     }
   };
+  
   const handleTouchMove = (e) => {
     if (!touchStartX.current) return;
     touchEndX.current = e.touches[0].clientX;
     touchEndY.current = e.touches[0].clientY;
   };
+  
   const handleTouchEnd = () => {
     if (!touchStartX.current || !touchEndX.current) return;
     const diffX = touchStartX.current - touchEndX.current;
@@ -592,7 +653,7 @@ function App() {
       <div key={uid} className={`mini-card ${isDeleteMode && isSelected ? 'selected-for-delete' : ''}`} style={{ ...(miniColors ? { borderLeft: `5px solid ${miniColors.color}` } : {}), ...(isDeleteMode && isSelected ? { backgroundColor: '#fff0f0', borderColor: '#ffcccc' } : {}) }}
         onClick={() => {
           if (isDeleteMode) toggleDeleteSelection(c.word);
-          else if (!isMemorizedList && index !== null) { stopAutoPlayIfActive(); setIsFlipped(false); setCurrentIndex(index - 1); }
+          else if (!isMemorizedList && index !== null) { stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex(index - 1); }
         }}>
         <div className="mini-card-header">
           {isDeleteMode && <input type="checkbox" checked={isSelected} readOnly style={{marginRight: '8px', pointerEvents: 'none'}} />}
@@ -610,7 +671,6 @@ function App() {
     );
   };
 
-  // ★ 余計なインラインスタイルを全削除し、元のApp.cssが100%効くように復元
   const renderDeckCard = (deck) => {
     const status = getEbbinghausStatus(deck);
     return (
@@ -667,6 +727,7 @@ function App() {
     return (
       <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
+        
         {qType === 'word' ? (
           <>
             {qLang === 'en' ? <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}><div className="core-meaning-large" style={{ textAlign: 'left', fontSize: fMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line" style={{textAlign: 'left'}}>{cleanText(m)}</div>)}</div></div>
@@ -700,6 +761,41 @@ function App() {
             <span style={{ fontWeight: 'bold', marginRight: '5px' }}>💡 メモ:</span> {card.memo}
           </div>
         )}
+
+        {/* ★ スッキリした折りたたみ式 Deep Dive ボタン（カード右下に固定配置） */}
+        {activeDicts.length > 0 && (
+          <div style={{ position: 'absolute', bottom: '15px', right: '15px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }} onClick={e => e.stopPropagation()}>
+            {showDeepDive && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', background: 'rgba(255,255,255,0.95)', padding: '10px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.15)', backdropFilter: 'blur(5px)', border: '1px solid #e2e8f0', minWidth: '140px' }}>
+                {activeDicts.map(dictId => {
+                  const dict = DICTIONARIES.find(d => d.id === dictId);
+                  if(!dict) return null;
+                  return (
+                    <button
+                      key={dictId}
+                      onClick={(e) => { handleOpenDict(e, dictId, card.word); setShowDeepDive(false); }}
+                      style={{ background: 'transparent', border: 'none', padding: '8px 10px', fontSize: '13px', fontWeight: '700', color: '#334155', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', borderRadius: '8px', transition: 'background 0.2s', width: '100%', textAlign: 'left' }}
+                      onMouseOver={e => e.currentTarget.style.background = '#f1f5f9'}
+                      onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                      title={`${dict.name}で調べる`}
+                    >
+                      <span style={{fontSize: '16px'}}>{dict.icon}</span> {dict.name}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowDeepDive(!showDeepDive); }}
+              style={{ background: showDeepDive ? '#334155' : '#ffffff', border: '1px solid #cbd5e1', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', transition: 'all 0.2s', color: showDeepDive ? '#fff' : '#000', opacity: showDeepDive ? 1 : 0.5 }}
+              onMouseOver={e => e.currentTarget.style.opacity = 1}
+              onMouseOut={e => e.currentTarget.style.opacity = showDeepDive ? 1 : 0.5}
+              title="辞書で深く調べる"
+            >
+              {showDeepDive ? '✖' : '🔍'}
+            </button>
+          </div>
+        )}
       </div>
     );
   };
@@ -726,17 +822,43 @@ function App() {
 
   if (view === 'boxes') return (
     <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={unlockAudio} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      {/* ★ スマホで重ならないように元のクラス名で配置を完全復元したヘッダーボタン群 */}
       <div className="top-right-actions">
         <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout}</button>
         <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
         <button className="manual-link-btn" onClick={() => window.open('https://app.english-t24.com', '_blank')} style={{backgroundColor: '#3498db', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>📊 Log</button>
         <div style={{width: '2px', height: '24px', backgroundColor: 'rgba(255,255,255,0.2)', margin: '0 5px'}}></div>
+        <button className="manual-link-btn" onClick={() => setShowDictSettings(true)} style={{backgroundColor: '#0f172a', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>⚙️ 辞書設定</button>
         <button className="manual-link-btn" onClick={() => setView('manual')}>{t.manualLink}</button>
         <button className="lang-toggle-btn" onClick={() => setLang(lang === 'ja' ? 'en' : 'ja')}>{t.langToggle}</button>
       </div>
+
+      {showDictSettings && (
+        <div className="modal-overlay" onClick={() => setShowDictSettings(false)} onTouchStart={e => e.stopPropagation()}>
+          <div className="modal-content" style={{ borderRadius: '20px', padding: '30px', maxWidth: '400px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{marginTop: 0, color: '#0f172a', fontSize: '20px', fontWeight: '800'}}>⚙️ マイ辞書設定</h3>
+            <p style={{fontSize: '13px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5'}}>
+              カードの裏面に表示する辞書を選んでください。<br/>気になった単語をワンタップで深く調べられます。
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '10px' }}>
+              {DICTIONARIES.map(dict => (
+                <label key={dict.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8fafc', borderRadius: '12px', cursor: 'pointer', border: '1px solid #e2e8f0' }}>
+                  <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>{dict.icon} {dict.name}</span>
+                  <input 
+                    type="checkbox" 
+                    checked={activeDicts.includes(dict.id)} 
+                    onChange={() => toggleDictSelection(dict.id)} 
+                    style={{ transform: 'scale(1.2)' }}
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="modal-actions" style={{ marginTop: '20px' }}>
+              <button className="add-btn" style={{ width: '100%', background: '#0f172a', borderRadius: '999px', padding: '14px', fontSize: '16px' }} onClick={() => setShowDictSettings(false)}>保存して閉じる</button>
+            </div>
+          </div>
+        </div>
+      )}
       
-      {/* ★ 元の光る看板と入力欄 */}
       <div className="hero-section">
         <h1 className="burning-text">{t.appTitle}</h1><h2 className="burning-subtitle">{t.appSubtitle}</h2>
         <div className="creation-header-row">
@@ -746,7 +868,6 @@ function App() {
         </div>
       </div>
 
-      {/* ★ わかりやすい説明入りの「3万語」語彙力ステータスバー */}
       <div style={{ width: '90%', maxWidth: '800px', margin: '0 auto 30px auto', background: '#fff', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '12px', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
           <div>
@@ -773,7 +894,6 @@ function App() {
           </div>
         )}
         
-        {/* ★ 生徒のモチベーションを上げる「目安表」を追加 */}
         <div style={{ marginTop: '10px', padding: '15px', background: '#f8fafc', borderRadius: '12px', fontSize: '13px', color: '#475569', lineHeight: '1.8' }}>
           <div style={{ fontWeight: 'bold', color: '#2c3e50', marginBottom: '8px' }}>💡 語彙力マスターの目安（最終目標：30,000語）</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '4px 12px' }}>
@@ -885,7 +1005,6 @@ function App() {
                 <h2 className="app-title" style={{margin:0}}>📦 {boxes.find(b => b.id === currentBoxId)?.name}</h2><div style={{width: '80px'}}></div>
               </div>
               <div className="integrated-creation-area">
-                {/* ★ 入力枠が潰れないように元のシンプルな配置に復元 */}
                 <div className="creation-row">
                   <span className="creation-label" title="Deck">🔖</span>
                   <input type="text" placeholder={t.deckPlaceholder} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
@@ -894,33 +1013,43 @@ function App() {
                 </div>
               </div>
               <div className="decks-split-layout">
-                {/* ★ 元の App.css に書かれている .decks-grid が確実に効くように完全復元 */}
-                <div className="decks-unmemorized-area"><h3 className="area-title">{t.unmemTitle}</h3><p className="area-hint">{t.unmemHint}</p>{unmemorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem}</p> : <div className="decks-grid">{unmemorizedDecks.map(renderDeckCard)}</div>}</div>
-                <div className="decks-memorized-area"><h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle}</h3><p className="area-hint">{t.memHint}</p>{memorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem}</p> : <div className="decks-grid memorized-grid">{memorizedDecks.map(renderDeckCard)}</div>}</div>
+                {/* ★ グリッド指定を強制的に戻し、横に3つ並ぶ美しいレイアウトに完全復元！ */}
+                <div className="decks-unmemorized-area"><h3 className="area-title">{t.unmemTitle}</h3><p className="area-hint">{t.unmemHint}</p>{unmemorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem}</p> : <div className="decks-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 220px)', gap: '20px', justifyContent: 'start', alignItems: 'start', width: '100%' }}>{unmemorizedDecks.map(renderDeckCard)}</div>}</div>
+                <div className="decks-memorized-area"><h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle}</h3><p className="area-hint">{t.memHint}</p>{memorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem}</p> : <div className="decks-grid memorized-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 220px)', gap: '20px', justifyContent: 'start', alignItems: 'start', width: '100%' }}>{memorizedDecks.map(renderDeckCard)}</div>}</div>
               </div>
             </div>
           </div>
         );
       })()}
 
-      {/* ★ ここから下も「元の完成された美しい学習画面」の完全復元です */}
       {view === 'study' && (
         <div style={{ width: '100%' }}>
           <div className="study-dashboard">
             {!isFullscreen && (
               <div className="side-panel left-panel">
                 <h3 className="panel-title">{t.learningPanel} ({studyCards.length})</h3>
-                <div className="panel-top-action" style={{ padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {/* ★ サイドバーのボタンを「上が横2つ、下が1つ」の完璧な配置に復元！ */}
+                <div className="panel-top-action" style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '8px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                   {!isDeleteMode ? (
-                    <><div style={{display: 'flex', gap: '8px', width: '100%', boxSizing: 'border-box'}}><button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '12px', backgroundColor: '#27ae60', margin: 0, boxSizing: 'border-box'}}>✏️ 手動で追加</button><button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '12px', backgroundColor: '#e67e22', margin: 0, boxSizing: 'border-box'}}>📂 CSVで追加</button></div><button onClick={() => setIsDeleteMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '8px 0', fontSize: '12px', backgroundColor: '#95a5a6', margin: 0, boxSizing: 'border-box'}}>🗑️ 一括削除</button></>
+                    <>
+                      <div style={{display: 'flex', gap: '8px'}}>
+                        <button onClick={() => setAddingCard(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '13px', backgroundColor: '#27ae60', margin: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px'}}>✏️ 手動で追加</button>
+                        <button onClick={() => setIsBulkMode(true)} className="add-btn bulk-toggle-btn" style={{flex: 1, padding: '10px 4px', fontSize: '13px', backgroundColor: '#e67e22', margin: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px'}}>📂 CSVで追加</button>
+                      </div>
+                      <button onClick={() => setIsDeleteMode(true)} className="add-btn bulk-toggle-btn" style={{width: '100%', padding: '10px 0', fontSize: '13px', backgroundColor: '#94a3b8', margin: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px'}}>🗑️ 一括削除</button>
+                    </>
                   ) : (
-                    <div style={{display: 'flex', gap: '8px', width: '100%', boxSizing: 'border-box'}}><button onClick={() => {setIsDeleteMode(false); setSelectedForDelete(new Set());}} className="cancel-btn" style={{flex: 1, padding: '10px 0', fontSize: '12px', margin: 0, boxSizing: 'border-box'}}>{t.cancelBulkDelete}</button><button onClick={executeBulkDelete} className="add-btn" style={{flex: 1, padding: '10px 0', fontSize: '12px', backgroundColor: '#e74c3c', margin: 0, boxSizing: 'border-box'}}>{t.executeBulkDelete} ({selectedForDelete.size})</button></div>
+                    <div style={{display: 'flex', gap: '8px'}}>
+                      <button onClick={() => {setIsDeleteMode(false); setSelectedForDelete(new Set());}} className="cancel-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', margin: 0}}>{t.cancelBulkDelete}</button>
+                      <button onClick={executeBulkDelete} className="add-btn" style={{flex: 1, padding: '10px 0', fontSize: '13px', backgroundColor: '#e74c3c', margin: 0}}>{t.executeBulkDelete} ({selectedForDelete.size})</button>
+                    </div>
                   )}
                 </div>
                 <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}</div>
               </div>
             )}
-            <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%' }}>
+            
+            <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ flex: 1, minWidth: 0, padding: '0 15px' }}>
               {!isFullscreen && (
                 <>
                   <div className="study-controls-top" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '10px' }}>
@@ -960,7 +1089,6 @@ function App() {
                       <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={loading} />
                     </label>
                   </div>
-                  {/* ★ 品詞を追加した指示文に修正 */}
                   <p className="bulk-note" style={{ color: '#27ae60', fontWeight: 'bold', lineHeight: '1.5', whiteSpace: 'pre-wrap', textAlign: 'left', padding: '15px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
                     {chatGptPrompt}
                   </p>
@@ -987,7 +1115,7 @@ function App() {
                         <input type="number" className="card-counter-input" min="1" max={studyCards.length} key={currentIndex} defaultValue={currentIndex + 1}
                           onBlur={(e) => {
                             let val = parseInt(e.target.value, 10);
-                            if (!isNaN(val)) { val = Math.max(1, Math.min(val, studyCards.length)); if (val - 1 !== currentIndex) { stopAutoPlayIfActive(); setIsFlipped(false); setCurrentIndex(val - 1); } else e.target.value = currentIndex + 1; } else e.target.value = currentIndex + 1;
+                            if (!isNaN(val)) { val = Math.max(1, Math.min(val, studyCards.length)); if (val - 1 !== currentIndex) { stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex(val - 1); } else e.target.value = currentIndex + 1; } else e.target.value = currentIndex + 1;
                           }}
                           onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); e.stopPropagation(); }}
                           style={{ width: '2.5em', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '2px dashed #cbd5e1', color: 'inherit', font: 'inherit', outline: 'none', padding: '0 5px', marginRight: '5px' }}
@@ -1013,11 +1141,11 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%' }}>
-                    <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
+                  <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', height: '50vh', minHeight: '400px' }}>
+                    <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped); setShowDeepDive(false);}} style={{ height: '100%' }}>
                       <div className="card-inner">
                         <div className="card-front">
-                          <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => { e.stopPropagation(); if (studyCards[currentIndex]) { setIsFlipped(false); toggleMemorize(e, studyCards[currentIndex], true); } }}>✔</button>
+                          <div className="ring-hole"></div><button className="memorize-check-btn" onClick={(e) => { e.stopPropagation(); if (studyCards[currentIndex]) { setIsFlipped(false); setShowDeepDive(false); toggleMemorize(e, studyCards[currentIndex], true); } }}>✔</button>
                           {renderCardFront(studyCards[currentIndex], isFullscreen)}
                         </div>
                         <div className="card-back">{renderCardBack(studyCards[currentIndex], isFullscreen)}</div>
