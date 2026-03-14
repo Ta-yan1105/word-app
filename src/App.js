@@ -88,6 +88,13 @@ function App() {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false); 
   const [showActionMenu, setShowActionMenu] = useState(false); 
 
+  const [showPodcast, setShowPodcast] = useState(false);
+  const [podOpts, setPodOpts] = useState({ ja: true, ex: true, gap: 1.0 });
+  const [isPodPlaying, setIsPodPlaying] = useState(false);
+  const [podIndex, setPodIndex] = useState(0);
+  const podIndexRef = useRef(0);
+  const isPodPlayingRef = useRef(false);
+
   const touchStartX = useRef(null); 
   const touchStartY = useRef(null); 
   const touchEndX = useRef(null); 
@@ -287,6 +294,21 @@ function App() {
     });
   };
 
+  const shuffleCurrentDeck = () => {
+    if(window.confirm(lang === 'ja' ? '現在の束をシャッフルしますか？' : 'Shuffle current deck?')) {
+        setDecks(prev => prev.map(d => {
+            if(d.id === currentDeckId) {
+                const shuffled = [...d.cards].sort(() => Math.random() - 0.5);
+                return { ...d, cards: shuffled };
+            }
+            return d;
+        }));
+        setCurrentIndex(0);
+        setIsFlipped(false);
+        setShowSettingsMenu(false);
+    }
+  };
+
   const handleLogin = () => {
     if (isInAppBrowser) return alert(lang === 'ja' ? "【ログインエラーの回避】\nLINE等のブラウザではログインできません。「Safari/ブラウザで開く」を選択してください。" : "Cannot login in in-app browsers. Please open in Safari or Chrome.");
     signInWithPopup(auth, provider).catch(e => { if (e.code !== 'auth/popup-closed-by-user') alert("Login Failed"); });
@@ -431,6 +453,7 @@ function App() {
     } catch(e) { alert(t.alertCsvError); } finally { setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false); }
   };
 
+  // ★ 音声ロジックの完全復元（最高音質かつローカル優先） ★
   const unlockAudio = useCallback(() => {
     if ('speechSynthesis' in window && !isMuted) { const dummy = new SpeechSynthesisUtterance(''); dummy.volume = 0; window.speechSynthesis.speak(dummy); }
   }, [isMuted]);
@@ -460,12 +483,82 @@ function App() {
     } catch (e) { fallbackTTS(cleanWord, rate); }
   }, [displaySeconds, isMuted, fallbackTTS]);
 
+  // ★ ポッドキャスト（聴き流し）モード：ローカルの最高音質プレミアムボイスを使用 ★
+  const stopPodcast = useCallback(() => {
+    isPodPlayingRef.current = false;
+    setIsPodPlaying(false);
+    window.speechSynthesis.cancel();
+  }, []);
+
+  const runPodcast = useCallback(async () => {
+    if (!isPodPlayingRef.current) return;
+    if (podIndexRef.current >= studyCards.length) {
+      stopPodcast();
+      return;
+    }
+    const card = studyCards[podIndexRef.current];
+    setPodIndex(podIndexRef.current);
+
+    const speakAndWait = (text, langStr) => new Promise(resolve => {
+      if (!isPodPlayingRef.current) return resolve();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = langStr;
+      u.rate = 0.9;
+      
+      // デバイスに内蔵されている中で一番綺麗な声を優先的に選ぶ
+      const voices = window.speechSynthesis.getVoices();
+      const targetVoices = voices.filter(v => v.lang.startsWith(langStr.substring(0, 2)));
+      const premiumVoice = targetVoices.find(v => v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Siri') || v.name.includes('Samantha') || v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Google US English') || v.name.includes('Google 日本語'));
+      
+      if (premiumVoice) u.voice = premiumVoice;
+      else if (targetVoices.length > 0) u.voice = targetVoices[0];
+
+      u.onend = resolve;
+      u.onerror = resolve;
+      window.speechSynthesis.speak(u);
+    });
+
+    const wait = (ms) => new Promise(res => setTimeout(res, ms));
+
+    const cleanWord = String(card.word).replace(/\*\*/g, '').replace(/[〜…~]/g, '').trim();
+    await speakAndWait(cleanWord, 'en-US');
+    if (!isPodPlayingRef.current) return;
+
+    if (podOpts.ja && card.meaning) {
+      await wait(podOpts.gap * 1000);
+      if (!isPodPlayingRef.current) return;
+      const cleanMeaning = cleanText(card.meaning.split('/')[0]);
+      await speakAndWait(cleanMeaning, 'ja-JP');
+    }
+
+    if (podOpts.ex && card.example) {
+      await wait(podOpts.gap * 1000);
+      if (!isPodPlayingRef.current) return;
+      const cleanEx = card.example.replace(/\*\*/g, '');
+      await speakAndWait(cleanEx, 'en-US');
+    }
+
+    await wait(podOpts.gap * 1000);
+    if (!isPodPlayingRef.current) return;
+    podIndexRef.current += 1;
+    runPodcast(); 
+  }, [studyCards, podOpts, stopPodcast]);
+
+  const startPodcast = () => {
+    if(studyCards.length === 0) return alert(lang === 'ja' ? '学習する単語がありません。' : 'No words to study.');
+    window.speechSynthesis.cancel();
+    podIndexRef.current = 0;
+    isPodPlayingRef.current = true;
+    setIsPodPlaying(true);
+    runPodcast();
+  };
+
   const handleNextCard = useCallback((e) => { if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex((currentIndex + 1) % studyCards.length); }, [currentIndex, studyCards]);
   const handlePrevCard = useCallback((e) => { if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex((currentIndex - 1 + studyCards.length) % studyCards.length); }, [currentIndex, studyCards]);
   const handleRepeat = () => { stopAutoPlayIfActive(); setCurrentIndex(0); setIsFlipped(false); setShowDeepDive(false); setStudyTime(0); setHasRecorded(false); playedRef.current = { index: -1, flipped: false, lang: '', type: '' }; };
 
   useEffect(() => {
-    if (studyCards.length === 0 || isCompleted || view !== 'study' || isBulkMode) return;
+    if (studyCards.length === 0 || isCompleted || view !== 'study' || isBulkMode || showPodcast) return;
     const currentCard = studyCards[currentIndex];
     if (!currentCard) return;
     let shouldPlay = (qLang === 'en' && !isFlipped) || (qLang === 'ja' && isFlipped);
@@ -473,7 +566,7 @@ function App() {
       playAudio((qType === 'example' && currentCard.example) ? currentCard.example : currentCard.word);
       playedRef.current = { index: currentIndex, flipped: isFlipped, lang: qLang, type: qType };
     }
-  }, [currentIndex, isFlipped, qLang, qType, studyCards, isCompleted, view, isBulkMode, playAudio]);
+  }, [currentIndex, isFlipped, qLang, qType, studyCards, isCompleted, view, isBulkMode, playAudio, showPodcast]);
 
   useEffect(() => {
     let timer = null;
@@ -498,21 +591,21 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || view !== 'study' || isBulkMode) return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || view !== 'study' || isBulkMode || showPodcast) return;
       unlockAudio();
       if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); stopAutoPlayIfActive(); setIsFlipped(p => !p); setShowDeepDive(false); } 
       else if (e.code === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); handleNextCard(); } 
       else if (e.key === 'ArrowLeft') { e.preventDefault(); handlePrevCard(); }
     };
     window.addEventListener('keydown', handleKeyDown); return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view, isBulkMode, isAutoPlaying, handleNextCard, handlePrevCard, unlockAudio]);
+  }, [view, isBulkMode, isAutoPlaying, handleNextCard, handlePrevCard, unlockAudio, showPodcast]);
 
   const elapsedRef = useRef(0);
   const lastTickRef = useRef(Date.now());
 
   useEffect(() => {
     let timer = null; 
-    if (isAutoPlaying && studyCards.length > 0 && !isCompleted) {
+    if (isAutoPlaying && studyCards.length > 0 && !isCompleted && !showPodcast) {
       lastTickRef.current = Date.now();
       timer = setInterval(() => {
         const now = Date.now(); elapsedRef.current += now - lastTickRef.current; lastTickRef.current = now;
@@ -525,7 +618,7 @@ function App() {
       }, 50); 
     } else elapsedRef.current = 0;
     return () => clearInterval(timer);
-  }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, isFrontOnlyAuto]);
+  }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, isFrontOnlyAuto, showPodcast]);
 
   const toggleMemorize = (e, wordOrCard, isMemorized) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
@@ -604,8 +697,8 @@ function App() {
     }
     setIsFullscreen(false);
     setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, lastStudied: Date.now() } : d));
-    setIsAutoPlaying(false); setCurrentDeckId(null); setView('decks'); setIsDeleteMode(false); setSelectedForDelete(new Set()); setShowDeepDive(false);
-  }, [currentDeckId]);
+    setIsAutoPlaying(false); stopPodcast(); setShowPodcast(false); setCurrentDeckId(null); setView('decks'); setIsDeleteMode(false); setSelectedForDelete(new Set()); setShowDeepDive(false);
+  }, [currentDeckId, stopPodcast]);
 
   const handleTouchStart = (e) => {
     unlockAudio();
@@ -743,6 +836,7 @@ function App() {
       <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingBottom: '60px', boxSizing: 'border-box', overflowY: 'auto' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
         
+        {/* カードのメインコンテンツ */}
         {qType === 'word' ? (
           <>
             {qLang === 'en' ? <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}><div className="core-meaning-large" style={{ textAlign: 'left', fontSize: fMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line" style={{textAlign: 'left'}}>{cleanText(m)}</div>)}</div></div>
@@ -771,14 +865,13 @@ function App() {
           </div>
         )}
         
-        {/* メモ欄 */}
         {showMemoOnBack && card.memo && (
           <div style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '8px', width: '100%', maxWidth: '800px', fontSize: isFullscreen ? 'clamp(18px, 4vw, 24px)' : '14px', color: '#475569', textAlign: 'left', lineHeight: '1.5', wordBreak: 'break-word' }}>
             <span style={{ fontWeight: 'bold', marginRight: '5px' }}>{lang==='ja'?'💡 メモ:':'💡 Memo:'}</span> {card.memo}
           </div>
         )}
 
-        {/* ★ 改善: Deep Diveボタンを「右上」に移動し、文字への被りを完全に防止。さらにメニューを下へ展開。 */}
+        {/* ★ Deep Diveボタン（右上配置） */}
         {activeDicts.length > 0 && (
           <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }} onClick={e => e.stopPropagation()}>
             <button 
@@ -842,8 +935,6 @@ function App() {
 
   if (view === 'boxes') return (
     <div className="app-container gentle-bg desk-view" style={{padding: 0}} onClick={unlockAudio} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-      
-      {/* ★ スマホで重ならないように元のクラス指定に完全修復したヘッダーボタン群 ★ */}
       <div className="top-right-actions">
         <button className="lang-toggle-btn logout-btn" onClick={handleLogout} style={{backgroundColor: 'rgba(231, 76, 60, 0.8)', borderColor: 'transparent'}}>{t.logout || (lang==='ja'?'ログアウト':'Logout')}</button>
         <button className="manual-link-btn" onClick={() => window.open('https://english-t24.com', '_blank')} style={{backgroundColor: '#e67e22', color: 'white', borderColor: 'transparent', fontWeight: 'bold'}}>🌐 Blog</button>
@@ -883,7 +974,7 @@ function App() {
       
       <div className="hero-section">
         <h1 className="burning-text">{t.appTitle}</h1><h2 className="burning-subtitle">{t.appSubtitle}</h2>
-        <div className="creation-header-row">
+        <div className="creation-header-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'center' }}>
           <span className="creation-label" title="Box" style={{color: '#fff'}}>📦</span>
           <input type="text" placeholder={t.boxPlaceholder || (lang==='ja'?'箱の名前を入力':'Box Name')} value={newBoxName} onChange={(e) => setNewBoxName(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewBox()} />
           <button onClick={createNewBox} className="add-btn mini-btn">{t.createBtn || (lang==='ja'?'作る':'Create')}</button>
@@ -972,6 +1063,64 @@ function App() {
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {toastMessage && <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(39, 174, 96, 0.95)', color: '#fff', padding: '20px 40px', borderRadius: '16px', fontWeight: 'bold', zIndex: 10001, fontSize: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', animation: 'popInOut 3s forwards', textAlign: 'center', whiteSpace: 'nowrap' }}>{toastMessage}</div>}
       
+      {/* ★ ポッドキャスト（聴き流し）モードの設定モーダル */}
+      {showPodcast && (
+        <div className="modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="modal-content" style={{ borderRadius: '24px', padding: '30px', maxWidth: '450px', width: '90%', textAlign: 'center' }}>
+            <h3 style={{ marginTop: 0, color: '#0f172a', fontSize: '24px', fontWeight: '800' }}>{lang === 'ja' ? '🎧 聴き流しモード' : '🎧 Podcast Mode'}</h3>
+            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '25px', lineHeight: '1.6' }}>
+              {lang === 'ja' ? '通学中や就寝前の「画面を見ない学習」に最適です。\n※ブラウザの仕様上、画面を点けたままご利用ください。' : 'Perfect for hands-free learning!\n*Keep screen on due to browser specs.'}
+            </p>
+
+            {!isPodPlaying ? (
+              <>
+                <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '25px' }}>
+                  <div style={{ fontWeight: 'bold', color: '#334155', marginBottom: '15px', fontSize: '15px', textAlign: 'left' }}>{lang === 'ja' ? '読み上げる項目' : 'Read Aloud Items'}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', textAlign: 'left' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '15px', color: '#475569', cursor: 'pointer' }}>
+                      <span style={{fontWeight:'bold'}}>🇺🇸 {lang === 'ja' ? '英単語 (固定)' : 'Word (Fixed)'}</span>
+                      <input type="checkbox" checked={true} readOnly style={{ transform: 'scale(1.2)' }} />
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '15px', color: '#475569', cursor: 'pointer' }}>
+                      <span>🇯🇵 {lang === 'ja' ? '日本語訳' : 'Meaning (JP)'}</span>
+                      <input type="checkbox" checked={podOpts.ja} onChange={(e) => setPodOpts({...podOpts, ja: e.target.checked})} style={{ transform: 'scale(1.2)' }} />
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '15px', color: '#475569', cursor: 'pointer' }}>
+                      <span>📝 {lang === 'ja' ? '英語例文' : 'Example'}</span>
+                      <input type="checkbox" checked={podOpts.ex} onChange={(e) => setPodOpts({...podOpts, ex: e.target.checked})} style={{ transform: 'scale(1.2)' }} />
+                    </label>
+                  </div>
+
+                  <div style={{ fontWeight: 'bold', color: '#334155', marginTop: '25px', marginBottom: '10px', fontSize: '15px', textAlign: 'left' }}>
+                    {lang === 'ja' ? '間隔 (ポーズ): ' : 'Interval: '}{podOpts.gap.toFixed(1)} {lang === 'ja' ? '秒' : 'sec'}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '13px', color: '#94a3b8' }}>0s</span>
+                    <input type="range" min="0" max="3.0" step="0.5" value={podOpts.gap} onChange={(e) => setPodOpts({...podOpts, gap: Number(e.target.value)})} style={{ flexGrow: 1 }} />
+                    <span style={{ fontSize: '13px', color: '#94a3b8' }}>3s</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button className="cancel-btn" style={{ flex: 1, padding: '15px', fontSize: '16px' }} onClick={() => setShowPodcast(false)}>{t.cancelBtn || (lang==='ja'?'閉じる':'Close')}</button>
+                  <button className="add-btn" style={{ flex: 2, padding: '15px', fontSize: '16px', background: '#3b82f6', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }} onClick={startPodcast}>▶️ {lang === 'ja' ? '再生スタート' : 'Start Podcast'}</button>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '250px' }}>
+                <div style={{ fontSize: '14px', color: '#94a3b8', fontWeight: 'bold', marginBottom: '10px' }}>NOW PLAYING... ({podIndex + 1} / {studyCards.length})</div>
+                <div style={{ fontSize: 'clamp(32px, 8vw, 50px)', fontWeight: '900', color: '#0f172a', wordBreak: 'break-word', lineHeight: '1.2', marginBottom: '40px' }}>
+                  {studyCards[podIndex]?.word}
+                </div>
+                <button className="cancel-btn" style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '15px 40px', borderRadius: '999px', fontSize: '18px', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(239,68,68,0.3)' }} onClick={stopPodcast}>
+                  ■ {lang === 'ja' ? '停止する' : 'Stop'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)} onTouchStart={e => e.stopPropagation()}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
@@ -1094,7 +1243,6 @@ function App() {
                   </div>
                 )}
               </div>
-              {/* ★ スマホで学習中リストがたくさん見えるように高さを確保 ★ */}
               <div className="mini-card-list" style={{ flex: 1, minHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>{studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}</div>
             </div>
           )}
@@ -1121,6 +1269,12 @@ function App() {
                       </button>
                       {showActionMenu && (
                         <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '10px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 100, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          
+                          <button onClick={() => { setShowPodcast(true); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#3b82f6', textAlign: 'left', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            🎧 {lang === 'ja' ? '聴き流しモード' : 'Podcast Mode'}
+                          </button>
+                          <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '2px 0' }}></div>
+
                           <button onClick={() => { setView('test'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '📝 アプリでテストする' : '📝 Take a Test'}</button>
                           <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '2px 0' }}></div>
                           <button onClick={() => { openPrintPreview('word'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>{lang === 'ja' ? '🖨️ 単語プリントを作る' : '🖨️ Print Word List'}</button>
@@ -1182,6 +1336,12 @@ function App() {
                       <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="setting-badge-btn" style={{ backgroundColor: showSettingsMenu ? '#e2e8f0' : '#fff' }}>{lang === 'ja' ? '⚙️ 表示オプション ▼' : '⚙️ Options ▼'}</button>
                       {showSettingsMenu && (
                         <div style={{ position: 'absolute', top: '100%', right: '50%', transform: 'translateX(50%)', marginTop: '8px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          
+                          <button onClick={shuffleCurrentDeck} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '10px', fontSize: '14px', fontWeight: 'bold', color: '#0f172a', textAlign: 'center', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            🔀 {lang === 'ja' ? '単語をシャッフルする' : 'Shuffle Cards'}
+                          </button>
+                          <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
+
                           {qType === 'word' ? (
                             <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '例文を表示' : 'Show Examples'}</span><input type="checkbox" checked={showExOnBack} onChange={() => setShowExOnBack(!showExOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
                           ) : (
@@ -1197,7 +1357,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* ★ カードのリアルなアスペクト比（1.5:1）を適用し、スマホで巨大化するのを防ぐ ★ */}
                 <div className="card-animation-wrapper" key={currentIndex} style={isFullscreen ? { width: '100%', height: '100vh' } : { width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: '450px' }}>
                   <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped); setShowDeepDive(false);}} style={{ height: '100%' }}>
                     <div className="card-inner">
@@ -1241,7 +1400,6 @@ function App() {
           {!isFullscreen && (
             <div className="side-panel right-panel">
               <h3 className="panel-title">{t.memorizedPanel || (lang==='ja'?'🏆 暗記済':'🏆 Mastered')} ({memorizedCards.length})</h3>
-              {/* ★ スマホで暗記済リストがたくさん見えるように高さを確保 ★ */}
               <div className="mini-card-list" style={{ flex: 1, minHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>{memorizedCards.length === 0 ? <p className="empty-mini-msg">{t.dragHereMsg || (lang==='ja'?'左の ✅ ボタンでここに移動！':'Click ✅ to move words here!')}</p> : memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`))}</div>
             </div>
           )}

@@ -902,3 +902,32 @@ textarea.modal-input { resize: vertical; min-height: 60px; }
 .nav-btn-physical:active { transform: scale(0.95); background: #f1f5f9; }
 .card-counter-input::-webkit-outer-spin-button, .card-counter-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .card-counter-input[type=number] { -moz-appearance: textfield; }
+/* スマホ表示時のタイトル箇所がボタンと干渉する問題の改善 */
+.creation-header-row .creation-label {
+  margin-right: 15px; /* マージンを増やして干渉を避ける */
+}
+
+/* 共有箇所の幅が大きくて入力箇所が潰れている問題の修繕 */
+/* スマホ表示時（max-width: 600px）の設定 */
+@media (max-width: 600px) {
+  .bulk-input-section .bulk-file-actions label {
+    width: auto; /* 幅を自動調整にする */
+    padding: 10px 15px; /* パディングを調整 */
+    font-size: 14px; /* フォントサイズを調整 */
+  }
+}
+
+/* 学習中の箇所が２枚ぐらいしか見えないので４枚は見えるようにする */
+.side-panel.left-panel .mini-card-list {
+  display: flex; /* フレックスボックスにする */
+  flex-wrap: wrap; /* 折り返しを許可する */
+  justify-content: flex-start; /* 左寄せにする */
+  gap: 10px; /* カード間の隙間 */
+  max-height: calc(4 * (mini-card-height + 10px)); /* 4枚分の高さを確保する。mini-card-heightは実際のカードの高さに合わせて調整してください */
+  overflow-y: auto; /* 縦スクロールを許可する */
+}
+
+.side-panel.left-panel .mini-card-list .mini-card {
+  width: calc(25% - 10px); /* 4枚並ぶように幅を調整する。隙間分を引く */
+  box-sizing: border-box; /* ボーダーも含めた幅計算にする */
+}
