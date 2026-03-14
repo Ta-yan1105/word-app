@@ -94,6 +94,7 @@ function App() {
   const [podIndex, setPodIndex] = useState(0);
   const podIndexRef = useRef(0);
   const isPodPlayingRef = useRef(false);
+  const podAudioRef = useRef(new Audio());
 
   const touchStartX = useRef(null); 
   const touchStartY = useRef(null); 
@@ -243,9 +244,9 @@ function App() {
 
   const stopAutoPlayIfActive = () => { if (isAutoPlaying) setIsAutoPlaying(false); };
 
+  // ★ 堅牢な全画面トグル（iOS等でのバグを防ぐため、状態の切り替えのみでも動くように）
   const toggleFullScreen = () => {
-    const isDocFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
-    if (!isDocFullscreen) {
+    if (!isFullscreen) {
       const docElm = document.documentElement;
       if (docElm.requestFullscreen) docElm.requestFullscreen().catch(err => console.error(err));
       else if (docElm.webkitRequestFullscreen) docElm.webkitRequestFullscreen();
@@ -453,21 +454,10 @@ function App() {
     } catch(e) { alert(t.alertCsvError); } finally { setIsBulkMode(false); setCurrentIndex(0); setIsFlipped(false); setHasRecorded(false); setLoading(false); }
   };
 
-  // ★ 音声ロジックの完全復元（最高音質かつローカル優先） ★
   const unlockAudio = useCallback(() => {
     if ('speechSynthesis' in window && !isMuted) { const dummy = new SpeechSynthesisUtterance(''); dummy.volume = 0; window.speechSynthesis.speak(dummy); }
+    if (podAudioRef.current) { podAudioRef.current.play().catch(()=>{}); }
   }, [isMuted]);
-
-  const fallbackTTS = useCallback((text, rate) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = rate; 
-      const voices = window.speechSynthesis.getVoices();
-      const enVoice = voices.find(v => v.lang === 'en-US' && v.name.includes('Google')) || voices.find(v => v.lang.includes('en'));
-      if (enVoice) utterance.voice = enVoice;
-      window.speechSynthesis.speak(utterance);
-    }
-  }, []);
 
   const playAudio = useCallback((text) => {
     if (isMuted || !text) return; 
@@ -475,18 +465,41 @@ function App() {
     let rate = 1.0;
     if (displaySeconds < 2.0) rate = 1.0 + ((2.0 - displaySeconds) / 2.0) * 0.5; else if (displaySeconds > 2.0) rate = 1.0 - ((displaySeconds - 2.0) / 2.0) * 0.2;
     rate = Math.max(0.5, Math.min(rate, 1.5));
-    try {
-      const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=${encodeURIComponent(cleanWord)}`;
-      const audio = new Audio(audioUrl); audio.playbackRate = rate;
-      const playPromise = audio.play();
-      if (playPromise !== undefined) playPromise.catch(() => fallbackTTS(cleanWord, rate));
-    } catch (e) { fallbackTTS(cleanWord, rate); }
-  }, [displaySeconds, isMuted, fallbackTTS]);
+    
+    const isJapaneseText = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/.test(cleanWord);
+    const shortLang = isJapaneseText ? 'ja' : 'en';
 
-  // ★ ポッドキャスト（聴き流し）モード：ローカルの最高音質プレミアムボイスを使用 ★
+    try {
+      const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${shortLang}&q=${encodeURIComponent(cleanWord)}`;
+      const audio = new Audio(audioUrl); 
+      audio.playbackRate = rate;
+      audio.play().catch(() => {
+         if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(cleanWord);
+            u.lang = isJapaneseText ? 'ja-JP' : 'en-US';
+            u.rate = rate;
+            window.speechSynthesis.speak(u);
+         }
+      });
+    } catch (e) {
+      if ('speechSynthesis' in window) {
+         window.speechSynthesis.cancel();
+         const u = new SpeechSynthesisUtterance(cleanWord);
+         u.lang = isJapaneseText ? 'ja-JP' : 'en-US';
+         u.rate = rate;
+         window.speechSynthesis.speak(u);
+      }
+    }
+  }, [displaySeconds, isMuted]);
+
   const stopPodcast = useCallback(() => {
     isPodPlayingRef.current = false;
     setIsPodPlaying(false);
+    if(podAudioRef.current) {
+        podAudioRef.current.pause();
+        podAudioRef.current.src = '';
+    }
     window.speechSynthesis.cancel();
   }, []);
 
@@ -501,21 +514,32 @@ function App() {
 
     const speakAndWait = (text, langStr) => new Promise(resolve => {
       if (!isPodPlayingRef.current) return resolve();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = langStr;
-      u.rate = 0.9;
       
-      // デバイスに内蔵されている中で一番綺麗な声を優先的に選ぶ
-      const voices = window.speechSynthesis.getVoices();
-      const targetVoices = voices.filter(v => v.lang.startsWith(langStr.substring(0, 2)));
-      const premiumVoice = targetVoices.find(v => v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Siri') || v.name.includes('Samantha') || v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Google US English') || v.name.includes('Google 日本語'));
+      const shortLang = langStr.substring(0, 2);
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${shortLang}&q=${encodeURIComponent(text)}`;
       
-      if (premiumVoice) u.voice = premiumVoice;
-      else if (targetVoices.length > 0) u.voice = targetVoices[0];
-
-      u.onend = resolve;
-      u.onerror = resolve;
-      window.speechSynthesis.speak(u);
+      const audio = podAudioRef.current || new Audio();
+      audio.src = url;
+      audio.playbackRate = 0.9;
+      
+      audio.onended = resolve;
+      audio.onerror = () => {
+         const u = new SpeechSynthesisUtterance(text);
+         u.lang = langStr;
+         u.rate = 0.9;
+         u.onend = resolve;
+         u.onerror = resolve;
+         window.speechSynthesis.speak(u);
+      };
+      
+      audio.play().catch(() => {
+         const u = new SpeechSynthesisUtterance(text);
+         u.lang = langStr;
+         u.rate = 0.9;
+         u.onend = resolve;
+         u.onerror = resolve;
+         window.speechSynthesis.speak(u);
+      });
     });
 
     const wait = (ms) => new Promise(res => setTimeout(res, ms));
@@ -546,6 +570,7 @@ function App() {
 
   const startPodcast = () => {
     if(studyCards.length === 0) return alert(lang === 'ja' ? '学習する単語がありません。' : 'No words to study.');
+    if(!podAudioRef.current) podAudioRef.current = new Audio();
     window.speechSynthesis.cancel();
     podIndexRef.current = 0;
     isPodPlayingRef.current = true;
@@ -865,6 +890,7 @@ function App() {
           </div>
         )}
         
+        {/* メモ欄 */}
         {showMemoOnBack && card.memo && (
           <div style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '8px', width: '100%', maxWidth: '800px', fontSize: isFullscreen ? 'clamp(18px, 4vw, 24px)' : '14px', color: '#475569', textAlign: 'left', lineHeight: '1.5', wordBreak: 'break-word' }}>
             <span style={{ fontWeight: 'bold', marginRight: '5px' }}>{lang==='ja'?'💡 メモ:':'💡 Memo:'}</span> {card.memo}
@@ -1247,7 +1273,18 @@ function App() {
             </div>
           )}
           
-          <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`}>
+          <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`} style={isFullscreen ? {position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, backgroundColor: '#f1f5f9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box'} : { flex: 1, minWidth: 0, padding: '0 15px' }}>
+            
+            {/* ★ 全集中モード解除用 ✖ボタン（右上固定） */}
+            {isFullscreen && (
+              <button 
+                onClick={toggleFullScreen} 
+                style={{ position: 'absolute', top: '20px', right: '20px', width: '44px', height: '44px', borderRadius: '50%', background: '#ef4444', color: '#fff', border: 'none', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', zIndex: 10001, boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}
+              >
+                ✖
+              </button>
+            )}
+
             {!isFullscreen && (
               <>
                 <div className="study-controls-top">
@@ -1310,54 +1347,55 @@ function App() {
             ) : studyCards.length > 0 && !isBulkMode ? (
               <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
                 
-                <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', width: '100%', gap: '15px' }}>
-                    
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="Toggle Language">{qLang === 'en' ? (lang === 'ja' ? '🇺🇸 英→日' : '🇺🇸 En→Jp') : (lang === 'ja' ? '🇯🇵 日→英' : '🇯🇵 Jp→En')}</button>
-                      <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
-                        <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>{lang === 'ja' ? '🔤 単語' : '🔤 Word'}</button>
-                        <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>{lang === 'ja' ? '📝 例文' : '📝 Example'}</button>
+                {!isFullscreen && (
+                  <div className="card-header-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', width: '100%', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', width: '100%', gap: '15px' }}>
+                      
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="Toggle Language">{qLang === 'en' ? (lang === 'ja' ? '🇺🇸 英→日' : '🇺🇸 En→Jp') : (lang === 'ja' ? '🇯🇵 日→英' : '🇯🇵 Jp→En')}</button>
+                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
+                          <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>{lang === 'ja' ? '🔤 単語' : '🔤 Word'}</button>
+                          <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>{lang === 'ja' ? '📝 例文' : '📝 Example'}</button>
+                        </div>
+                      </div>
+
+                      <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <input type="number" className="card-counter-input" min="1" max={studyCards.length} key={currentIndex} defaultValue={currentIndex + 1}
+                          onBlur={(e) => {
+                            let val = parseInt(e.target.value, 10);
+                            if (!isNaN(val)) { val = Math.max(1, Math.min(val, studyCards.length)); if (val - 1 !== currentIndex) { stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex(val - 1); } else e.target.value = currentIndex + 1; } else e.target.value = currentIndex + 1;
+                          }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); e.stopPropagation(); }}
+                          style={{ width: '2.5em', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '2px dashed #cbd5e1', color: 'inherit', font: 'inherit', outline: 'none', padding: '0 5px', marginRight: '5px' }}
+                        /> / {studyCards.length}
+                      </div>
+
+                      <div ref={settingsRef} style={{ position: 'relative' }}>
+                        <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="setting-badge-btn" style={{ backgroundColor: showSettingsMenu ? '#e2e8f0' : '#fff' }}>{lang === 'ja' ? '⚙️ 表示オプション ▼' : '⚙️ Options ▼'}</button>
+                        {showSettingsMenu && (
+                          <div style={{ position: 'absolute', top: '100%', right: '50%', transform: 'translateX(50%)', marginTop: '8px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            
+                            <button onClick={shuffleCurrentDeck} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '10px', fontSize: '14px', fontWeight: 'bold', color: '#0f172a', textAlign: 'center', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                              🔀 {lang === 'ja' ? '単語をシャッフルする' : 'Shuffle Cards'}
+                            </button>
+                            <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
+
+                            {qType === 'word' ? (
+                              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '例文を表示' : 'Show Examples'}</span><input type="checkbox" checked={showExOnBack} onChange={() => setShowExOnBack(!showExOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                            ) : (
+                              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '単語を表示' : 'Show Words'}</span><input type="checkbox" checked={showWordOnExMode} onChange={() => setShowWordOnExMode(!showWordOnExMode)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                            )}
+                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? 'メモを表示' : 'Show Memos'}</span><input type="checkbox" checked={showMemoOnBack} onChange={() => setShowMemoOnBack(!showMemoOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                            <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
+                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '自動めくり: 表面のみ' : 'Auto-play: Front only'}</span><input type="checkbox" checked={isFrontOnlyAuto} onChange={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                          </div>
+                        )}
                       </div>
                     </div>
-
-                    <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <input type="number" className="card-counter-input" min="1" max={studyCards.length} key={currentIndex} defaultValue={currentIndex + 1}
-                        onBlur={(e) => {
-                          let val = parseInt(e.target.value, 10);
-                          if (!isNaN(val)) { val = Math.max(1, Math.min(val, studyCards.length)); if (val - 1 !== currentIndex) { stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex(val - 1); } else e.target.value = currentIndex + 1; } else e.target.value = currentIndex + 1;
-                        }}
-                        onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); e.stopPropagation(); }}
-                        style={{ width: '2.5em', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '2px dashed #cbd5e1', color: 'inherit', font: 'inherit', outline: 'none', padding: '0 5px', marginRight: '5px' }}
-                      /> / {studyCards.length}
-                    </div>
-
-                    <div ref={settingsRef} style={{ position: 'relative' }}>
-                      <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="setting-badge-btn" style={{ backgroundColor: showSettingsMenu ? '#e2e8f0' : '#fff' }}>{lang === 'ja' ? '⚙️ 表示オプション ▼' : '⚙️ Options ▼'}</button>
-                      {showSettingsMenu && (
-                        <div style={{ position: 'absolute', top: '100%', right: '50%', transform: 'translateX(50%)', marginTop: '8px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                          
-                          <button onClick={shuffleCurrentDeck} style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', padding: '10px', fontSize: '14px', fontWeight: 'bold', color: '#0f172a', textAlign: 'center', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                            🔀 {lang === 'ja' ? '単語をシャッフルする' : 'Shuffle Cards'}
-                          </button>
-                          <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
-
-                          {qType === 'word' ? (
-                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '例文を表示' : 'Show Examples'}</span><input type="checkbox" checked={showExOnBack} onChange={() => setShowExOnBack(!showExOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
-                          ) : (
-                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '単語を表示' : 'Show Words'}</span><input type="checkbox" checked={showWordOnExMode} onChange={() => setShowWordOnExMode(!showWordOnExMode)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
-                          )}
-                          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? 'メモを表示' : 'Show Memos'}</span><input type="checkbox" checked={showMemoOnBack} onChange={() => setShowMemoOnBack(!showMemoOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
-                          <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
-                          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>{lang === 'ja' ? '自動めくり: 表面のみ' : 'Auto-play: Front only'}</span><input type="checkbox" checked={isFrontOnlyAuto} onChange={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
-                        </div>
-                      )}
-                    </div>
-
                   </div>
-                </div>
+                )}
 
-                <div className="card-animation-wrapper" key={currentIndex} style={isFullscreen ? { width: '100%', height: '100vh' } : { width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: '450px' }}>
+                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '90%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: isFullscreen ? '50vh' : '450px' }}>
                   <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped); setShowDeepDive(false);}} style={{ height: '100%' }}>
                     <div className="card-inner">
                       <div className="card-front">
@@ -1369,27 +1407,27 @@ function App() {
                   </div>
                 </div>
                 
-                <div className={isFullscreen ? "fullscreen-stealth-bottom" : "autoplay-controls"} style={isFullscreen ? {} : {background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
+                <div style={isFullscreen ? { position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '500px', background: 'rgba(255,255,255,0.95)', padding: '20px', borderRadius: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', boxSizing: 'border-box', zIndex: 10000, backdropFilter: 'blur(10px)' } : { background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box' }} className={isFullscreen ? "" : "autoplay-controls"}>
                   <div className="autoplay-actions-row">
                     <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>
                     <button className={`autoplay-toggle-btn ${isAutoPlaying ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) { playAudio((qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word); } setIsAutoPlaying(!isAutoPlaying); }}>
                       {isAutoPlaying ? (lang === 'ja' ? '■ 停止' : '■ Stop') : (lang === 'ja' ? '▶ 自動めくり' : '▶ Auto Play')}
                     </button>
                     <button className="nav-btn-physical" onClick={handleNextCard}>▶</button>
-                    <button className="repeat-btn" onClick={handleRepeat} style={isFullscreen ? {} : {background: '#f8f9fa', color: '#555'}}>{lang === 'ja' ? '🔄 もう1回' : '🔄 Restart'}</button>
-                    <button className="fullscreen-btn" onClick={toggleFullScreen} style={isFullscreen ? {} : {background: '#f8f9fa', color: '#555'}}>{isFullscreen ? (lang==='ja'?'元に戻す':'Exit') : (lang==='ja'?'全集中 🔥':'Focus 🔥')}</button>
+                    <button className="repeat-btn" onClick={handleRepeat} style={isFullscreen ? { background: '#f1f5f9', color: '#64748b', border: 'none', padding: '10px 15px', borderRadius: '8px', fontWeight: 'bold' } : {background: '#f8f9fa', color: '#555'}}>{lang === 'ja' ? '🔄 もう1回' : '🔄 Restart'}</button>
+                    <button className="fullscreen-btn" onClick={toggleFullScreen} style={isFullscreen ? { background: '#f1f5f9', color: '#64748b', border: 'none', padding: '10px 15px', borderRadius: '8px', fontWeight: 'bold' } : {background: '#f8f9fa', color: '#555'}}>{isFullscreen ? (lang==='ja'?'元に戻す':'Exit') : (lang==='ja'?'全集中 🔥':'Focus 🔥')}</button>
                   </div>
-                  <div className="speed-slider-container" style={isFullscreen ? {} : {marginTop: '15px'}}>
-                    <div className={isFullscreen ? "speed-slider-label" : ""} style={isFullscreen ? {} : {fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center', whiteSpace: 'nowrap'}}>
+                  <div className="speed-slider-container" style={isFullscreen ? { marginTop: '15px' } : {marginTop: '15px'}}>
+                    <div className={isFullscreen ? "speed-slider-label" : ""} style={isFullscreen ? { fontSize: '13px', color: '#64748b', fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' } : {fontSize: '13px', color: '#7f8c8d', fontWeight: 'bold', marginBottom: '5px', textAlign: 'center', whiteSpace: 'nowrap'}}>
                       {lang === 'ja' ? '表示間隔: ' : 'Interval: '}{displaySeconds === 0 ? (lang==='ja'?`${t.godspeed || '神速'} (0.0 ${t.sec||'秒'})`:`Godspeed (0.0 sec)`) : `${displaySeconds.toFixed(1)} ${lang==='ja'?'秒':'sec'}`}
                     </div>
-                    <div className="speed-slider-wrapper" style={isFullscreen ? {} : { display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
-                      <span className="speed-min-max" style={isFullscreen ? {} : { fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{lang === 'ja' ? '速 🐇' : 'Fast 🐇'}</span>
-                      <div style={isFullscreen ? {} : { flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div className="speed-slider-wrapper" style={isFullscreen ? { display: 'flex', alignItems: 'center', gap: '10px' } : { display: 'flex', alignItems: 'center', width: '100%', gap: '10px' }}>
+                      <span className="speed-min-max" style={isFullscreen ? { fontSize: '14px', fontWeight: 'bold', color: '#94a3b8' } : { fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'right' }}>{lang === 'ja' ? '速 🐇' : 'Fast 🐇'}</span>
+                      <div style={isFullscreen ? { flexGrow: 1 } : { flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                         {!isFullscreen && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 5px', fontSize: '12px', color: '#bdc3c7', fontWeight: 'bold', marginBottom: '2px' }}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div>}
-                        <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={isFullscreen ? {} : { width: '100%', margin: 0 }} />
+                        <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={isFullscreen ? { width: '100%' } : { width: '100%', margin: 0 }} />
                       </div>
-                      <span className="speed-min-max" style={isFullscreen ? {} : { fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>{lang === 'ja' ? '🐢 遅' : '🐢 Slow'}</span>
+                      <span className="speed-min-max" style={isFullscreen ? { fontSize: '14px', fontWeight: 'bold', color: '#94a3b8' } : { fontSize: '14px', color: '#7f8c8d', fontWeight: 'bold', whiteSpace: 'nowrap', width: '45px', textAlign: 'left' }}>{lang === 'ja' ? '🐢 遅' : '🐢 Slow'}</span>
                     </div>
                   </div>
                 </div>
