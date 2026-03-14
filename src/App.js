@@ -6,7 +6,6 @@ import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 
-// 分割したファイル群を読み込む
 import { DICT } from './locales';
 import { initialBoxes, initialDecks } from './initialData';
 import { parseCSV, cleanText, cleanTranslation, renderHighlightedText } from './utils';
@@ -48,7 +47,7 @@ function App() {
   const [newDeckNameInside, setNewDeckNameInside] = useState('');
   const [editingCard, setEditingCard] = useState(null); 
   const [addingCard, setAddingCard] = useState(false);
-  const [newCardData, setNewCardData] = useState({ word: '', meaning: '', example: '', translation: '', pos: '' });
+  const [newCardData, setNewCardData] = useState({ word: '', meaning: '', example: '', translation: '', pos: '', memo: '' });
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   
@@ -63,19 +62,32 @@ function App() {
   const [qType, setQType] = useState('word'); 
   const [showExOnBack, setShowExOnBack] = useState(true); 
   const [showWordOnExMode, setShowWordOnExMode] = useState(true); 
+  const [showMemoOnBack, setShowMemoOnBack] = useState(true); 
   const [isFrontOnlyAuto, setIsFrontOnlyAuto] = useState(false); 
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false); 
 
   const touchStartX = useRef(null); 
   const touchStartY = useRef(null); 
   const touchEndX = useRef(null); 
   const touchEndY = useRef(null);
   const playedRef = useRef({ index: -1, flipped: false, lang: '', type: '' });
+  const settingsRef = useRef(null); 
 
   const activeDeck = (Array.isArray(decks) ? decks : []).find(d => d.id === currentDeckId);
   const allCards = activeDeck && Array.isArray(activeDeck.cards) ? activeDeck.cards : [];
   const studyCards = allCards.filter(c => !c.isMemorized);
   const memorizedCards = allCards.filter(c => c.isMemorized);
   const isCompleted = studyCards.length > 0 && currentIndex === studyCards.length - 1 && isFlipped;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setShowSettingsMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const ua = (navigator.userAgent || navigator.vendor || window.opera).toLowerCase();
@@ -176,7 +188,7 @@ function App() {
 
   const downloadTemplate = () => {
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); 
-    const content = '英単語,日本語訳,英語例文,例文和訳,品詞\n"例: apple",りんご,"I have an **apple**.","私は**りんご**を持っています。",名詞\n';
+    const content = '英単語,日本語訳,英語例文,例文和訳,品詞,メモ\n"例: regard",見なす,"Many people **regard** this book **as** very important.","多くの人がこの本をとても重要なものとみなしている。",動詞,"regard A as B (AをBと見なす)"\n';
     const blob = new Blob([bom, content], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob); const a = document.createElement('a');
     a.href = url; a.download = 'import_template.csv'; a.click(); window.URL.revokeObjectURL(url);
@@ -202,7 +214,7 @@ function App() {
         if (allCards.some(c => c.word === targetWord) || newCards.some(c => c.word === targetWord)) {
            if (!duplicateWords.includes(targetWord)) duplicateWords.push(targetWord);
         }
-        newCards.push({ word: targetWord, meaning: row[1] ? cleanText(row[1]) : '', example: row[2] ? cleanText(row[2]) : '', translation: row[3] ? cleanText(row[3]) : '', pos: row[4] ? cleanText(row[4]) : '', isMemorized: false });
+        newCards.push({ word: targetWord, meaning: row[1] ? cleanText(row[1]) : '', example: row[2] ? cleanText(row[2]) : '', translation: row[3] ? cleanText(row[3]) : '', pos: row[4] ? cleanText(row[4]) : '', memo: row[5] ? cleanText(row[5]) : '', isMemorized: false });
       }
       if (duplicateWords.length > 0) {
          const sample = duplicateWords.slice(0, 3).join(', ');
@@ -348,8 +360,8 @@ function App() {
     const word = newCardData.word.trim(); const meaning = newCardData.meaning.trim();
     if (!word || !meaning) return alert(t.alertReq);
     if (allCards.some(c => c.word === word) && !window.confirm(lang === 'ja' ? `「${word}」は既にあります。重複追加しますか？` : `Add duplicate?`)) return;
-    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...(d.cards || []), { word, meaning, example: newCardData.example.trim(), translation: newCardData.translation.trim(), pos: newCardData.pos, isMemorized: false }] } : d));
-    setAddingCard(false); setNewCardData({ word: '', meaning: '', example: '', translation: '', pos: '' }); 
+    setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: [...(d.cards || []), { word, meaning, example: newCardData.example.trim(), translation: newCardData.translation.trim(), pos: newCardData.pos, memo: newCardData.memo?.trim() || '', isMemorized: false }] } : d));
+    setAddingCard(false); setNewCardData({ word: '', meaning: '', example: '', translation: '', pos: '', memo: '' }); 
   };
 
   const saveEditedCard = () => {
@@ -360,7 +372,7 @@ function App() {
       return { ...d, cards: (d.cards || []).map(c => {
          if (!edited && (editingCard.originalCard ? c === editingCard.originalCard : c.word === editingCard.originalWord)) {
             edited = true;
-            return { ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation, pos: editingCard.pos };
+            return { ...c, word: editingCard.word, meaning: editingCard.meaning, example: editingCard.example, translation: editingCard.translation, pos: editingCard.pos, memo: editingCard.memo };
          }
          return c;
       })};
@@ -443,7 +455,7 @@ function App() {
       case '代名詞': return { color: '#0891b2', bg: '#ecfeff', border: '#a5f3fc' }; // 水色
       case '前置詞': case '接続詞': return { color: '#9333ea', bg: '#faf5ff', border: '#e9d5ff' }; // 紫
       case '熟語': return { color: '#4f46e5', bg: '#e0e7ff', border: '#c7d2fe' }; // 藍色
-      default: return null; // その他は色なし（グレー）
+      default: return null; 
     }
   };
 
@@ -468,7 +480,7 @@ function App() {
           {!isDeleteMode && (
             <div className="mini-icons" onClick={e=>e.stopPropagation()} onTouchStart={e=>e.stopPropagation()}>
               <button className="mini-icon-btn" onClick={(e) => toggleMemorize(e, c, !isMemorizedList)} title={isMemorizedList ? t.markUnmem : t.markMem}>{isMemorizedList ? '↩️' : '✅'}</button>
-              <button className="mini-icon-btn" onClick={(e) => { e.stopPropagation(); stopAutoPlayIfActive(); setEditingCard({ originalCard: c, originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '', pos: c.pos || '' }); }}>✏️</button>
+              <button className="mini-icon-btn" onClick={(e) => { e.stopPropagation(); stopAutoPlayIfActive(); setEditingCard({ originalCard: c, originalWord: c.word, word: c.word, meaning: c.meaning, example: c.example || '', translation: c.translation || '', pos: c.pos || '', memo: c.memo || '' }); }}>✏️</button>
               <button className="mini-icon-btn delete-mini" onClick={(e) => deleteSpecificCard(e, c)}>✖</button>
             </div>
           )}
@@ -556,9 +568,20 @@ function App() {
              )}
           </div>
         )}
+        
+        {/* メモ表示 */}
+        {showMemoOnBack && card.memo && (
+          <div style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '8px', width: '100%', maxWidth: '800px', fontSize: isFullscreen ? 'clamp(18px, 4vw, 24px)' : '14px', color: '#475569', textAlign: 'left', lineHeight: '1.5', wordBreak: 'break-word' }}>
+            <span style={{ fontWeight: 'bold', marginRight: '5px' }}>💡 メモ:</span> {card.memo}
+          </div>
+        )}
       </div>
     );
   };
+
+  // ============================
+  // メインの描画
+  // ============================
 
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
   if (!currentUser) return (
@@ -622,16 +645,16 @@ function App() {
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {toastMessage && <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(39, 174, 96, 0.95)', color: '#fff', padding: '20px 40px', borderRadius: '16px', fontWeight: 'bold', zIndex: 10001, fontSize: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', animation: 'popInOut 3s forwards', textAlign: 'center', whiteSpace: 'nowrap' }}>{toastMessage}</div>}
       
-      {/* ★インライン展開に戻したモーダル部分（これで確実に入力可能になります） */}
+      {/* 編集モーダル */}
       {editingCard && (
-        <div className="modal-overlay" onClick={() => setEditingCard(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setEditingCard(null)} onTouchStart={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
             <h3 style={{marginTop: 0, color: '#6d5b53'}}>{t.editCardTitle}</h3>
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.wordReq}</label>
             <input className="modal-input" value={editingCard.word} onChange={(e) => setEditingCard({...editingCard, word: e.target.value})} />
             
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.posLabel}</label>
-            <select className="modal-input" style={{ appearance: 'auto', marginBottom: '15px' }} value={editingCard.pos || ''} onChange={(e) => setEditingCard({...editingCard, pos: e.target.value})}>
+            <select className="modal-input" style={{ appearance: 'menulist', WebkitAppearance: 'menulist', marginBottom: '15px', cursor: 'pointer', userSelect: 'auto' }} value={editingCard.pos || ''} onChange={(e) => setEditingCard({...editingCard, pos: e.target.value})}>
               <option value="">-- 指定なし --</option>
               <option value="名詞">名詞</option><option value="動詞">動詞</option><option value="形容詞">形容詞</option><option value="副詞">副詞</option><option value="代名詞">代名詞</option><option value="前置詞">前置詞</option><option value="接続詞">接続詞</option><option value="熟語">熟語</option><option value="その他">その他</option>
             </select>
@@ -642,6 +665,8 @@ function App() {
             <textarea className="modal-input" value={editingCard.example} onChange={(e) => setEditingCard({...editingCard, example: e.target.value})} rows="2" />
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint}</label>
             <textarea className="modal-input" value={editingCard.translation} onChange={(e) => setEditingCard({...editingCard, translation: e.target.value})} rows="2" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>💡 メモ (語源や注意点など)</label>
+            <input className="modal-input" value={editingCard.memo || ''} onChange={(e) => setEditingCard({...editingCard, memo: e.target.value})} />
             <div className="modal-actions">
               <button className="cancel-btn" onClick={() => setEditingCard(null)}>{t.cancelBtn}</button><button className="add-btn" onClick={saveEditedCard}>{t.saveBtn}</button>
             </div>
@@ -649,15 +674,16 @@ function App() {
         </div>
       )}
 
+      {/* 新規作成モーダル */}
       {addingCard && (
-        <div className="modal-overlay" onClick={() => setAddingCard(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setAddingCard(false)} onTouchStart={e => e.stopPropagation()}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
             <h3 style={{marginTop: 0, color: '#27ae60'}}>{t.newCardTitle}</h3>
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.wordReq}</label>
             <input className="modal-input" value={newCardData.word} onChange={(e) => setNewCardData({...newCardData, word: e.target.value})} />
             
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.posLabel}</label>
-            <select className="modal-input" style={{ appearance: 'auto', marginBottom: '15px' }} value={newCardData.pos || ''} onChange={(e) => setNewCardData({...newCardData, pos: e.target.value})}>
+            <select className="modal-input" style={{ appearance: 'menulist', WebkitAppearance: 'menulist', marginBottom: '15px', cursor: 'pointer', userSelect: 'auto' }} value={newCardData.pos || ''} onChange={(e) => setNewCardData({...newCardData, pos: e.target.value})}>
               <option value="">-- 指定なし --</option>
               <option value="名詞">名詞</option><option value="動詞">動詞</option><option value="形容詞">形容詞</option><option value="副詞">副詞</option><option value="代名詞">代名詞</option><option value="前置詞">前置詞</option><option value="接続詞">接続詞</option><option value="熟語">熟語</option><option value="その他">その他</option>
             </select>
@@ -668,6 +694,8 @@ function App() {
             <textarea className="modal-input" value={newCardData.example} onChange={(e) => setNewCardData({...newCardData, example: e.target.value})} rows="2" />
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint}</label>
             <textarea className="modal-input" value={newCardData.translation} onChange={(e) => setNewCardData({...newCardData, translation: e.target.value})} rows="2" />
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>💡 メモ (語源や注意点など)</label>
+            <input className="modal-input" value={newCardData.memo || ''} onChange={(e) => setNewCardData({...newCardData, memo: e.target.value})} />
             <div className="modal-actions">
               <button className="cancel-btn" onClick={() => setAddingCard(false)}>{t.cancelBtn}</button>
               <button className="add-btn" style={{backgroundColor: '#27ae60'}} onClick={saveNewCard}>{t.addBtn}</button>
@@ -727,7 +755,8 @@ function App() {
                     <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}><button className="mute-toggle-btn" onClick={() => setIsMuted(!isMuted)}>{isMuted ? t.audioOff : t.audioOn}</button><div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible', background: '#fff', color: '#333', textShadow: 'none' }}>⏱ {formatTime(studyTime)}</div></div>
                   </div>
                   <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
-                    <h2 className="study-deck-title" style={{ margin: 0 }}>{activeDeck?.name}</h2>
+                    {/* ★ タイトルデザインの洗練化 */}
+                    <h2 className="study-deck-title" style={{ margin: 0, fontSize: 'clamp(28px, 6vw, 36px)', fontWeight: '800', color: '#34495e', letterSpacing: '0.1em', textShadow: '1px 2px 4px rgba(0,0,0,0.1)', fontStyle: 'normal', fontFamily: '"Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif' }}>{activeDeck?.name}</h2>
                     {allCards.length >= 4 && (
                       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
                         <button className="test-start-btn" onClick={() => { if(allCards.length < 4) alert(t.testNeeds4); else setView('test'); }}>{t.testBtn}</button>
@@ -758,18 +787,18 @@ function App() {
                 <div className="empty-deck-msg" style={{marginTop: '60px'}}><h2 style={{color: '#27ae60'}}>{t.allMemorizedMsg}</h2><button onClick={resetMemorized} className="add-btn" style={{marginTop: '20px', padding: '15px 30px', fontSize: '18px'}}>{t.resetBtn}</button></div>
               ) : studyCards.length > 0 && !isBulkMode ? (
                 <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
+                  
+                  {/* ★ 操作ボタン群の中央寄せ配置 */}
                   <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: isFullscreen ? 0 : '20px', width: '100%', gap: '10px' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '15px', width: '100%' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', width: '100%', gap: '15px' }}>
+                      
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">{qLang === 'en' ? '🇺🇸 英→日' : '🇯 ঐতি 日→英'}</button>
+                        <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" title="出題言語の切り替え">{qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}</button>
                         <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '50px', padding: '3px', border: '1px solid #e2e8f0' }}>
                           <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`}>🔤 単語</button><button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`}>📝 例文</button>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        {qType === 'word' ? <button onClick={() => setShowExOnBack(!showExOnBack)} className={`setting-badge-btn ${showExOnBack ? 'active' : ''}`}>例文 {showExOnBack ? 'ON' : 'OFF'}</button> : <button onClick={() => setShowWordOnExMode(!showWordOnExMode)} className={`setting-badge-btn ${showWordOnExMode ? 'active' : ''}`}>単語 {showWordOnExMode ? 'ON' : 'OFF'}</button>}
-                        <button onClick={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} className={`setting-badge-btn ${isFrontOnlyAuto ? 'active' : ''}`}>表面のみ {isFrontOnlyAuto ? 'ON' : 'OFF'}</button>
-                      </div>
+
                       <div className="card-counter" style={{ margin: 0, fontSize: '22px', fontWeight: '900', color: '#94a3b8', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <input type="number" className="card-counter-input" min="1" max={studyCards.length} key={currentIndex} defaultValue={currentIndex + 1}
                           onBlur={(e) => {
@@ -780,8 +809,27 @@ function App() {
                           style={{ width: '2.5em', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '2px dashed #cbd5e1', color: 'inherit', font: 'inherit', outline: 'none', padding: '0 5px', marginRight: '5px' }}
                         /> / {studyCards.length}
                       </div>
+
+                      {/* ★ 設定メニュー */}
+                      <div ref={settingsRef} style={{ position: 'relative' }}>
+                        <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="setting-badge-btn" style={{ backgroundColor: showSettingsMenu ? '#e2e8f0' : '#fff' }}>⚙️ 表示オプション ▼</button>
+                        {showSettingsMenu && (
+                          <div style={{ position: 'absolute', top: '100%', right: '50%', transform: 'translateX(50%)', marginTop: '8px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {qType === 'word' ? (
+                              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>例文を表示</span><input type="checkbox" checked={showExOnBack} onChange={() => setShowExOnBack(!showExOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                            ) : (
+                              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>単語を表示</span><input type="checkbox" checked={showWordOnExMode} onChange={() => setShowWordOnExMode(!showWordOnExMode)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                            )}
+                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>メモを表示</span><input type="checkbox" checked={showMemoOnBack} onChange={() => setShowMemoOnBack(!showMemoOnBack)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                            <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '4px 0' }}></div>
+                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '14px', fontWeight: 'bold', color: '#475569', cursor: 'pointer' }}><span>自動めくり: 表面のみ</span><input type="checkbox" checked={isFrontOnlyAuto} onChange={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} style={{ cursor: 'pointer', transform: 'scale(1.2)' }} /></label>
+                          </div>
+                        )}
+                      </div>
+
                     </div>
                   </div>
+
                   <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%' }}>
                     <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => {stopAutoPlayIfActive(); setIsFlipped(!isFlipped);}}>
                       <div className="card-inner">
@@ -794,7 +842,7 @@ function App() {
                     </div>
                   </div>
                   
-                  {/* ★インライン展開に戻したAutoPlayControls */}
+                  {/* ★ インライン展開で復活させた AutoPlayControls */}
                   <div className={isFullscreen ? "fullscreen-stealth-bottom" : "autoplay-controls"} style={isFullscreen ? {} : {background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
                     <div className="autoplay-actions-row">
                       <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>

@@ -101,7 +101,7 @@ export const renderHighlightedText = (text, markerColor = null) => {
     const elements = [];
     for (let i = 0; i < parts.length; i++) {
       if (i % 2 === 1) {
-        // ★ マーカー色が指定されていれば、CSSを上書きして品詞カラーのマーカーを引く
+        // 品詞カラーに基づいた薄いマーカーのみ適用
         const customStyle = markerColor ? { background: `linear-gradient(transparent 50%, ${markerColor} 50%)` } : {};
         const highlight = <span key={`highlight-${i}`} className="highlight-word" style={customStyle}>{parts[i]}</span>;
         
