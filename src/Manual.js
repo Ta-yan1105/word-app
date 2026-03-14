@@ -1,120 +1,211 @@
 import React from 'react';
 
 function Manual({ t, setView }) {
-  // tの中に日本語が含まれているかで表示言語を自動判定
-  const isJa = t.appTitle ? t.appTitle.match(/[ぁ-んァ-ヶ亜-熙]/) : true;
+  // ★ バグ修正: t（辞書データ）の「すべての値」をチェックし、確実に日本語/英語を判定する
+  const isJa = Object.values(t).some(val => typeof val === 'string' && /[ぁ-んァ-ヶ亜-熙]/.test(val));
 
   return (
-    <div className="app-container gentle-bg desk-view">
+    <div className="app-container gentle-bg desk-view" style={{ overflowY: 'auto' }}>
       {/* ヘッダー部分 */}
-      <div className="study-header" style={{ marginBottom: '30px' }}>
+      <div className="study-header" style={{ marginBottom: '30px', position: 'sticky', top: 0, zIndex: 100, background: 'rgba(248, 250, 252, 0.9)', backdropFilter: 'blur(10px)', padding: '15px 0', borderBottom: '1px solid #e2e8f0' }}>
         <button className="back-to-desk-btn" onClick={() => setView('boxes')}>
           {t.backBtn || '◀ 戻る'}
         </button>
         <h2 className="app-title" style={{ margin: 0, textAlign: 'center', flex: 1, paddingRight: '80px' }}>
-          {isJa ? '📖 REDLINE VOCABULARY の使い方' : '📖 How to use REDLINE VOCABULARY'}
+          {isJa ? '📖 REDLINE VOCABULARY 完全マニュアル' : '📖 REDLINE VOCABULARY Guide'}
         </h2>
       </div>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', background: '#fff', borderRadius: '16px', padding: 'clamp(20px, 5vw, 40px)', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', lineHeight: '1.8', color: '#334155' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto 50px auto', background: '#fff', borderRadius: '16px', padding: 'clamp(20px, 5vw, 40px)', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', lineHeight: '1.8', color: '#334155' }}>
 
         {isJa ? (
           // ==============================
-          // 日本語マニュアル
+          // 日本語マニュアル（詳細版）
           // ==============================
           <>
-            <section style={{ marginBottom: '35px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>1. 箱と束（デッキ）の作成 📦</h3>
-              <p style={{ fontSize: '15px', color: '#475569' }}>
-                まずは「箱」を作り、その中に単語の「束（デッキ）」を作成します。<br/>
-                先生や友達から<b>「6桁の共有コード」</b>をもらった場合は、「🔗 共有」ボタンからコードを入力するだけで、一瞬で単語帳をダウンロードできます。
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📦 1. 箱と束（デッキ）の基本
+              </h3>
+              <p style={{ fontSize: '15px', color: '#475569', marginBottom: '10px' }}>
+                このアプリは<b>「箱の中に、単語の束を入れる」</b>という構造になっています。まずはカテゴリごとの「箱」を作り、その中に学習する「束」を作成しましょう。
               </p>
-            </section>
-
-            <section style={{ marginBottom: '35px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>2. 単語の追加とCSVインポート 📂</h3>
-              <p style={{ fontSize: '15px', color: '#475569' }}>
-                「手動で追加」から1語ずつ追加するか、「CSVで追加」から一括インポートが可能です。<br/>
-                AI（ChatGPT等）を使って、自分の趣味や興味に合った例文をCSVで作ってもらうと、記憶への定着率が劇的にアップします。
-              </p>
-            </section>
-
-            <section style={{ marginBottom: '35px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>3. 学習と「Deep Dive（深く調べる）」 🔍</h3>
-              <ul style={{ paddingLeft: '20px', fontSize: '15px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <li><b>基本操作:</b> カードをタップしてめくり、右上の「✔」で暗記済みにします。<br/>（スマホの場合はカード上で左右にスワイプ、PCの場合は矢印キーやスペースキーでも快適に操作可能です）</li>
-                <li><b>Deep Dive機能:</b> カード裏面の右下にある「🔍」アイコンをタップすると、Weblio、英辞郎、YouGlish（YouTube動画検索）などの辞書に一発でアクセスできます。気になった単語の語源や生きた文脈を深く知りましょう。<br/>※ トップ画面右上の「⚙️ 辞書設定」から、自分好みの辞書をカスタマイズできます。</li>
+              <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#64748b' }}>
+                <li style={{ marginBottom: '8px' }}><b>共有コードで追加：</b> 先生や友人から「6桁の英数字コード」をもらった場合は、束の作成欄にある「🔗 共有」ボタンを押し、コードを入力するだけで一瞬で単語帳を取り込めます。</li>
+                <li><b>名前の変更・削除：</b> 箱や束の右上にある「✏️」ボタンで名前の変更、「✖」ボタンで削除ができます。</li>
               </ul>
             </section>
 
-            <section style={{ marginBottom: '35px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>4. テスト＆プリント（PDF出力） 🖨️</h3>
-              <p style={{ fontSize: '15px', color: '#475569' }}>
-                学習画面の「🎯 テスト＆プリント」ボタンから、アプリ内でのテストや、PDF形式の美しいプリントを作成できます。<br/>
-                「単語リスト」「例文プリント」さらに「英検形式の4択問題」など、目的に合わせて出力し、印刷して学習に役立ててください。
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📂 2. 単語の追加とCSVインポート
+              </h3>
+              <p style={{ fontSize: '15px', color: '#475569', marginBottom: '10px' }}>
+                束を開くと、左側のメニューから単語を追加できます。
               </p>
+              <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#64748b' }}>
+                <li style={{ marginBottom: '8px' }}><b>手動で追加：</b> 単語、意味、品詞、例文、メモを1語ずつ丁寧に入力します。</li>
+                <li>
+                  <b>CSVで一括追加：</b> 大量の単語を一気に追加できる強力な機能です。<br/>
+                  指定のChatGPTプロンプト（指示文）を使えば、自分の趣味（ゲームやスポーツなど）に合わせた例文をAIに作らせることができます。<br/>
+                  ※CSVの構成：A列(単語)、B列(意味)、C列(例文)、D列(例文和訳)、E列(品詞)、F列(メモ)
+                </li>
+              </ul>
             </section>
 
-            <section style={{ marginBottom: '20px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>5. 目指せ「30,000語（ネイティブレベル）」 👑</h3>
-              <p style={{ fontSize: '15px', color: '#475569' }}>
-                トップ画面のステータスバーは、あなたが覚えた単語の総数を示しています。<br/>
-                基礎レベル（1,200語）から始まり、最終的には教養あるネイティブスピーカーのレベルである<b>「30,000語」</b>を目指して、自分の限界を突破（REDLINE）していきましょう！
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🔥 3. サクサク進む学習操作
+              </h3>
+              <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px', color: '#475569' }}>
+                <div style={{ marginBottom: '10px' }}><b>【基本のめくり方】</b></div>
+                <ul style={{ paddingLeft: '20px', marginBottom: '15px' }}>
+                  <li><b>スマホ・タブレット：</b> カードをタップして裏返し、<b>カードの上を左右にスワイプ</b>すると前後の単語に移動します。</li>
+                  <li><b>PC・キーボード：</b> <code>Space</code>キー または <code>↑</code> <code>↓</code>キーで裏返し、<code>←</code> <code>→</code>キーで前後に移動できます。</li>
+                </ul>
+                <div style={{ marginBottom: '10px' }}><b>【その他の便利機能】</b></div>
+                <ul style={{ paddingLeft: '20px' }}>
+                  <li><b>暗記済みにする：</b> 完全に覚えた単語は、右上の「✔」ボタンを押すと右側のリストに移動し、次回から出題されなくなります。</li>
+                  <li><b>自動めくり：</b> 画面下の再生ボタンを押すと、スライダーで設定した秒数ごとに自動でカードがめくられます（ハンズフリー学習）。</li>
+                  <li><b>表示オプション：</b> カード上の「⚙️ 表示オプション」から、例文やメモを隠してストイックにテストすることも可能です。</li>
+                </ul>
+              </div>
+            </section>
+
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🔍 4. Deep Dive（深く調べる）機能
+              </h3>
+              <p style={{ fontSize: '15px', color: '#475569', marginBottom: '10px' }}>
+                「この単語、どんな場面で使われるんだろう？」「語源は？」と気になったら、カードの右下にある<b>「🔍」アイコン</b>をタップしてください。
+              </p>
+              <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#64748b' }}>
+                <li style={{ marginBottom: '8px' }}>Weblioや英辞郎、YouGlish（YouTube上のリアルな発音動画検索）、Google画像検索など、様々な辞書へ1タップでアクセスできます。</li>
+                <li>トップ画面の右上の<b>「⚙️ 辞書設定」</b>から、自分が普段よく使う辞書だけを表示するようにカスタマイズが可能です。物書堂アプリへの連携もサポートしています。</li>
+              </ul>
+            </section>
+
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🧠 5. 忘却曲線とプリント出力
+              </h3>
+              <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#64748b' }}>
+                <li style={{ marginBottom: '15px' }}>
+                  <b>復習のタイミング：</b> 束（デッキ）につくバッジは、学習からの経過時間を示します。時間が経ち、束が<b>「ブルブルと震え出したら」</b>、脳が忘れかけているサインです。すぐに復習しましょう！
+                </li>
+                <li>
+                  <b>PDFプリント作成：</b> 学習画面の「🎯 テスト＆プリント」から、アプリ内でのテストだけでなく、<b>美しいPDFプリント</b>を出力できます。通学中や学校での学習用に、「単語一覧」「例文テスト」「英検形式の4択問題」などを印刷して活用してください。
+                </li>
+              </ul>
+            </section>
+
+            <section style={{ marginBottom: '20px', background: '#0f172a', color: '#fff', padding: '25px', borderRadius: '16px' }}>
+              <h3 style={{ borderBottom: '2px solid rgba(255,255,255,0.2)', paddingBottom: '10px', marginTop: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                👑 目指せ、限界突破（30,000語）
+              </h3>
+              <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: 0, lineHeight: '1.8' }}>
+                トップ画面のステータスバーは、あなたがこれまでに「暗記済み」にした総単語数をカウントしています。<br/><br/>
+                高校入試レベル（1,200語）や難関大レベル（5,000語）を通過し、最終目標である<b>「教養あるネイティブスピーカーレベル（30,000語）」</b>を目指して、日々の学習を積み重ねていきましょう！
               </p>
             </section>
           </>
         ) : (
           // ==============================
-          // 英語マニュアル
+          // 英語マニュアル（詳細版）
           // ==============================
           <>
-            <section style={{ marginBottom: '35px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>1. Creating Boxes & Decks 📦</h3>
-              <p style={{ fontSize: '15px', color: '#475569' }}>
-                Start by creating a "Box", and then create "Decks" inside it.<br/>
-                If you receive a <b>"6-digit Share Code"</b> from a teacher or friend, simply click the "🔗 Share" button and enter the code to instantly download their deck.
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📦 1. Basic Structure: Boxes & Decks
+              </h3>
+              <p style={{ fontSize: '15px', color: '#475569', marginBottom: '10px' }}>
+                This app uses a structure where you place <b>"Decks" inside "Boxes."</b> First, create a Box for a specific category, and then create Decks inside it.
               </p>
-            </section>
-
-            <section style={{ marginBottom: '35px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>2. Adding Cards & CSV Import 📂</h3>
-              <p style={{ fontSize: '15px', color: '#475569' }}>
-                You can add cards manually one by one, or bulk import them using the "Add via CSV" feature.<br/>
-                Using AI (like ChatGPT) to generate example sentences related to your hobbies or interests greatly improves your memory retention.
-              </p>
-            </section>
-
-            <section style={{ marginBottom: '35px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>3. Study & "Deep Dive" 🔍</h3>
-              <ul style={{ paddingLeft: '20px', fontSize: '15px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <li><b>Controls:</b> Tap to flip the card, and click the "✔" button to mark it as memorized.<br/>(You can also swipe left/right on mobile, or use arrow keys and the spacebar on PC).</li>
-                <li><b>Deep Dive:</b> Tap the "🔍" icon at the bottom right of a card to instantly search the word in dictionaries like Cambridge, Oxford, or YouGlish (YouTube context search).<br/>* Customize your preferred dictionaries from "⚙️ Dict Settings" on the home screen.</li>
+              <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#64748b' }}>
+                <li style={{ marginBottom: '8px' }}><b>Add via Share Code:</b> If you receive a 6-digit alphanumeric code from a teacher or friend, simply click the "🔗 Share" button and enter the code to instantly download the deck.</li>
+                <li><b>Rename / Delete:</b> Use the "✏️" button to rename and the "✖" button to delete a Box or Deck.</li>
               </ul>
             </section>
 
-            <section style={{ marginBottom: '35px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>4. Tests & Print (PDF) 🖨️</h3>
-              <p style={{ fontSize: '15px', color: '#475569' }}>
-                Click the "🎯 Test & Print" button in the study view to take an in-app test or generate beautifully formatted PDFs.<br/>
-                You can export vocabulary lists, example sentence sheets, and multiple-choice quizzes to print and study offline.
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📂 2. Adding Words & CSV Import
+              </h3>
+              <p style={{ fontSize: '15px', color: '#475569', marginBottom: '10px' }}>
+                Open a deck to add words using the left sidebar menu.
               </p>
+              <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#64748b' }}>
+                <li style={{ marginBottom: '8px' }}><b>Add Manually:</b> Enter the word, meaning, part of speech, example sentence, and memo one by one.</li>
+                <li>
+                  <b>Bulk Import via CSV:</b> A powerful feature to add many words at once. By using the provided ChatGPT prompt, you can generate personalized example sentences tailored to your hobbies! <br/>
+                  *Columns: A(Word), B(Meaning), C(Example), D(Translation), E(POS), F(Memo)
+                </li>
+              </ul>
             </section>
 
-            <section style={{ marginBottom: '20px' }}>
-              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '20px' }}>5. Aim for 30,000 Words 👑</h3>
-              <p style={{ fontSize: '15px', color: '#475569' }}>
-                The progress bar on the home screen tracks your total memorized words.<br/>
-                Starting from the basic level (1,200 words), aim to push your limits (REDLINE) and reach the ultimate goal of <b>30,000 words</b>, which represents an educated native speaker's vocabulary!
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🔥 3. How to Study Efficiently
+              </h3>
+              <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '14px', color: '#475569' }}>
+                <div style={{ marginBottom: '10px' }}><b>[Basic Navigation]</b></div>
+                <ul style={{ paddingLeft: '20px', marginBottom: '15px' }}>
+                  <li><b>Mobile/Tablet:</b> Tap the card to flip it, and <b>swipe left or right on the card</b> to move to the next/previous word.</li>
+                  <li><b>PC/Keyboard:</b> Press <code>Space</code> or <code>↑</code> <code>↓</code> to flip, and <code>←</code> <code>→</code> to navigate.</li>
+                </ul>
+                <div style={{ marginBottom: '10px' }}><b>[Useful Features]</b></div>
+                <ul style={{ paddingLeft: '20px' }}>
+                  <li><b>Mark as Mastered:</b> Click the "✔" button on the top right to move a fully memorized word to the mastered list.</li>
+                  <li><b>Auto-Play:</b> Click the play button at the bottom for hands-free learning based on your preferred interval speed.</li>
+                  <li><b>Display Options:</b> Use "⚙️ Options" to hide example sentences or memos for strict self-testing.</li>
+                </ul>
+              </div>
+            </section>
+
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🔍 4. The "Deep Dive" Feature
+              </h3>
+              <p style={{ fontSize: '15px', color: '#475569', marginBottom: '10px' }}>
+                When you want to know more about a word's nuance or real-life usage, tap the <b>"🔍" icon</b> at the bottom right of the card back.
+              </p>
+              <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#64748b' }}>
+                <li style={{ marginBottom: '8px' }}>Instantly access external dictionaries like Cambridge, Oxford, YouGlish (YouTube context search), or Google Images with just one tap.</li>
+                <li>Customize which dictionaries appear by clicking <b>"⚙️ Dict Settings"</b> on the top right of the home screen.</li>
+              </ul>
+            </section>
+
+            <section style={{ marginBottom: '40px' }}>
+              <h3 style={{ borderBottom: '2px solid #f1f5f9', paddingBottom: '10px', color: '#0f172a', fontSize: '22px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🧠 5. Spaced Repetition & PDF Prints
+              </h3>
+              <ul style={{ paddingLeft: '20px', fontSize: '14px', color: '#64748b' }}>
+                <li style={{ marginBottom: '15px' }}>
+                  <b>Review Timing:</b> The badges on the decks change based on the time elapsed since your last study session. When a deck starts <b>"shaking"</b>, it's the perfect time to review to prevent forgetting!
+                </li>
+                <li>
+                  <b>Generate PDFs:</b> Click "🎯 Test & Print" in the study view to generate beautiful PDF materials. You can print Vocabulary Lists, Example Sheets, or 4-choice Quizzes (Eiken format) for offline studying.
+                </li>
+              </ul>
+            </section>
+
+            <section style={{ marginBottom: '20px', background: '#0f172a', color: '#fff', padding: '25px', borderRadius: '16px' }}>
+              <h3 style={{ borderBottom: '2px solid rgba(255,255,255,0.2)', paddingBottom: '10px', marginTop: 0, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                👑 Aim for 30,000 Words
+              </h3>
+              <p style={{ fontSize: '14px', color: '#cbd5e1', marginBottom: 0, lineHeight: '1.8' }}>
+                The progress bar on the home screen tracks your total mastered vocabulary.<br/><br/>
+                Push your limits (REDLINE) through the basic levels and aim for the ultimate goal: <b>30,000 words</b>, which represents the vocabulary of an educated native speaker. Let's make it happen!
               </p>
             </section>
           </>
         )}
 
         {/* 戻るボタン */}
-        <div style={{ textAlign: 'center', marginTop: '40px' }}>
+        <div style={{ textAlign: 'center', marginTop: '50px' }}>
           <button 
             onClick={() => setView('boxes')}
-            style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '15px 40px', borderRadius: '30px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', transition: 'transform 0.2s' }}
+            style={{ background: '#0f172a', color: '#fff', border: 'none', padding: '16px 48px', borderRadius: '30px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', transition: 'transform 0.2s' }}
             onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
             onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
           >

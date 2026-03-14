@@ -194,10 +194,21 @@ function App() {
     return unsubscribe;
   }, []);
 
+  // ★ Firebaseエラー防止のサニタイズ処理を追加 ★
   useEffect(() => {
-    try { localStorage.setItem('redline_boxes', JSON.stringify(boxes)); localStorage.setItem('redline_decks', JSON.stringify(decks)); } catch (e) {}
+    try { 
+      localStorage.setItem('redline_boxes', JSON.stringify(boxes)); 
+      localStorage.setItem('redline_decks', JSON.stringify(decks)); 
+    } catch (e) {}
+
     if (currentUser && boxes.length > 0) {
-      const timer = setTimeout(() => { setDoc(doc(db, "users", currentUser.uid), { boxes, decks }, { merge: true }).catch(e => console.log(e)); }, 1000); 
+      const timer = setTimeout(() => { 
+        // JSONのパースを通すことで、undefinedなフィールドを綺麗に消去し、Firebaseエラーを防ぐ
+        const safeBoxes = JSON.parse(JSON.stringify(boxes));
+        const safeDecks = JSON.parse(JSON.stringify(decks));
+        setDoc(doc(db, "users", currentUser.uid), { boxes: safeBoxes, decks: safeDecks }, { merge: true })
+          .catch(e => console.log(e)); 
+      }, 1000); 
       return () => clearTimeout(timer);
     }
   }, [boxes, decks, currentUser]);
@@ -728,6 +739,7 @@ function App() {
       <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
         
+        {/* カードのメインコンテンツ（単語や意味など） */}
         {qType === 'word' ? (
           <>
             {qLang === 'en' ? <div className="meaning-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', margin: 0, padding: 0, border: 'none' }}><div className="core-meaning-large" style={{ textAlign: 'left', fontSize: fMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>{String(card.meaning || '').split('/').map((m, i) => <div key={i} className="meaning-line" style={{textAlign: 'left'}}>{cleanText(m)}</div>)}</div></div>
@@ -756,6 +768,7 @@ function App() {
           </div>
         )}
         
+        {/* メモ欄 */}
         {showMemoOnBack && card.memo && (
           <div style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '8px', width: '100%', maxWidth: '800px', fontSize: isFullscreen ? 'clamp(18px, 4vw, 24px)' : '14px', color: '#475569', textAlign: 'left', lineHeight: '1.5', wordBreak: 'break-word' }}>
             <span style={{ fontWeight: 'bold', marginRight: '5px' }}>💡 メモ:</span> {card.memo}
@@ -1013,9 +1026,9 @@ function App() {
                 </div>
               </div>
               <div className="decks-split-layout">
-                {/* ★ グリッド指定を強制的に戻し、横に3つ並ぶ美しいレイアウトに完全復元！ */}
-                <div className="decks-unmemorized-area"><h3 className="area-title">{t.unmemTitle}</h3><p className="area-hint">{t.unmemHint}</p>{unmemorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem}</p> : <div className="decks-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 220px)', gap: '20px', justifyContent: 'start', alignItems: 'start', width: '100%' }}>{unmemorizedDecks.map(renderDeckCard)}</div>}</div>
-                <div className="decks-memorized-area"><h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle}</h3><p className="area-hint">{t.memHint}</p>{memorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem}</p> : <div className="decks-grid memorized-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 220px)', gap: '20px', justifyContent: 'start', alignItems: 'start', width: '100%' }}>{memorizedDecks.map(renderDeckCard)}</div>}</div>
+                {/* ★ 元の App.css が確実に効くようにクラス指定のみに復元（余計なインラインCSSを全消去） */}
+                <div className="decks-unmemorized-area"><h3 className="area-title">{t.unmemTitle}</h3><p className="area-hint">{t.unmemHint}</p>{unmemorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem}</p> : <div className="decks-grid">{unmemorizedDecks.map(renderDeckCard)}</div>}</div>
+                <div className="decks-memorized-area"><h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle}</h3><p className="area-hint">{t.memHint}</p>{memorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem}</p> : <div className="decks-grid memorized-grid">{memorizedDecks.map(renderDeckCard)}</div>}</div>
               </div>
             </div>
           </div>
