@@ -64,7 +64,9 @@ function App() {
   const [showWordOnExMode, setShowWordOnExMode] = useState(true); 
   const [showMemoOnBack, setShowMemoOnBack] = useState(true); 
   const [isFrontOnlyAuto, setIsFrontOnlyAuto] = useState(false); 
+  
   const [showSettingsMenu, setShowSettingsMenu] = useState(false); 
+  const [showActionMenu, setShowActionMenu] = useState(false); 
 
   const touchStartX = useRef(null); 
   const touchStartY = useRef(null); 
@@ -72,6 +74,7 @@ function App() {
   const touchEndY = useRef(null);
   const playedRef = useRef({ index: -1, flipped: false, lang: '', type: '' });
   const settingsRef = useRef(null); 
+  const actionMenuRef = useRef(null); 
 
   const activeDeck = (Array.isArray(decks) ? decks : []).find(d => d.id === currentDeckId);
   const allCards = activeDeck && Array.isArray(activeDeck.cards) ? activeDeck.cards : [];
@@ -81,9 +84,8 @@ function App() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
-        setShowSettingsMenu(false);
-      }
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) setShowSettingsMenu(false);
+      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) setShowActionMenu(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -239,12 +241,6 @@ function App() {
       setIsFullscreen(false);
     }
   };
-
-  useEffect(() => {
-    const handleFullscreenChange = () => { if (!(document.fullscreenElement || document.webkitFullscreenElement)) setIsFullscreen(false); };
-    document.addEventListener('fullscreenchange', handleFullscreenChange); document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    return () => { document.removeEventListener('fullscreenchange', handleFullscreenChange); document.removeEventListener('webkitfullscreenchange', handleFullscreenChange); };
-  }, []);
 
   const unlockAudio = useCallback(() => {
     if ('speechSynthesis' in window && !isMuted) { const dummy = new SpeechSynthesisUtterance(''); dummy.volume = 0; window.speechSynthesis.speak(dummy); }
@@ -568,8 +564,6 @@ function App() {
              )}
           </div>
         )}
-        
-        {/* メモ表示 */}
         {showMemoOnBack && card.memo && (
           <div style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '8px', width: '100%', maxWidth: '800px', fontSize: isFullscreen ? 'clamp(18px, 4vw, 24px)' : '14px', color: '#475569', textAlign: 'left', lineHeight: '1.5', wordBreak: 'break-word' }}>
             <span style={{ fontWeight: 'bold', marginRight: '5px' }}>💡 メモ:</span> {card.memo}
@@ -578,10 +572,6 @@ function App() {
       </div>
     );
   };
-
-  // ============================
-  // メインの描画
-  // ============================
 
   if (isAuthLoading) return <div className="app-container gentle-bg desk-view" style={{justifyContent:'center', height:'100vh'}}><h2 style={{color:'#7f8c8d'}}>{t.loading}</h2></div>;
   if (!currentUser) return (
@@ -645,7 +635,7 @@ function App() {
     <div className="app-container gentle-bg desk-view" onClick={handleClick} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {toastMessage && <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(39, 174, 96, 0.95)', color: '#fff', padding: '20px 40px', borderRadius: '16px', fontWeight: 'bold', zIndex: 10001, fontSize: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', animation: 'popInOut 3s forwards', textAlign: 'center', whiteSpace: 'nowrap' }}>{toastMessage}</div>}
       
-      {/* 編集モーダル */}
+      {/* 編集・新規作成モーダル */}
       {editingCard && (
         <div className="modal-overlay" onClick={() => setEditingCard(null)} onTouchStart={e => e.stopPropagation()}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
@@ -674,7 +664,6 @@ function App() {
         </div>
       )}
 
-      {/* 新規作成モーダル */}
       {addingCard && (
         <div className="modal-overlay" onClick={() => setAddingCard(false)} onTouchStart={e => e.stopPropagation()}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
@@ -755,13 +744,23 @@ function App() {
                     <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}><button className="mute-toggle-btn" onClick={() => setIsMuted(!isMuted)}>{isMuted ? t.audioOff : t.audioOn}</button><div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`} style={{ visibility: isBulkMode ? 'hidden' : 'visible', background: '#fff', color: '#333', textShadow: 'none' }}>⏱ {formatTime(studyTime)}</div></div>
                   </div>
                   <div className="study-title-area" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', gap: '10px', width: '100%' }}>
-                    {/* ★ タイトルデザインの洗練化 */}
                     <h2 className="study-deck-title" style={{ margin: 0, fontSize: 'clamp(28px, 6vw, 36px)', fontWeight: '800', color: '#34495e', letterSpacing: '0.1em', textShadow: '1px 2px 4px rgba(0,0,0,0.1)', fontStyle: 'normal', fontFamily: '"Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif' }}>{activeDeck?.name}</h2>
+                    
+                    {/* ★ 4択プリント作成を追加した統合メニュー */}
                     {allCards.length >= 4 && (
-                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                        <button className="test-start-btn" onClick={() => { if(allCards.length < 4) alert(t.testNeeds4); else setView('test'); }}>{t.testBtn}</button>
-                        <button className="test-start-btn print-btn" onClick={() => openPrintPreview('word')}>{t.printBtn}</button>
-                        <button className="test-start-btn print-btn" onClick={() => openPrintPreview('example')} style={{backgroundColor: '#3498db'}}>{t.printExampleBtn}</button>
+                      <div ref={actionMenuRef} style={{ position: 'relative', marginTop: '10px' }}>
+                        <button onClick={() => setShowActionMenu(!showActionMenu)} style={{ backgroundColor: '#34495e', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '30px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          🎯 テスト ＆ プリント ▼
+                        </button>
+                        {showActionMenu && (
+                          <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '10px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.15)', zIndex: 100, minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <button onClick={() => { setView('test'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>📝 アプリでテストする</button>
+                            <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '2px 0' }}></div>
+                            <button onClick={() => { openPrintPreview('word'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>🖨️ 単語プリントを作る</button>
+                            <button onClick={() => { openPrintPreview('example'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>🖨️ 例文プリントを作る</button>
+                            <button onClick={() => { openPrintPreview('choice'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '12px', fontSize: '15px', fontWeight: 'bold', color: '#2c3e50', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}>🖨️ 4択プリント (英検形式)</button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -788,7 +787,6 @@ function App() {
               ) : studyCards.length > 0 && !isBulkMode ? (
                 <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
                   
-                  {/* ★ 操作ボタン群の中央寄せ配置 */}
                   <div className={`card-header-actions ${isFullscreen ? 'fullscreen-stealth-top' : ''}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: isFullscreen ? 0 : '20px', width: '100%', gap: '10px' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', width: '100%', gap: '15px' }}>
                       
@@ -810,7 +808,6 @@ function App() {
                         /> / {studyCards.length}
                       </div>
 
-                      {/* ★ 設定メニュー */}
                       <div ref={settingsRef} style={{ position: 'relative' }}>
                         <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="setting-badge-btn" style={{ backgroundColor: showSettingsMenu ? '#e2e8f0' : '#fff' }}>⚙️ 表示オプション ▼</button>
                         {showSettingsMenu && (
@@ -842,7 +839,6 @@ function App() {
                     </div>
                   </div>
                   
-                  {/* ★ インライン展開で復活させた AutoPlayControls */}
                   <div className={isFullscreen ? "fullscreen-stealth-bottom" : "autoplay-controls"} style={isFullscreen ? {} : {background: '#fff', border: '1px solid #e1e4e8', width: '100%', maxWidth: '500px', margin: '0 auto', boxSizing: 'border-box'}}>
                     <div className="autoplay-actions-row">
                       <button className="nav-btn-physical" onClick={handlePrevCard}>◀</button>
