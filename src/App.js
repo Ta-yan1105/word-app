@@ -14,16 +14,16 @@ import PrintPreview from './PrintPreview';
 import TestMode from './TestMode';
 
 const DICTIONARIES = [
-  { id: 'weblio', name: 'Weblio英和', icon: '📖' },
-  { id: 'eijiro', name: '英辞郎', icon: '📘' },
-  { id: 'goo', name: 'goo辞書', icon: '📗' },
-  { id: 'cambridge', name: 'Cambridge(英英)', icon: '🇬🇧' },
-  { id: 'oxford', name: 'Oxford(英英)', icon: '🎓' },
-  { id: 'longman', name: 'Longman(英英)', icon: '🦁' },
-  { id: 'google', name: 'Google翻訳', icon: '🌐' },
-  { id: 'images', name: '画像検索', icon: '🖼️' },
-  { id: 'youglish', name: 'YouGlish(動画)', icon: '🎬' },
-  { id: 'monokakido', name: '物書堂(アプリ)', icon: '📱' }
+  { id: 'weblio', name: 'Weblio', icon: '📖' },
+  { id: 'eijiro', name: 'Eijiro', icon: '📘' },
+  { id: 'goo', name: 'goo Dict', icon: '📗' },
+  { id: 'cambridge', name: 'Cambridge', icon: '🇬🇧' },
+  { id: 'oxford', name: 'Oxford', icon: '🎓' },
+  { id: 'longman', name: 'Longman', icon: '🦁' },
+  { id: 'google', name: 'Google', icon: '🌐' },
+  { id: 'images', name: 'Images', icon: '🖼️' },
+  { id: 'youglish', name: 'YouGlish', icon: '🎬' },
+  { id: 'monokakido', name: 'Monokakido', icon: '📱' }
 ];
 
 function App() {
@@ -740,7 +740,7 @@ function App() {
     const markerColor = posColors ? posColors.border : null;
 
     return (
-      <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
+      <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingBottom: '60px', boxSizing: 'border-box', overflowY: 'auto' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
         
         {qType === 'word' ? (
@@ -771,15 +771,25 @@ function App() {
           </div>
         )}
         
+        {/* メモ欄 */}
         {showMemoOnBack && card.memo && (
           <div style={{ marginTop: '15px', padding: '10px 15px', backgroundColor: '#f8fafc', borderRadius: '8px', width: '100%', maxWidth: '800px', fontSize: isFullscreen ? 'clamp(18px, 4vw, 24px)' : '14px', color: '#475569', textAlign: 'left', lineHeight: '1.5', wordBreak: 'break-word' }}>
             <span style={{ fontWeight: 'bold', marginRight: '5px' }}>{lang==='ja'?'💡 メモ:':'💡 Memo:'}</span> {card.memo}
           </div>
         )}
 
-        {/* ★ 折りたたみ式 Deep Dive ボタン（カード右下に固定配置） */}
+        {/* ★ 改善: Deep Diveボタンを「右上」に移動し、文字への被りを完全に防止。さらにメニューを下へ展開。 */}
         {activeDicts.length > 0 && (
-          <div style={{ position: 'absolute', bottom: '15px', right: '15px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }} onClick={e => e.stopPropagation()}>
+          <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }} onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowDeepDive(!showDeepDive); }}
+              style={{ background: showDeepDive ? '#334155' : '#ffffff', border: '1px solid #cbd5e1', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', transition: 'all 0.2s', color: showDeepDive ? '#fff' : '#000', opacity: showDeepDive ? 1 : 0.7 }}
+              onMouseOver={e => e.currentTarget.style.opacity = 1}
+              onMouseOut={e => e.currentTarget.style.opacity = showDeepDive ? 1 : 0.7}
+              title={lang==='ja'?'辞書で深く調べる':'Deep Dive (Dictionary)'}
+            >
+              {showDeepDive ? '✖' : '🔍'}
+            </button>
             {showDeepDive && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', background: 'rgba(255,255,255,0.95)', padding: '10px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.15)', backdropFilter: 'blur(5px)', border: '1px solid #e2e8f0', minWidth: '140px' }}>
                 {activeDicts.map(dictId => {
@@ -800,15 +810,6 @@ function App() {
                 })}
               </div>
             )}
-            <button 
-              onClick={(e) => { e.stopPropagation(); setShowDeepDive(!showDeepDive); }}
-              style={{ background: showDeepDive ? '#334155' : '#ffffff', border: '1px solid #cbd5e1', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', transition: 'all 0.2s', color: showDeepDive ? '#fff' : '#000', opacity: showDeepDive ? 1 : 0.5 }}
-              onMouseOver={e => e.currentTarget.style.opacity = 1}
-              onMouseOut={e => e.currentTarget.style.opacity = showDeepDive ? 1 : 0.5}
-              title={lang==='ja'?'辞書で深く調べる':'Deep Dive (Dictionary)'}
-            >
-              {showDeepDive ? '✖' : '🔍'}
-            </button>
           </div>
         )}
       </div>
@@ -998,7 +999,7 @@ function App() {
             <textarea className="modal-input" value={editingCard.example} onChange={(e) => setEditingCard({...editingCard, example: e.target.value})} rows="2" />
             <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{t.trHint || (lang==='ja'?'例文和訳':'Translation')}</label>
             <textarea className="modal-input" value={editingCard.translation} onChange={(e) => setEditingCard({...editingCard, translation: e.target.value})} rows="2" />
-            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold' }}>{lang === 'ja' ? '💡 メモ (語源や注意点など)' : '💡 Memo'}</label>
+            <label style={{fontSize: '13px', color: '#a39c96', fontWeight: 'bold'}}>{lang === 'ja' ? '💡 メモ (語源や注意点など)' : '💡 Memo'}</label>
             <input className="modal-input" value={editingCard.memo || ''} onChange={(e) => setEditingCard({...editingCard, memo: e.target.value})} />
             <div className="modal-actions">
               <button className="cancel-btn" onClick={() => setEditingCard(null)}>{t.cancelBtn || (lang==='ja'?'キャンセル':'Cancel')}</button><button className="add-btn" onClick={saveEditedCard}>{t.saveBtn || (lang==='ja'?'保存':'Save')}</button>
@@ -1064,7 +1065,6 @@ function App() {
               </div>
             </div>
 
-            {/* ★ 束（デッキ）が全画面に伸びるバグを解消し、横に綺麗に並べる元のCSSを信じる */}
             <div className="decks-split-layout">
               <div className="decks-unmemorized-area"><h3 className="area-title">{t.unmemTitle || (lang==='ja'?'📖 学習中・未修の束':'📖 To Study')}</h3><p className="area-hint">{t.unmemHint || (lang==='ja'?'※すべての単語を覚えると、暗記済みに移動します。':'Words move to Mastered when memorized.')}</p>{unmemorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noUnmem || (lang==='ja'?'束がありません':'No Decks')}</p> : <div className="decks-grid">{unmemorizedDecks.map(renderDeckCard)}</div>}</div>
               <div className="decks-memorized-area"><h3 className="area-title" style={{color: '#27ae60'}}>{t.memTitle || (lang==='ja'?'🏆 暗記済の束':'🏆 Mastered')}</h3><p className="area-hint">{t.memHint || (lang==='ja'?'※完璧に覚えた束がここに並びます！':'Perfectly memorized decks appear here!')}</p>{memorizedDecks.length === 0 ? <p style={{textAlign: 'center', color: '#999', marginTop: '30px'}}>{t.noMem || (lang==='ja'?'まだ暗記済みの束はありません。':'No mastered decks yet.')}</p> : <div className="decks-grid memorized-grid">{memorizedDecks.map(renderDeckCard)}</div>}</div>
@@ -1078,7 +1078,6 @@ function App() {
           {!isFullscreen && (
             <div className="side-panel left-panel">
               <h3 className="panel-title">{t.learningPanel || (lang==='ja'?'📖 学習中':'📖 Learning')} ({studyCards.length})</h3>
-              {/* ★ サイドバーのボタンを完璧な配置に復元！余計なインラインスタイル削除 */}
               <div className="panel-top-action">
                 {!isDeleteMode ? (
                   <>
@@ -1095,11 +1094,11 @@ function App() {
                   </div>
                 )}
               </div>
-              <div className="mini-card-list">{studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}</div>
+              {/* ★ スマホで学習中リストがたくさん見えるように高さを確保 ★ */}
+              <div className="mini-card-list" style={{ flex: 1, minHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>{studyCards.map((c, i) => renderMiniCard(c, false, i + 1, `study-${i}`))}</div>
             </div>
           )}
           
-          {/* ★ センターズレの元凶だったインラインスタイルを完全削除し、真ん中に配置する */}
           <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`}>
             {!isFullscreen && (
               <>
@@ -1242,7 +1241,8 @@ function App() {
           {!isFullscreen && (
             <div className="side-panel right-panel">
               <h3 className="panel-title">{t.memorizedPanel || (lang==='ja'?'🏆 暗記済':'🏆 Mastered')} ({memorizedCards.length})</h3>
-              <div className="mini-card-list">{memorizedCards.length === 0 ? <p className="empty-mini-msg">{t.dragHereMsg || (lang==='ja'?'左の ✅ ボタンでここに移動！':'Click ✅ to move words here!')}</p> : memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`))}</div>
+              {/* ★ スマホで暗記済リストがたくさん見えるように高さを確保 ★ */}
+              <div className="mini-card-list" style={{ flex: 1, minHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>{memorizedCards.length === 0 ? <p className="empty-mini-msg">{t.dragHereMsg || (lang==='ja'?'左の ✅ ボタンでここに移動！':'Click ✅ to move words here!')}</p> : memorizedCards.map((c, i) => renderMiniCard(c, true, null, `mem-${i}`))}</div>
             </div>
           )}
         </div>
