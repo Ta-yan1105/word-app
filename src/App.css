@@ -935,6 +935,20 @@ textarea.modal-input { resize: vertical; min-height: 58px; }
 .bulk-hint { font-size: 14px; color: var(--ink-mid); line-height: 1.6; margin-bottom: 12px; }
 .bulk-note { background: var(--green-soft); border: 1px solid #BBF7D0; border-radius: var(--radius-md); padding: 13px; text-align: left; white-space: pre-wrap; color: #065F46; font-size: 13px; line-height: 1.6; }
 
+/* ring-hole: 繧ｹ繝槭�縺ｧ縺ｯ髱櫁｡ｨ遉ｺ */
+@media (max-width: 600px) {
+  .ring-hole { display: none !important; }
+}
+
+/* 險ｭ螳壹Γ繝九Η繝ｼ: 繧ｹ繝槭�縺ｧ縺ｯ蜿ｳ遶ｯ蝗ｺ螳壹〒縺ｯ縺ｪ縺丈ｸｭ螟ｮ蟇�○ */
+@media (max-width: 600px) {
+  .settings-dropdown {
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
 /* =========================================================================
    MOBILE: study controls row scroll & card centering
    ========================================================================= */
@@ -968,4 +982,16 @@ textarea.modal-input { resize: vertical; min-height: 58px; }
     text-align: center !important;
     width: 100% !important;
   }
+}
+
+/* ctrl-hide-mobile: PC 縺ｧ縺ｯ陦ｨ遉ｺ縲√せ繝槭�縺ｧ縺ｯ髱櫁｡ｨ遉ｺ */
+.ctrl-hide-mobile { display: flex; }
+@media (max-width: 600px) {
+  .ctrl-hide-mobile { display: none !important; }
+}
+
+/* ctrl-mobile-only: 繧ｹ繝槭�縺ｧ縺ｮ縺ｿ陦ｨ遉ｺ */
+.ctrl-mobile-only { display: none; }
+@media (max-width: 600px) {
+  .ctrl-mobile-only { display: flex !important; }
 }

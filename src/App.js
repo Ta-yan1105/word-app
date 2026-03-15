@@ -1469,6 +1469,7 @@ function App() {
 
                   {/* 🔊 音声 */}
                   <button onClick={() => setIsMuted(!isMuted)}
+                    className="ctrl-hide-mobile"
                     style={{
                       height: '32px', padding: '0 10px', borderRadius: '8px',
                       border: 'none',
@@ -1487,10 +1488,11 @@ function App() {
                     <span style={{ fontSize: '11px' }}>{isMuted ? (lang==='ja'?'オフ':'OFF') : (lang==='ja'?'オン':'ON')}</span>
                   </button>
 
-                  <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 2px', flexShrink: 0 }} />
+                  <div className="ctrl-hide-mobile" style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 2px', flexShrink: 0 }} />
 
                   {/* 🇺🇸 英→日 */}
                   <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')}
+                    className="ctrl-hide-mobile"
                     style={{
                       height: '32px', padding: '0 10px', borderRadius: '8px',
                       border: 'none', background: 'transparent',
@@ -1505,7 +1507,7 @@ function App() {
                   </button>
 
                   {/* 単語 / 例文 セグメント */}
-                  <div style={{
+                  <div className="ctrl-hide-mobile" style={{
                     display: 'flex', background: '#f1f5f9', borderRadius: '8px',
                     padding: '2px', border: '1px solid #e8ecf2', flexShrink: 0,
                   }}>
@@ -1615,11 +1617,11 @@ function App() {
                       <span style={{ fontSize: '8px', opacity: 0.5 }}>▼</span>
                     </button>
                     {showSettingsMenu && (
-                      <div style={{
+                      <div className="settings-dropdown" style={{
                         position: 'absolute', top: '100%', right: 0, marginTop: '6px',
                         backgroundColor: '#fff', border: '1px solid #e2e8f0',
                         borderRadius: '14px', padding: '12px',
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 100,
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 200,
                         minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '8px',
                       }}>
                         <button onClick={shuffleCurrentDeck}
@@ -1654,31 +1656,40 @@ function App() {
                   </div>
                 </div>
 
-                {/* ── Row 2: カード管理ライン ── */}
+                {/* ── Row 2: スマホ用ミニコントロール + カード管理 ── */}
                 {!isBulkMode && !isDeleteMode && (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: '0px',
-                    background: 'transparent',
-                  }}>
-                    {[
-                      { fn: () => setAddingCard(true), label: lang==='ja'?'+ 手動で追加':'+  Add', color: '#16a34a', hover: '#f0fdf4' },
-                      { fn: () => setIsBulkMode(true),  label: lang==='ja'?'↑ CSVで追加':'↑  CSV',  color: '#d97706', hover: '#fffbeb' },
-                      { fn: () => setShowOverview(true), label: lang==='ja'?'▦ カード一覧':'▦  Cards', color: '#475569', hover: '#f1f5f9' },
-                    ].map((item, idx) => (
-                      <button key={idx} onClick={item.fn}
-                        style={{
-                          height: '28px', padding: '0 14px', border: 'none',
-                          background: 'transparent', color: item.color,
-                          fontSize: '11px', fontWeight: 700, cursor: 'pointer',
-                          whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif",
-                          letterSpacing: '0.2px', transition: 'all 0.15s',
-                          borderRight: idx < 2 ? '1px solid #e2e8f0' : 'none',
-                          borderRadius: idx === 0 ? '6px 0 0 6px' : idx === 2 ? '0 6px 6px 0' : '0',
-                        }}
-                        onMouseOver={e => { e.currentTarget.style.background = item.hover; }}
-                        onMouseOut={e => { e.currentTarget.style.background = 'transparent'; }}
-                      >{item.label}</button>
-                    ))}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '100%' }}>
+                    {/* スマホのみ: 音声・英語方向・単語/例文 */}
+                    <div className="ctrl-mobile-only" style={{ alignItems: 'center', gap: '4px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '4px 8px', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+                      <button onClick={() => setIsMuted(!isMuted)}
+                        style={{ height: '30px', padding: '0 10px', borderRadius: '7px', border: 'none', background: isMuted ? '#fef2f2' : 'transparent', color: isMuted ? '#E8294A' : '#475569', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        {isMuted ? '🔇 オフ' : '🔊 オン'}
+                      </button>
+                      <div style={{ width: '1px', height: '16px', background: '#e2e8f0', display: 'inline-block', verticalAlign: 'middle', margin: '0 2px' }} />
+                      <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')}
+                        style={{ height: '30px', padding: '0 10px', borderRadius: '7px', border: 'none', background: 'transparent', color: '#334155', fontSize: '12px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        {qLang === 'en' ? '🇺🇸 英→日' : '🇯🇵 日→英'}
+                      </button>
+                      <div style={{ width: '1px', height: '16px', background: '#e2e8f0', display: 'inline-block', verticalAlign: 'middle', margin: '0 2px' }} />
+                      <span style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: '6px', padding: '2px' }}>
+                        <button onClick={() => setQType('word')} style={{ height: '26px', padding: '0 9px', borderRadius: '4px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer', background: qType === 'word' ? '#fff' : 'transparent', color: qType === 'word' ? '#0f172a' : '#94a3b8', transition: 'all 0.15s' }}>{lang==='ja'?'単語':'Word'}</button>
+                        <button onClick={() => setQType('example')} style={{ height: '26px', padding: '0 9px', borderRadius: '4px', border: 'none', fontSize: '11px', fontWeight: 700, cursor: 'pointer', background: qType === 'example' ? '#fff' : 'transparent', color: qType === 'example' ? '#0f172a' : '#94a3b8', transition: 'all 0.15s' }}>{lang==='ja'?'例文':'Ex.'}</button>
+                      </span>
+                    </div>
+                    {/* カード管理リンク */}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {[
+                        { fn: () => setAddingCard(true), label: lang==='ja'?'+ 手動で追加':'+  Add', color: '#16a34a', hover: '#f0fdf4' },
+                        { fn: () => setIsBulkMode(true),  label: lang==='ja'?'↑ CSVで追加':'↑  CSV',  color: '#d97706', hover: '#fffbeb' },
+                        { fn: () => setShowOverview(true), label: lang==='ja'?'▦ カード一覧':'▦  Cards', color: '#475569', hover: '#f1f5f9' },
+                      ].map((item, idx) => (
+                        <button key={idx} onClick={item.fn}
+                          style={{ height: '28px', padding: '0 14px', border: 'none', background: 'transparent', color: item.color, fontSize: '11px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.2px', transition: 'all 0.15s', borderRight: idx < 2 ? '1px solid #e2e8f0' : 'none', borderRadius: idx === 0 ? '6px 0 0 6px' : idx === 2 ? '0 6px 6px 0' : '0' }}
+                          onMouseOver={e => e.currentTarget.style.background = item.hover}
+                          onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                        >{item.label}</button>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {!isBulkMode && isDeleteMode && (
