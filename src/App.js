@@ -1450,118 +1450,235 @@ function App() {
               </div>
             )}
 
-            {/* ━━━━━━ メインコントロール（1行） ━━━━━━ */}
+            {/* ━━━━━━ メインコントロール ━━━━━━ */}
             {!isFullscreen && (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '12px', gap: '8px', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '14px', gap: '8px', width: '100%' }}>
                 <h2 className="study-deck-title">{activeDeck?.name}</h2>
 
-                {/* ── 全コントロール 1行 ── */}
-                <div className="study-controls-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', maxWidth: '900px', flexWrap: 'wrap' }}>
+                {/* ── Row 1: 統合ツールバー（カード全体をラップするカプセル） ── */}
+                <div className="study-controls-row"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '2px',
+                    background: '#ffffff', border: '1px solid #e2e8f0',
+                    borderRadius: '14px', padding: '5px 8px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
+                    width: '100%', maxWidth: '900px',
+                    flexWrap: 'wrap', justifyContent: 'center',
+                    boxSizing: 'border-box',
+                  }}>
 
-                  {/* 音声 */}
+                  {/* 🔊 音声 */}
                   <button onClick={() => setIsMuted(!isMuted)}
-                    style={{ height: '34px', padding: '0 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: isMuted ? '#fef2f2' : '#f8fafc', color: isMuted ? '#E8294A' : '#475569', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif", transition: 'all 0.18s', flexShrink: 0 }}>
-                    {isMuted ? '🔇' : '🔊'}{isMuted ? (lang==='ja'?'オフ':'OFF') : (lang==='ja'?'オン':'ON')}
+                    style={{
+                      height: '32px', padding: '0 10px', borderRadius: '8px',
+                      border: 'none',
+                      background: isMuted ? '#fef2f2' : 'transparent',
+                      color: isMuted ? '#E8294A' : '#64748b',
+                      fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '4px',
+                      whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif",
+                      transition: 'all 0.15s', flexShrink: 0,
+                    }}
+                    onMouseOver={e => { if (!isMuted) e.currentTarget.style.background = '#f8fafc'; }}
+                    onMouseOut={e => { if (!isMuted) e.currentTarget.style.background = 'transparent'; }}
+                    title={isMuted ? (lang==='ja'?'音声オフ':'Audio OFF') : (lang==='ja'?'音声オン':'Audio ON')}
+                  >
+                    <span style={{ fontSize: '15px' }}>{isMuted ? '🔇' : '🔊'}</span>
+                    <span style={{ fontSize: '11px' }}>{isMuted ? (lang==='ja'?'オフ':'OFF') : (lang==='ja'?'オン':'ON')}</span>
                   </button>
 
-                  {/* 区切り */}
-                  <div style={{ width: '1px', height: '20px', background: '#e2e8f0', flexShrink: 0 }} />
+                  <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 2px', flexShrink: 0 }} />
 
-                  {/* 英→日 */}
-                  <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')} className="setting-badge-btn" style={{ height: '34px', flexShrink: 0 }}>
+                  {/* 🇺🇸 英→日 */}
+                  <button onClick={() => setQLang(qLang === 'en' ? 'ja' : 'en')}
+                    style={{
+                      height: '32px', padding: '0 10px', borderRadius: '8px',
+                      border: 'none', background: 'transparent',
+                      color: '#334155', fontSize: '12px', fontWeight: 700,
+                      cursor: 'pointer', whiteSpace: 'nowrap',
+                      fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s', flexShrink: 0,
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                    onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                  >
                     {qLang === 'en' ? (lang==='ja'?'🇺🇸 英→日':'🇺🇸 En→Jp') : (lang==='ja'?'🇯🇵 日→英':'🇯🇵 Jp→En')}
                   </button>
 
-                  {/* 単語 / 例文 */}
-                  <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '3px', border: '1px solid #e2e8f0', flexShrink: 0 }}>
-                    <button onClick={() => setQType('word')} className={`toggle-tab-btn ${qType === 'word' ? 'active' : ''}`} style={{ height: '28px', fontSize: '12px', padding: '0 10px' }}>{lang==='ja'?'単語':'Word'}</button>
-                    <button onClick={() => setQType('example')} className={`toggle-tab-btn ${qType === 'example' ? 'active' : ''}`} style={{ height: '28px', fontSize: '12px', padding: '0 10px' }}>{lang==='ja'?'例文':'Example'}</button>
+                  {/* 単語 / 例文 セグメント */}
+                  <div style={{
+                    display: 'flex', background: '#f1f5f9', borderRadius: '8px',
+                    padding: '2px', border: '1px solid #e8ecf2', flexShrink: 0,
+                  }}>
+                    {[
+                      { key: 'word',    label: lang==='ja'?'単語':'Word' },
+                      { key: 'example', label: lang==='ja'?'例文':'Example' },
+                    ].map(item => (
+                      <button key={item.key} onClick={() => setQType(item.key)}
+                        style={{
+                          height: '28px', padding: '0 11px', borderRadius: '6px', border: 'none',
+                          fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                          background: qType === item.key ? '#fff' : 'transparent',
+                          color: qType === item.key ? '#0f172a' : '#94a3b8',
+                          boxShadow: qType === item.key ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+                          transition: 'all 0.15s', fontFamily: "'Outfit', sans-serif",
+                          whiteSpace: 'nowrap',
+                        }}
+                      >{item.label}</button>
+                    ))}
                   </div>
 
                   {/* カウンター */}
-                  <div style={{ display: 'flex', alignItems: 'center', fontSize: '15px', fontWeight: 900, color: '#94a3b8', fontFamily: "'DM Mono', monospace", flexShrink: 0, gap: '2px' }}>
-                    <input type="number" className="card-counter-input" min="1" max={studyCards.length} key={currentIndex} defaultValue={currentIndex + 1}
-                      onBlur={(e) => { let val = parseInt(e.target.value, 10); if (!isNaN(val)) { val = Math.max(1, Math.min(val, studyCards.length)); if (val - 1 !== currentIndex) { stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex(val - 1); } else e.target.value = currentIndex + 1; } else e.target.value = currentIndex + 1; }}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '1px',
+                    fontFamily: "'DM Mono', monospace", flexShrink: 0,
+                    background: '#f8fafc', borderRadius: '8px', padding: '0 10px',
+                    height: '32px', border: '1px solid #e8ecf2',
+                  }}>
+                    <input type="number" className="card-counter-input"
+                      min="1" max={studyCards.length} key={currentIndex} defaultValue={currentIndex + 1}
+                      onBlur={(e) => {
+                        let val = parseInt(e.target.value, 10);
+                        if (!isNaN(val)) { val = Math.max(1, Math.min(val, studyCards.length)); if (val - 1 !== currentIndex) { stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex(val - 1); } else e.target.value = currentIndex + 1; } else e.target.value = currentIndex + 1;
+                      }}
                       onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); e.stopPropagation(); }}
-                      style={{ width: '2.2em', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '2px dashed #cbd5e1', color: 'inherit', font: 'inherit', outline: 'none' }}
+                      style={{ width: '2em', textAlign: 'center', background: 'transparent', border: 'none', borderBottom: '1.5px dashed #cbd5e1', color: '#334155', font: 'inherit', outline: 'none', fontSize: '14px', fontWeight: 800 }}
                     />
-                    <span style={{ opacity: 0.5 }}>/ {studyCards.length}</span>
+                    <span style={{ color: '#cbd5e1', fontSize: '13px', margin: '0 1px' }}>/</span>
+                    <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 800 }}>{studyCards.length}</span>
                   </div>
 
-                  {/* 区切り */}
-                  <div style={{ width: '1px', height: '20px', background: '#e2e8f0', flexShrink: 0 }} />
+                  <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 2px', flexShrink: 0 }} />
 
                   {/* テスト & プリント */}
                   {allCards.length >= 4 && (
                     <div ref={actionMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
                       <button onClick={() => setShowActionMenu(!showActionMenu)}
-                        style={{ height: '34px', padding: '0 14px', background: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontFamily: "'Outfit', sans-serif", whiteSpace: 'nowrap' }}>
-                        {lang==='ja'?'テスト & プリント':'Test & Print'} <span style={{ fontSize: '9px', opacity: 0.7 }}>▼</span>
+                        style={{
+                          height: '32px', padding: '0 12px',
+                          background: showActionMenu ? '#0f172a' : '#0f172a',
+                          color: '#fff', border: 'none', borderRadius: '8px',
+                          fontSize: '12px', fontWeight: 700, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', gap: '5px',
+                          fontFamily: "'Outfit', sans-serif", whiteSpace: 'nowrap',
+                          boxShadow: '0 2px 6px rgba(15,23,42,0.2)',
+                        }}>
+                        <span style={{ fontSize: '13px' }}>🎯</span>
+                        {lang==='ja'?'テスト & プリント':'Test & Print'}
+                        <span style={{ fontSize: '8px', opacity: 0.6, marginLeft: '2px' }}>▼</span>
                       </button>
                       {showActionMenu && (
-                        <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '6px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 100, minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          <button onClick={() => { setShowPodcast(true); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '9px 11px', fontSize: '13px', fontWeight: 600, color: '#2563EB', textAlign: 'left', cursor: 'pointer', borderRadius: '7px' }}>🎧 {lang==='ja'?'聴き流し':'Podcast'}</button>
-                          <div style={{ height: '1px', background: '#f1f5f9' }}></div>
-                          <button onClick={() => { setView('test'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '9px 11px', fontSize: '13px', fontWeight: 600, color: '#334155', textAlign: 'left', cursor: 'pointer', borderRadius: '7px' }}>📝 {lang==='ja'?'テスト':'Test'}</button>
-                          <div style={{ height: '1px', background: '#f1f5f9' }}></div>
-                          <button onClick={() => { openPrintPreview('word'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '9px 11px', fontSize: '13px', fontWeight: 600, color: '#334155', textAlign: 'left', cursor: 'pointer', borderRadius: '7px' }}>🖨 {lang==='ja'?'単語プリント':'Print Words'}</button>
-                          <button onClick={() => { openPrintPreview('example'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '9px 11px', fontSize: '13px', fontWeight: 600, color: '#334155', textAlign: 'left', cursor: 'pointer', borderRadius: '7px' }}>🖨 {lang==='ja'?'例文プリント':'Examples'}</button>
-                          <button onClick={() => { openPrintPreview('choice'); setShowActionMenu(false); }} style={{ background: 'none', border: 'none', padding: '9px 11px', fontSize: '13px', fontWeight: 600, color: '#334155', textAlign: 'left', cursor: 'pointer', borderRadius: '7px' }}>🖨 {lang==='ja'?'4択プリント':'4-Choice'}</button>
+                        <div style={{
+                          position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+                          marginTop: '6px', backgroundColor: '#fff', border: '1px solid #e2e8f0',
+                          borderRadius: '14px', padding: '8px',
+                          boxShadow: '0 10px 30px rgba(0,0,0,0.12)', zIndex: 100,
+                          minWidth: '190px', display: 'flex', flexDirection: 'column', gap: '2px',
+                        }}>
+                          <button onClick={() => { setShowPodcast(true); setShowActionMenu(false); }}
+                            style={{ background: 'none', border: 'none', padding: '9px 12px', fontSize: '13px', fontWeight: 600, color: '#2563EB', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}
+                            onMouseOver={e => e.currentTarget.style.background = '#eff6ff'}
+                            onMouseOut={e => e.currentTarget.style.background = 'none'}
+                          >🎧 {lang==='ja'?'聴き流し':'Podcast'}</button>
+                          <div style={{ height: '1px', background: '#f1f5f9', margin: '2px 0' }}></div>
+                          {[
+                            { fn: () => setView('test'), icon: '📝', label: lang==='ja'?'テスト':'Test' },
+                            { fn: () => openPrintPreview('word'), icon: '🖨', label: lang==='ja'?'単語プリント':'Words' },
+                            { fn: () => openPrintPreview('example'), icon: '🖨', label: lang==='ja'?'例文プリント':'Examples' },
+                            { fn: () => openPrintPreview('choice'), icon: '🖨', label: lang==='ja'?'4択プリント':'4-Choice' },
+                          ].map((item, idx) => (
+                            <button key={idx} onClick={() => { item.fn(); setShowActionMenu(false); }}
+                              style={{ background: 'none', border: 'none', padding: '9px 12px', fontSize: '13px', fontWeight: 600, color: '#334155', textAlign: 'left', cursor: 'pointer', borderRadius: '8px' }}
+                              onMouseOver={e => e.currentTarget.style.background = '#f8fafc'}
+                              onMouseOut={e => e.currentTarget.style.background = 'none'}
+                            >{item.icon} {item.label}</button>
+                          ))}
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* 表示オプション */}
+                  {/* ⚙ オプション */}
                   <div ref={settingsRef} style={{ position: 'relative', flexShrink: 0 }}>
-                    <button onClick={() => setShowSettingsMenu(!showSettingsMenu)} className="setting-badge-btn" style={{ height: '34px', backgroundColor: showSettingsMenu ? '#e2e8f0' : '#fff' }}>
-                      {lang==='ja'?'⚙ オプション':'⚙ Options'} <span style={{ fontSize: '9px', opacity: 0.6 }}>▼</span>
+                    <button onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+                      style={{
+                        height: '32px', padding: '0 10px', borderRadius: '8px',
+                        border: 'none',
+                        background: showSettingsMenu ? '#f1f5f9' : 'transparent',
+                        color: '#64748b', fontSize: '12px', fontWeight: 700,
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
+                        fontFamily: "'Outfit', sans-serif", whiteSpace: 'nowrap', transition: 'all 0.15s',
+                      }}
+                      onMouseOver={e => { if (!showSettingsMenu) e.currentTarget.style.background = '#f8fafc'; }}
+                      onMouseOut={e => { if (!showSettingsMenu) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <span style={{ fontSize: '14px' }}>⚙</span>
+                      <span style={{ fontSize: '8px', opacity: 0.5 }}>▼</span>
                     </button>
                     {showSettingsMenu && (
-                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '6px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px', boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '210px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <button onClick={shuffleCurrentDeck} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '9px', fontSize: '13px', fontWeight: 700, color: '#0f172a', textAlign: 'center', cursor: 'pointer', borderRadius: '8px' }}>
-                          🔀 {lang==='ja'?'シャッフル':'Shuffle'}
-                        </button>
+                      <div style={{
+                        position: 'absolute', top: '100%', right: 0, marginTop: '6px',
+                        backgroundColor: '#fff', border: '1px solid #e2e8f0',
+                        borderRadius: '14px', padding: '12px',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 100,
+                        minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '8px',
+                      }}>
+                        <button onClick={shuffleCurrentDeck}
+                          style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '9px', fontSize: '13px', fontWeight: 700, color: '#0f172a', textAlign: 'center', cursor: 'pointer', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                          onMouseOver={e => e.currentTarget.style.background = '#f1f5f9'}
+                          onMouseOut={e => e.currentTarget.style.background = '#f8fafc'}
+                        >🔀 {lang==='ja'?'シャッフル':'Shuffle'}</button>
                         <div style={{ height: '1px', background: '#e2e8f0' }}></div>
                         {qType === 'word'
-                          ? <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}><span>{lang==='ja'?'例文を表示':'Show Examples'}</span><input type="checkbox" checked={showExOnBack} onChange={() => setShowExOnBack(!showExOnBack)} style={{ cursor: 'pointer' }} /></label>
-                          : <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}><span>{lang==='ja'?'単語を表示':'Show Words'}</span><input type="checkbox" checked={showWordOnExMode} onChange={() => setShowWordOnExMode(!showWordOnExMode)} style={{ cursor: 'pointer' }} /></label>
+                          ? <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer', gap: '10px' }}><span>{lang==='ja'?'裏に例文を表示':'Show Examples'}</span><input type="checkbox" checked={showExOnBack} onChange={() => setShowExOnBack(!showExOnBack)} /></label>
+                          : <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer', gap: '10px' }}><span>{lang==='ja'?'裏に単語を表示':'Show Words'}</span><input type="checkbox" checked={showWordOnExMode} onChange={() => setShowWordOnExMode(!showWordOnExMode)} /></label>
                         }
-                        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer' }}><span>{lang==='ja'?'表面のみ自動めくり':'Front-only Auto'}</span><input type="checkbox" checked={isFrontOnlyAuto} onChange={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} style={{ cursor: 'pointer' }} /></label>
+                        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: '#475569', cursor: 'pointer', gap: '10px' }}>
+                          <span>{lang==='ja'?'表面のみ自動めくり':'Front-only Auto'}</span>
+                          <input type="checkbox" checked={isFrontOnlyAuto} onChange={() => setIsFrontOnlyAuto(!isFrontOnlyAuto)} />
+                        </label>
                       </div>
                     )}
                   </div>
 
                   {/* タイマー */}
                   <div className={`study-timer-box ${isCompleted ? 'completed-timer' : ''}`}
-                    style={{ flexShrink: 0, visibility: isBulkMode ? 'hidden' : 'visible', height: '34px', display: 'flex', alignItems: 'center', padding: '0 12px', borderRadius: '8px', fontSize: '14px' }}>
+                    style={{
+                      flexShrink: 0, visibility: isBulkMode ? 'hidden' : 'visible',
+                      height: '32px', display: 'flex', alignItems: 'center',
+                      padding: '0 10px', borderRadius: '8px', fontSize: '13px',
+                      fontFamily: "'DM Mono', monospace", fontWeight: 600,
+                      background: '#f8fafc', border: '1px solid #e8ecf2',
+                      color: '#475569', boxShadow: 'none',
+                    }}>
                     {formatTime(studyTime)}
                   </div>
                 </div>
 
-                {/* ── カード管理（小さいピル行） ── */}
+                {/* ── Row 2: カード管理ライン ── */}
                 {!isBulkMode && !isDeleteMode && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '999px', padding: '4px 8px' }}>
-                    <button onClick={() => setAddingCard(true)}
-                      style={{ height: '26px', padding: '0 12px', borderRadius: '999px', border: 'none', fontSize: '11px', fontWeight: 700, background: 'transparent', color: '#16a34a', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s' }}
-                      onMouseOver={e => { e.currentTarget.style.background = '#f0fdf4'; }}
-                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; }}>
-                      ✏ {lang==='ja'?'手動で追加':'Add'}
-                    </button>
-                    <div style={{ width: '1px', height: '14px', background: '#e2e8f0' }} />
-                    <button onClick={() => setIsBulkMode(true)}
-                      style={{ height: '26px', padding: '0 12px', borderRadius: '999px', border: 'none', fontSize: '11px', fontWeight: 700, background: 'transparent', color: '#d97706', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s' }}
-                      onMouseOver={e => { e.currentTarget.style.background = '#fffbeb'; }}
-                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; }}>
-                      ⬆ {lang==='ja'?'CSVで追加':'CSV'}
-                    </button>
-                    <div style={{ width: '1px', height: '14px', background: '#e2e8f0' }} />
-                    <button onClick={() => setShowOverview(true)}
-                      style={{ height: '26px', padding: '0 12px', borderRadius: '999px', border: 'none', fontSize: '11px', fontWeight: 700, background: 'transparent', color: '#475569', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s' }}
-                      onMouseOver={e => { e.currentTarget.style.background = '#f1f5f9'; }}
-                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; }}>
-                      ▦ {lang==='ja'?'カード一覧':'Cards'}
-                    </button>
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: '0px',
+                    background: 'transparent',
+                  }}>
+                    {[
+                      { fn: () => setAddingCard(true), label: lang==='ja'?'+ 手動で追加':'+  Add', color: '#16a34a', hover: '#f0fdf4' },
+                      { fn: () => setIsBulkMode(true),  label: lang==='ja'?'↑ CSVで追加':'↑  CSV',  color: '#d97706', hover: '#fffbeb' },
+                      { fn: () => setShowOverview(true), label: lang==='ja'?'▦ カード一覧':'▦  Cards', color: '#475569', hover: '#f1f5f9' },
+                    ].map((item, idx) => (
+                      <button key={idx} onClick={item.fn}
+                        style={{
+                          height: '28px', padding: '0 14px', border: 'none',
+                          background: 'transparent', color: item.color,
+                          fontSize: '11px', fontWeight: 700, cursor: 'pointer',
+                          whiteSpace: 'nowrap', fontFamily: "'Outfit', sans-serif",
+                          letterSpacing: '0.2px', transition: 'all 0.15s',
+                          borderRight: idx < 2 ? '1px solid #e2e8f0' : 'none',
+                          borderRadius: idx === 0 ? '6px 0 0 6px' : idx === 2 ? '0 6px 6px 0' : '0',
+                        }}
+                        onMouseOver={e => { e.currentTarget.style.background = item.hover; }}
+                        onMouseOut={e => { e.currentTarget.style.background = 'transparent'; }}
+                      >{item.label}</button>
+                    ))}
                   </div>
                 )}
                 {!isBulkMode && isDeleteMode && (
