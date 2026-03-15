@@ -1456,7 +1456,7 @@ function App() {
                 <h2 className="study-deck-title">{activeDeck?.name}</h2>
 
                 {/* ── 全コントロール 1行 ── */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', maxWidth: '900px', flexWrap: 'wrap' }}>
+                <div className="study-controls-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', width: '100%', maxWidth: '900px', flexWrap: 'wrap' }}>
 
                   {/* 音声 */}
                   <button onClick={() => setIsMuted(!isMuted)}

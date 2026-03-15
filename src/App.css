@@ -706,18 +706,61 @@ textarea.modal-input { resize: vertical; min-height: 58px; }
   .left-panel { order: 2; } .center-panel { order: 1; } .right-panel { order: 3; }
 }
 @media (max-width: 600px) {
-  .top-right-actions { top: 8px !important; gap: 6px !important; flex-wrap: wrap !important; }
-  .lang-toggle-btn, .manual-link-btn { font-size: 11px !important; padding: 5px 9px !important; }
-  .hero-section { padding: 46px 14px 26px; width: 96%; margin-top: 72px; }
+  /* 笏笏 繝翫ン繧ｲ繝ｼ繧ｷ繝ｧ繝ｳ: 1陦後↓蜿弱ａ繧� 笏笏 */
+  .top-right-actions {
+    top: 10px !important;
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding: 0 8px !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+    justify-content: center !important;
+  }
+  .top-right-actions::-webkit-scrollbar { display: none; }
+  .top-right-actions > .logout-btn { position: static !important; margin: 0 !important; }
+  .top-right-actions > .lang-toggle-btn:not(.logout-btn) { position: static !important; margin: 0 !important; }
+  .lang-toggle-btn, .manual-link-btn {
+    font-size: 10px !important;
+    padding: 5px 8px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* 笏笏 繝帙�繝�逕ｻ髱｢ 笏笏 */
+  .hero-section { padding: 46px 14px 26px; width: 96%; margin-top: 58px; }
   .boxes-grid { grid-template-columns: repeat(2, 1fr); padding: 10px 14px; gap: 14px; }
   .decks-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .box-label { font-size: 11px; } .deck-name { font-size: 11px; }
   .deck-stats-mini { font-size: 9px; } .status-badge { font-size: 9px; }
   .rubber-band { height: 5px; top: 24%; } .delete-deck-btn-corner { opacity: 1; }
-  .card-animation-wrapper { aspect-ratio: 4 / 3; min-height: auto; }
-  .autoplay-actions-row { gap: 5px; }
-  .autoplay-toggle-btn, .repeat-btn, .fullscreen-btn { font-size: 11px; padding: 9px 6px; }
-  .study-dashboard-solo { padding: 10px 12px; }
+
+  /* 笏笏 繧ｫ繝ｼ繝�: 繧ｹ繝槭�縺ｧ螟ｧ縺阪￥荳ｭ螟ｮ謠�∴ 笏笏 */
+  .study-dashboard-solo { padding: 8px 10px !important; }
+  .card-animation-wrapper {
+    aspect-ratio: 4 / 3 !important;
+    min-height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .card-front, .card-back {
+    padding: 20px 16px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  .word-text { font-size: clamp(30px, 9vw, 52px) !important; text-align: center !important; }
+  .core-meaning-large { font-size: clamp(22px, 7vw, 38px) !important; text-align: center !important; }
+  .example-en { font-size: clamp(17px, 5vw, 24px) !important; text-align: center !important; }
+  .example-ja { font-size: clamp(14px, 4vw, 20px) !important; text-align: center !important; }
+
+  /* 繧ｫ繝ｼ繝牙�繝�く繧ｹ繝医ｒ蟾ｦ謠�∴ 竊� 荳ｭ螟ｮ謠�∴縺ｫ蠑ｷ蛻ｶ */
+  .card-front div, .card-back div { text-align: center !important; }
+  .card-front h1, .card-back h1,
+  .card-front p, .card-back p { text-align: center !important; }
+
+  /* 繧ｳ繝ｳ繝医Ο繝ｼ繝ｫ繝代ロ繝ｫ */
+  .autoplay-toggle-btn { font-size: 12px; }
 }
 
 /* =========================================================================
@@ -891,3 +934,38 @@ textarea.modal-input { resize: vertical; min-height: 58px; }
 .bulk-file-actions button, .bulk-file-actions label { box-sizing: border-box; width: 100%; max-width: 100%; }
 .bulk-hint { font-size: 14px; color: var(--ink-mid); line-height: 1.6; margin-bottom: 12px; }
 .bulk-note { background: var(--green-soft); border: 1px solid #BBF7D0; border-radius: var(--radius-md); padding: 13px; text-align: left; white-space: pre-wrap; color: #065F46; font-size: 13px; line-height: 1.6; }
+
+/* =========================================================================
+   MOBILE: study controls row scroll & card centering
+   ========================================================================= */
+.study-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 900px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .study-controls-row {
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    padding: 4px 0 !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .study-controls-row::-webkit-scrollbar { display: none; }
+  .study-controls-row > * { flex-shrink: 0 !important; }
+
+  /* 繧ｫ繝ｼ繝牙�繝�く繧ｹ繝井ｸｭ螟ｮ謠�∴蠑ｷ蛻ｶ */
+  .card-front > div,
+  .card-back > div {
+    align-items: center !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+}
