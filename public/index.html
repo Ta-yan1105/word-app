@@ -1,43 +1,1691 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>防犯・実践対策検定【富山県条例 / 闇バイト完全対応】</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deepest: #0a0a0f;
+            --bg-card: #111118;
+            --bg-elevated: #1a1a24;
+            --border-dim: rgba(255,255,255,0.07);
+            --border-glow: rgba(255,80,80,0.4);
+            --red-core: #e8192c;
+            --red-glow: rgba(232,25,44,0.35);
+            --red-soft: rgba(232,25,44,0.12);
+            --amber: #f59e0b;
+            --amber-glow: rgba(245,158,11,0.3);
+            --blue-safe: #3b9eff;
+            --blue-safe-glow: rgba(59,158,255,0.3);
+            --orange-mid: #f97316;
+            --orange-glow: rgba(249,115,22,0.3);
+            --text-primary: #f0f0f5;
+            --text-secondary: rgba(240,240,245,0.55);
+            --text-dim: rgba(240,240,245,0.3);
+            --font-display: 'Black Han Sans', 'Noto Sans JP', sans-serif;
+            --font-body: 'Noto Sans JP', sans-serif;
+            --correct: #22c55e;
+            --correct-glow: rgba(34,197,94,0.2);
+        }
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-deepest);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 600px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(255,255,255,0.04),
+                0 25px 60px rgba(0,0,0,0.7),
+                0 0 80px rgba(232,25,44,0.06);
+            max-height: 95vh;
+        }
+
+        /* ──────────────────────────────
+           SHARED SCREEN STYLES
+        ────────────────────────────── */
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; }
+
+        .screen-scroll {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+        .screen-scroll::-webkit-scrollbar { width: 4px; }
+        .screen-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        /* ──────────────────────────────
+           START SCREEN
+        ────────────────────────────── */
+        #screen-start {
+            flex-direction: column;
+            max-height: 95vh;
+        }
+        #screen-start .screen-scroll {
+            flex: 1;
+            padding: 36px 28px 32px;
+        }
+
+        .start-eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: var(--red-core);
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+        .start-eyebrow::before, .start-eyebrow::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--red-core));
+        }
+        .start-eyebrow::after {
+            background: linear-gradient(90deg, var(--red-core), transparent);
+        }
+
+        .start-title {
+            font-family: var(--font-display);
+            font-size: clamp(26px, 6vw, 36px);
+            font-weight: 400;
+            line-height: 1.2;
+            letter-spacing: 0.02em;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .start-title span {
+            display: block;
+            font-family: var(--font-body);
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            letter-spacing: 0.08em;
+            margin-top: 8px;
+        }
+
+        .warning-box {
+            margin: 24px 0;
+            background: var(--red-soft);
+            border: 1px solid var(--border-glow);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .warning-box-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            color: var(--red-core);
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+        .warning-box ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .warning-box li {
+            display: flex;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(240,200,200,0.9);
+            line-height: 1.5;
+        }
+        .warning-box li::before {
+            content: '▸';
+            color: var(--red-core);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .warning-box li .highlight {
+            background: rgba(232,25,44,0.25);
+            border-radius: 4px;
+            padding: 0 4px;
+        }
+
+        .start-description {
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+
+        .btn-start {
+            width: 100%;
+            background: var(--red-core);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-family: var(--font-display);
+            font-size: 17px;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+            box-shadow: 0 4px 24px var(--red-glow);
+        }
+        .btn-start::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+        }
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px var(--red-glow);
+        }
+        .btn-start:active { transform: translateY(0); }
+
+        /* ──────────────────────────────
+           QUIZ SCREEN
+        ────────────────────────────── */
+        #screen-quiz {
+            flex-direction: column;
+            max-height: 95vh;
+        }
+
+        .quiz-header {
+            flex-shrink: 0;
+            padding: 14px 20px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .q-counter {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dim);
+            white-space: nowrap;
+        }
+        .q-counter strong {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--text-primary);
+        }
+
+        .level-badge {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 5px 12px;
+            border-radius: 100px;
+            white-space: nowrap;
+            border: 1px solid currentColor;
+        }
+        .badge-lv1 { color: var(--blue-safe); background: rgba(59,158,255,0.1); }
+        .badge-lv2 { color: var(--amber); background: rgba(245,158,11,0.1); }
+        .badge-lv3 { color: var(--orange-mid); background: rgba(249,115,22,0.1); }
+        .badge-lv4 { color: var(--red-core); background: var(--red-soft); }
+        .badge-lv5 { color: #ff9999; background: rgba(232,25,44,0.2); }
+
+        .progress-track {
+            flex-shrink: 0;
+            height: 3px;
+            background: rgba(255,255,255,0.06);
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--red-core);
+            transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 0 10px var(--red-core);
+        }
+
+        .quiz-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px 16px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.08) transparent;
+        }
+
+        .category-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .question-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 3px solid var(--blue-safe);
+            transition: border-color 0.3s;
+        }
+        .question-card.lv2 { border-left-color: var(--amber); }
+        .question-card.lv3 { border-left-color: var(--orange-mid); }
+        .question-card.lv4 { border-left-color: var(--red-core); }
+        .question-card.lv5 { border-left-color: #cc0020; }
+
+        .question-text {
+            font-size: clamp(14px, 3.5vw, 16px);
+            font-weight: 700;
+            line-height: 1.7;
+            color: var(--text-primary);
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 16px;
+        }
+
+        .choice-btn {
+            width: 100%;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 16px 18px;
+            text-align: left;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.5;
+            cursor: pointer;
+            transition: all 0.18s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .choice-btn::before {
+            content: attr(data-index);
+            flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--text-dim);
+            transition: all 0.18s;
+            margin-top: 1px;
+        }
+        .choice-btn:hover {
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+        }
+        .choice-btn:hover::before {
+            background: rgba(255,255,255,0.12);
+            color: var(--text-primary);
+        }
+        .choice-btn:active { transform: scale(0.99); }
+
+        /* ──────────────────────────────
+           EXPLANATION SCREEN (正解)
+        ────────────────────────────── */
+        #screen-explanation {
+            flex-direction: column;
+            max-height: 95vh;
+        }
+
+        .exp-header {
+            flex-shrink: 0;
+            padding: 18px 20px;
+            background: rgba(34,197,94,0.1);
+            border-bottom: 1px solid rgba(34,197,94,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .correct-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--correct);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 0 16px var(--correct-glow);
+        }
+        .correct-icon svg { width: 16px; height: 16px; }
+        .exp-header-text {
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--correct);
+            letter-spacing: 0.1em;
+        }
+
+        .exp-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.08) transparent;
+        }
+
+        .exp-label {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .exp-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            padding: 20px;
+        }
+        .exp-answer-highlight {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 400;
+            letter-spacing: 0.04em;
+            color: var(--text-primary);
+            background: rgba(34,197,94,0.12);
+            border: 1px solid rgba(34,197,94,0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+        }
+        .exp-text {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .btn-next {
+            flex-shrink: 0;
+            margin: 0 20px 20px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: var(--font-display);
+            font-size: 16px;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        .btn-next:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        /* ──────────────────────────────
+           GAME OVER SCREEN
+        ────────────────────────────── */
+        #screen-gameover {
+            flex-direction: column;
+            max-height: 95vh;
+            background: #0d0305;
+        }
+
+        .go-header {
+            flex-shrink: 0;
+            padding: 32px 28px 0;
+            text-align: center;
+        }
+        .go-title {
+            font-family: var(--font-display);
+            font-size: clamp(40px, 10vw, 56px);
+            font-weight: 400;
+            color: var(--red-core);
+            letter-spacing: 0.12em;
+            line-height: 1;
+            text-shadow:
+                0 0 20px var(--red-glow),
+                0 0 60px rgba(232,25,44,0.15);
+            animation: pulse-text 2s ease-in-out infinite;
+        }
+        @keyframes pulse-text {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .go-subtitle {
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(220,140,140,0.7);
+            letter-spacing: 0.1em;
+            margin-top: 10px;
+        }
+
+        .go-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,100,100,0.15) transparent;
+        }
+
+        .go-exp-card {
+            background: rgba(232,25,44,0.07);
+            border: 1px solid rgba(232,25,44,0.2);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .go-exp-label {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: rgba(232,25,44,0.6);
+            margin-bottom: 12px;
+        }
+        .go-answer-highlight {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 15px;
+            font-weight: 400;
+            color: #ff9999;
+            background: rgba(232,25,44,0.12);
+            border: 1px solid rgba(232,25,44,0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            letter-spacing: 0.03em;
+        }
+        .go-exp-text {
+            font-size: 14px;
+            line-height: 1.8;
+            color: rgba(220,180,180,0.8);
+            font-weight: 500;
+        }
+
+        .btn-retry {
+            flex-shrink: 0;
+            margin: 0 20px 20px;
+            background: var(--red-core);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-family: var(--font-display);
+            font-size: 17px;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 24px var(--red-glow);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-retry::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+        }
+        .btn-retry:hover { transform: translateY(-2px); }
+
+        /* ──────────────────────────────
+           CLEAR SCREEN
+        ────────────────────────────── */
+        #screen-clear {
+            flex-direction: column;
+            max-height: 95vh;
+        }
+        #screen-clear .screen-scroll {
+            flex: 1;
+            padding: 36px 28px 32px;
+            text-align: center;
+        }
+
+        .clear-badge {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 40px rgba(245,158,11,0.3);
+        }
+        .clear-title {
+            font-family: var(--font-display);
+            font-size: clamp(28px, 7vw, 40px);
+            font-weight: 400;
+            color: var(--text-primary);
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+        .clear-subtitle {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+        .clear-message {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            padding: 22px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.85;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 28px;
+        }
+        .clear-message strong { color: var(--red-core); font-weight: 900; }
+
+        .btn-home {
+            width: 100%;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: var(--font-display);
+            font-size: 16px;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-home:hover { background: rgba(255,255,255,0.06); }
+
+        /* ──────────────────────────────
+           ANIMATIONS
+        ────────────────────────────── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            15% { transform: translateX(-6px) rotate(-0.5deg); }
+            30% { transform: translateX(6px) rotate(0.5deg); }
+            45% { transform: translateX(-4px); }
+            60% { transform: translateX(4px); }
+            75% { transform: translateX(-2px); }
+        }
+
+        .anim-fadeup { animation: fadeUp 0.35s cubic-bezier(0.25,0,0.25,1) both; }
+        .anim-shake { animation: shake 0.5s cubic-bezier(0.36,0.07,0.19,0.97) both; }
+
+        /* ──────────────────────────────
+           DIVIDER
+        ────────────────────────────── */
+        .divider {
+            height: 1px;
+            background: var(--border-dim);
+            margin: 4px 0;
+        }
+
+        /* SVG icons helper */
+        .icon-sm { width: 18px; height: 18px; flex-shrink: 0; }
+        .icon-lg { width: 24px; height: 24px; flex-shrink: 0; }
+
+        /* ──────────────────────────────
+           SCREENSHOT PREVENTION
+        ────────────────────────────── */
+        /* 印刷・スクリーンショット系を黒塗り */
+        @media print {
+            html, body { background: #000 !important; }
+            * { visibility: hidden !important; color: transparent !important; }
+        }
+        /* スクリーンキャプチャ検知時のブラックアウト */
+        #screenshot-shield {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        #screenshot-shield.active { display: flex; }
+        #screenshot-shield p {
+            color: rgba(255,255,255,0.4);
+            font-family: var(--font-body);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+        }
+
+        /* ──────────────────────────────
+           CLEAR / CELEBRATION SCREEN
+        ────────────────────────────── */
+        #screen-clear {
+            background: radial-gradient(ellipse at 50% 0%, #1a1500 0%, #0a0a0f 60%);
+            position: relative;
+            overflow: hidden;
+        }
+        #fireworks-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .clear-inner {
+            position: relative;
+            z-index: 1;
+            padding: 32px 24px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            overflow-y: auto;
+            max-height: 95vh;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        /* 合格スタンプ */
+        .cert-stamp {
+            width: 110px;
+            height: 110px;
+            border: 4px solid #f59e0b;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+            animation: stamp-in 0.6s cubic-bezier(0.175,0.885,0.32,1.275) 0.3s both;
+            box-shadow:
+                0 0 0 8px rgba(245,158,11,0.08),
+                0 0 40px rgba(245,158,11,0.25),
+                inset 0 0 30px rgba(245,158,11,0.06);
+        }
+        .cert-stamp::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 50%;
+        }
+        @keyframes stamp-in {
+            from { transform: scale(0) rotate(-20deg); opacity: 0; }
+            to   { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .cert-kanji {
+            font-family: var(--font-display);
+            font-size: 32px;
+            color: #f59e0b;
+            line-height: 1;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 20px rgba(245,158,11,0.5);
+        }
+        .cert-sub {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            color: rgba(245,158,11,0.7);
+            margin-top: 3px;
+        }
+
+        /* 合格テキスト */
+        .clear-eyebrow {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(245,158,11,0.6);
+            margin-bottom: 10px;
+            animation: fadeUp 0.5s 0.7s both;
+        }
+        .clear-title-main {
+            font-family: var(--font-display);
+            font-size: clamp(22px, 5.5vw, 30px);
+            font-weight: 400;
+            color: var(--text-primary);
+            letter-spacing: 0.06em;
+            line-height: 1.3;
+            animation: fadeUp 0.5s 0.85s both;
+            margin-bottom: 6px;
+        }
+        .clear-title-main em {
+            font-style: normal;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 2.5s linear infinite;
+        }
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+        .clear-stars {
+            font-size: 22px;
+            letter-spacing: 6px;
+            animation: fadeUp 0.5s 1.0s both;
+            margin-bottom: 20px;
+        }
+
+        /* メッセージカード */
+        .clear-msg-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 18px 20px;
+            font-size: 13px;
+            line-height: 1.85;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: left;
+            width: 100%;
+            animation: fadeUp 0.5s 1.1s both;
+            margin-bottom: 20px;
+        }
+        .clear-msg-card strong { color: var(--red-core); font-weight: 900; }
+
+        /* 秘密の合言葉ボックス */
+        .secret-box {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(251,191,36,0.04));
+            border: 1px solid rgba(245,158,11,0.35);
+            border-radius: 16px;
+            padding: 22px 20px;
+            margin-bottom: 20px;
+            animation: fadeUp 0.5s 1.3s both;
+            position: relative;
+            overflow: hidden;
+        }
+        .secret-box::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .secret-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #f59e0b;
+            margin-bottom: 14px;
+        }
+        .secret-label::before, .secret-label::after {
+            content: '★';
+            font-size: 8px;
+        }
+        .secret-password {
+            font-family: var(--font-display);
+            font-size: clamp(13px, 3.5vw, 17px);
+            letter-spacing: 0.04em;
+            color: #fbbf24;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(245,158,11,0.25);
+            border-radius: 10px;
+            padding: 14px 16px;
+            text-align: center;
+            line-height: 1.5;
+            text-shadow: 0 0 20px rgba(245,158,11,0.4);
+            position: relative;
+        }
+        .secret-note {
+            font-size: 11px;
+            color: rgba(245,158,11,0.55);
+            font-weight: 700;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        /* Googleフォームエリア */
+        .form-section {
+            width: 100%;
+            background: rgba(59,158,255,0.05);
+            border: 1px solid rgba(59,158,255,0.2);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            animation: fadeUp 0.5s 1.5s both;
+            text-align: left;
+        }
+        .form-section-label {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--blue-safe);
+            margin-bottom: 12px;
+        }
+        .form-placeholder {
+            background: rgba(255,255,255,0.04);
+            border: 2px dashed rgba(59,158,255,0.25);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: rgba(59,158,255,0.5);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.7;
+        }
+        .form-placeholder code {
+            display: block;
+            font-family: monospace;
+            font-size: 11px;
+            background: rgba(59,158,255,0.1);
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-top: 10px;
+            color: var(--blue-safe);
+            text-align: left;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .btn-home {
+            width: 100%;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 16px;
+            font-family: var(--font-display);
+            font-size: 16px;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s;
+            animation: fadeUp 0.5s 1.7s both;
+        }
+        .btn-home:hover { background: rgba(255,255,255,0.06); }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<!-- スクリーンショット検知時のブラックアウトシールド -->
+<div id="screenshot-shield">
+    <p>📵 この画面はキャプチャ禁止です</p>
+</div>
+
+<div id="app">
+
+    <!-- ==============================
+         START SCREEN
+    ============================== -->
+    <div id="screen-start" class="screen active">
+        <div class="screen-scroll">
+            <div class="start-eyebrow">富山県条例 / 闇バイト完全対応</div>
+            <h1 class="start-title">
+                防犯・実践対策検定
+                <span>サドンデス・全30問</span>
+            </h1>
+
+            <div class="warning-box">
+                <div class="warning-box-header">
+                    <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--red-core)">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    サドンデス・ルール
+                </div>
+                <ul>
+                    <li>全30問。進むにつれて難易度と事態の深刻さが増します。</li>
+                    <li><span class="highlight">1問でも間違えたら即ゲームオーバー。第1問からやり直しです。</span></li>
+                    <li>教育効果を高めるため、文字のコピー・検索はできません。</li>
+                </ul>
+            </div>
+
+            <p class="start-description">
+                軽い気持ちの「深夜徘徊」が、どのように取り返しのつかない「凶悪犯罪（闇バイト）」へと繋がっていくのか。その恐ろしい現実を学んでください。
+            </p>
+
+            <button class="btn-start" onclick="startQuiz()">
+                検定に挑戦する
+                <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==============================
+         QUIZ SCREEN
+    ============================== -->
+    <div id="screen-quiz" class="screen">
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar" style="width:0%"></div>
+        </div>
+        <div class="quiz-header">
+            <div class="q-counter">問題&nbsp;<strong id="q-current">1</strong>&nbsp;/ 30</div>
+            <div class="level-badge badge-lv1" id="level-badge">Lv.1 基礎</div>
+        </div>
+        <div class="quiz-body" id="quiz-body">
+            <div class="category-label" id="category-text">カテゴリ</div>
+            <div class="question-card lv1" id="question-card">
+                <p class="question-text" id="question-text">問題文</p>
+            </div>
+            <div class="choices" id="choices"></div>
+        </div>
+    </div>
+
+    <!-- ==============================
+         EXPLANATION SCREEN (正解)
+    ============================== -->
+    <div id="screen-explanation" class="screen">
+        <div class="exp-header">
+            <div class="correct-icon">
+                <svg fill="none" stroke="white" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <div class="exp-header-text">正解！</div>
+        </div>
+        <div class="exp-body">
+            <div class="exp-label">解説</div>
+            <div class="exp-card">
+                <span class="exp-answer-highlight" id="exp-answer-text">正解テキスト</span>
+                <p class="exp-text" id="explanation-text">解説本文</p>
+            </div>
+        </div>
+        <button class="btn-next" onclick="nextQuestion()">
+            次の問題へ進む
+            <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- ==============================
+         GAME OVER SCREEN
+    ============================== -->
+    <div id="screen-gameover" class="screen">
+        <div class="go-header">
+            <div class="go-title">GAME OVER</div>
+            <div class="go-subtitle">不正解。一瞬の判断ミスが命取りになります。</div>
+        </div>
+        <div class="go-body">
+            <div class="go-exp-card">
+                <div class="go-exp-label">なぜ間違えたのか？（解説）</div>
+                <span class="go-answer-highlight" id="go-answer-text">正解テキスト</span>
+                <p class="go-exp-text" id="gameover-explanation">解説文</p>
+            </div>
+        </div>
+        <button class="btn-retry" onclick="startQuiz()">
+            <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            第1問からやり直す
+        </button>
+    </div>
+
+    <!-- ==============================
+         CLEAR / CELEBRATION SCREEN
+    ============================== -->
+    <div id="screen-clear" class="screen">
+        <canvas id="fireworks-canvas"></canvas>
+        <div class="clear-inner">
+
+            <!-- 合格スタンプ -->
+            <div class="cert-stamp">
+                <div class="cert-kanji">合格</div>
+                <div class="cert-sub">CERTIFIED</div>
+            </div>
+
+            <div class="clear-eyebrow">ルールマナー検定 完全制覇</div>
+            <h2 class="clear-title-main">
+                <em>全30問 サドンデス突破！</em><br>おめでとうございます🎉
+            </h2>
+            <div class="clear-stars">⭐⭐⭐</div>
+
+            <!-- メッセージ -->
+            <div class="clear-msg-card">
+                あなたは、深夜徘徊が犯罪の入り口になる危険性と、闇バイトの法的な恐ろしさを完全に理解しています。<br><br>
+                <strong>「楽して稼げる仕事はない」「脅されても犯罪をやれば実刑になる」</strong><br><br>
+                この知識を、友達が間違った道に進みそうになった時に活かしてください。あなたの知識が誰かを救います。
+            </div>
+
+            <!-- 秘密の合言葉 -->
+            <div class="secret-box">
+                <div class="secret-label">秘密の合言葉</div>
+                <div class="secret-password" id="secret-password">
+                    <!-- JS で文字を1字ずつ表示 -->
+                </div>
+                <p class="secret-note">
+                    ✅ この合言葉を先生に報告してください。<br>
+                    下のフォームから合言葉を送ると記録されます。
+                </p>
+            </div>
+
+            <!-- Googleフォーム埋め込みエリア -->
+            <div class="form-section">
+                <div class="form-section-label">📋 合言葉を報告する</div>
+                <!-- ▼▼▼ ここにGoogleフォームの埋め込みコードを貼り付けてください ▼▼▼ -->
+                <div class="form-placeholder">
+                    Googleフォームの埋め込みコードをここに貼り付けてください
+                    <code>&lt;iframe src="https://docs.google.com/forms/d/e/【フォームID】/viewform?embedded=true"
+  width="100%" height="520" frameborder="0"&gt;
+&lt;/iframe&gt;</code>
+                </div>
+                <!-- ▲▲▲ ここまで ▲▲▲ -->
+            </div>
+
+            <button class="btn-home" onclick="location.reload()">トップに戻る</button>
+        </div>
+    </div>
+
+</div>
+<script>
+    // ============================================================
+    // スクリーンショット・キャプチャ防止
+    // ============================================================
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+        // Ctrl/Cmd + C/X/A/S/P/F12/PrintScreen
+        if ((e.ctrlKey || e.metaKey) && ['c','x','a','s','p'].includes(e.key)) e.preventDefault();
+        if (e.key === 'PrintScreen' || e.key === 'F12') {
+            e.preventDefault();
+            flashShield();
+        }
+        // Windows Snipping Tool shortcut (Win+Shift+S) — limited but adds friction
+        if (e.shiftKey && e.metaKey && e.key === 's') e.preventDefault();
+    });
+    // ウィンドウフォーカス離脱検知（スクリーンショットツール起動の代替検知）
+    let shieldTimer = null;
+    window.addEventListener('blur', () => {
+        shieldTimer = setTimeout(() => flashShield(), 200);
+    });
+    window.addEventListener('focus', () => {
+        clearTimeout(shieldTimer);
+        hideShield();
+    });
+    // 印刷防止
+    window.addEventListener('beforeprint', e => { e.preventDefault(); flashShield(); });
+
+    const shield = document.getElementById('screenshot-shield');
+    function flashShield() {
+        shield.classList.add('active');
+        setTimeout(() => hideShield(), 2500);
+    }
+    function hideShield() { shield.classList.remove('active'); }
+
+    // ============================================================
+    // 花火（Canvas パーティクル）
+    // ============================================================
+    function launchFireworks() {
+        const canvas = document.getElementById('fireworks-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        function resize() {
+            const parent = canvas.parentElement;
+            canvas.width = parent.offsetWidth;
+            canvas.height = parent.offsetHeight;
+        }
+        resize();
+
+        const COLORS = ['#f59e0b','#fbbf24','#ffffff','#34d399','#60a5fa','#f472b6','#a78bfa','#fb923c'];
+        const particles = [];
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 4 + 1.5;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.018 + 0.012;
+                this.size = Math.random() * 4 + 2;
+                this.color = color;
+                this.gravity = 0.06;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.alpha -= this.decay;
+                this.vx *= 0.98;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function burst(x, y) {
+            const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            const count = 40 + Math.floor(Math.random() * 25);
+            for (let i = 0; i < count; i++) particles.push(new Particle(x, y, color));
+        }
+
+        let frameId;
+        function loop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].alpha <= 0) particles.splice(i, 1);
+            }
+            frameId = requestAnimationFrame(loop);
+        }
+        loop();
+
+        // 連続バースト
+        const w = canvas.width, h = canvas.height;
+        const positions = [
+            [w * 0.25, h * 0.25],[w * 0.75, h * 0.2],[w * 0.5, h * 0.35],
+            [w * 0.15, h * 0.5],[w * 0.85, h * 0.45],[w * 0.4, h * 0.15],
+            [w * 0.6, h * 0.55],[w * 0.5, h * 0.2],[w * 0.3, h * 0.4],
+            [w * 0.7, h * 0.35]
+        ];
+        positions.forEach(([x, y], i) => setTimeout(() => burst(x, y), i * 280));
+        // 追加バースト
+        setTimeout(() => {
+            for (let i = 0; i < 6; i++) {
+                setTimeout(() => burst(Math.random() * w, Math.random() * h * 0.6), i * 200);
+            }
+        }, 3500);
+
+        // 60秒後に停止（メモリ節約）
+        setTimeout(() => { cancelAnimationFrame(frameId); ctx.clearRect(0, 0, canvas.width, canvas.height); }, 12000);
+    }
+
+    // ============================================================
+    // タイプライター演出（合言葉）
+    // ============================================================
+    const SECRET_WORD = '闇バイトの闇はblackでなくDark';
+
+    function typewriterSecret() {
+        const el = document.getElementById('secret-password');
+        if (!el) return;
+        el.textContent = '';
+        let i = 0;
+        // 少し間を置いてから開始
+        setTimeout(() => {
+            const timer = setInterval(() => {
+                el.textContent += SECRET_WORD[i];
+                i++;
+                if (i >= SECRET_WORD.length) clearInterval(timer);
+            }, 80);
+        }, 1800);
+    }
+
+    // ============================================================
+    // クイズロジック
+    // ============================================================
+    const questions = [
+        {
+            levelText: "Lv.1 基礎", levelClass: "badge-lv1", cardClass: "lv1",
+            category: "富山県条例・青少年の定義",
+            q: "富山県青少年保護育成条例において、深夜外出などが制限される「青少年」とは、何歳未満の人を指しますか？",
+            choices: [
+                { text: "16歳未満", isCorrect: false },
+                { text: "18歳未満", isCorrect: true },
+                { text: "20歳未満", isCorrect: false }
+            ],
+            answerText: "正解：18歳未満",
+            explanation: "富山県の条例では、18歳未満の者を「青少年」と定義し、健全な育成を阻害する行為から保護するためのルールを定めています。"
+        },
+        {
+            levelText: "Lv.1 基礎", levelClass: "badge-lv1", cardClass: "lv1",
+            category: "富山県条例・深夜の定義",
+            q: "富山県の条例で保護者に外出させないよう努める義務が課されている「深夜」とは、原則として何時から何時までですか？",
+            choices: [
+                { text: "午後10時から翌日午前5時まで", isCorrect: false },
+                { text: "午後11時から翌日午前4時まで", isCorrect: true },
+                { text: "午前0時から翌日午前6時まで", isCorrect: false }
+            ],
+            answerText: "正解：午後11時から翌日午前4時まで",
+            explanation: "この時間帯に正当な理由なく外出している18歳未満の青少年は、警察による補導の対象となります。"
+        },
+        {
+            levelText: "Lv.1 基礎", levelClass: "badge-lv1", cardClass: "lv1",
+            category: "補導の対象",
+            q: "17歳の高校生が、親に内緒で深夜0時にコンビニの駐車場で友達とたむろしていました。どうなりますか？",
+            choices: [
+                { text: "買い物が目的なら問題ない", isCorrect: false },
+                { text: "警察官に見つかれば、条例に基づく「深夜徘徊」として補導される", isCorrect: true },
+                { text: "16歳以上なので自由の範囲内とされる", isCorrect: false }
+            ],
+            answerText: "正解：補導される",
+            explanation: "親の承諾がなく、正当な理由（塾の帰りなど）もない深夜外出は不良行為とみなされ、補導（注意・保護者への連絡）の対象になります。"
+        },
+        {
+            levelText: "Lv.1 基礎", levelClass: "badge-lv1", cardClass: "lv1",
+            category: "施設の利用制限",
+            q: "「親が書いてくれた同意書（許可証）」を持っていれば、18歳未満でも深夜にゲームセンターやカラオケで遊べますか？",
+            choices: [
+                { text: "遊べる（親の許可が最優先されるため）", isCorrect: false },
+                { text: "遊べない（同意書があっても施設側が条例違反になるため入店を断られる）", isCorrect: true }
+            ],
+            answerText: "正解：遊べない",
+            explanation: "条例や風営法により、事業者には深夜（午後11時以降、施設によっては午後10時以降）の青少年の立ち入りを拒否する義務があります。親の同意書では免除されません。"
+        },
+        {
+            levelText: "Lv.1 基礎", levelClass: "badge-lv1", cardClass: "lv1",
+            category: "補導の対象外",
+            q: "中学生が夜遅くまで塾で勉強し、深夜に帰宅途中です。これは深夜徘徊として補導されますか？",
+            choices: [
+                { text: "補導される（いかなる理由でも深夜は駄目）", isCorrect: false },
+                { text: "補導されない（塾の帰りなどの「正当な理由」があるため）", isCorrect: true }
+            ],
+            answerText: "正解：補導されない",
+            explanation: "通塾、通勤、緊急の用事など、社会通念上「正当な理由」がある場合は、深夜外出の制限から除外されます。ただし、安全のために警察から声をかけられることはあります。"
+        },
+        {
+            levelText: "Lv.2 応用", levelClass: "badge-lv2", cardClass: "lv2",
+            category: "年齢の偽装",
+            q: "深夜に警察官に声をかけられました。面倒なので「自分は18歳の大学生だ」と嘘をついたらどうなりますか？",
+            choices: [
+                { text: "警察はそれ以上調べないので、見逃してもらえる", isCorrect: false },
+                { text: "身元確認（学生証の提示や無線照会）で必ず嘘がバレ、事態がより悪化し厳しく指導される", isCorrect: true }
+            ],
+            answerText: "正解：嘘がバレて事態が悪化する",
+            explanation: "警察官は必ず身分証の確認や親への連絡を行います。嘘をつく行為自体が非行の兆候とみなされ、指導が厳しくなります。"
+        },
+        {
+            levelText: "Lv.2 応用", levelClass: "badge-lv2", cardClass: "lv2",
+            category: "深夜同伴の罪",
+            q: "20歳の社会人が、16歳の高校生を親の許可なく深夜のドライブに連れ回しました。連れ回した社会人はどうなりますか？",
+            choices: [
+                { text: "本人が合意していれば罪にはならない", isCorrect: false },
+                { text: "富山県の条例違反（深夜同伴等の制限違反）として、警察に逮捕・処罰される可能性がある", isCorrect: true }
+            ],
+            answerText: "正解：条例違反として処罰される可能性がある",
+            explanation: "何人も、正当な理由なく深夜に青少年を連れ出したり、同伴したりしてはいけません。違反すると大人側に罰則（富山県の場合は30万円以下の罰金）が科されます。"
+        },
+        {
+            levelText: "Lv.2 応用", levelClass: "badge-lv2", cardClass: "lv2",
+            category: "年齢の誤解",
+            q: "「自分はもう高校を中退して働いている17歳だから、大人の扱いで深夜に出歩いても補導されない」マルかバツか？",
+            choices: [
+                { text: "マル（働いていて納税していれば大人扱い）", isCorrect: false },
+                { text: "バツ（学生か社会人かは関係なく、18歳未満はすべて青少年の対象）", isCorrect: true }
+            ],
+            answerText: "正解：バツ",
+            explanation: "条例の「青少年」の定義は職業ではなく「年齢（18歳未満）」です。社会人であっても18歳未満なら深夜徘徊として補導の対象になります。"
+        },
+        {
+            levelText: "Lv.2 応用", levelClass: "badge-lv2", cardClass: "lv2",
+            category: "文書偽造の罪",
+            q: "ネットカフェの個室に深夜入るため、親の身分証をスマホで加工・偽造して提示しました。どうなりますか？",
+            choices: [
+                { text: "店を騙しただけなので、見つかっても追い出されるだけで済む", isCorrect: false },
+                { text: "「有印私文書偽造・同行使罪」という重い犯罪になり、警察に逮捕される可能性がある", isCorrect: true }
+            ],
+            answerText: "正解：有印私文書偽造・同行使罪という犯罪になる",
+            explanation: "年齢をごまかすために身分証を偽造する行為は、単なるイタズラではなく立派な「犯罪」です。補導では済まなくなります。"
+        },
+        {
+            levelText: "Lv.2 応用", levelClass: "badge-lv2", cardClass: "lv2",
+            category: "非行へのエスカレート",
+            q: "【ケーススタディ】深夜の公園で先輩たちとたむろしていた時、先輩から「警察が来たからこれ持ってて！」とタバコを渡されました。自分は吸っていません。どうなりますか？",
+            choices: [
+                { text: "吸っていないので無罪放免される", isCorrect: false },
+                { text: "所持している時点で「喫煙（不良行為）」の疑いが強くかけられ、厳しく追及されて警察・学校・親に連絡が行く", isCorrect: true }
+            ],
+            answerText: "正解：厳しく追及され連絡が行く",
+            explanation: "深夜徘徊をしていると、悪い先輩や犯罪グループと接点を持ちやすくなります。自分の身を守るためにも、深夜に出歩かないことが鉄則です。"
+        },
+        {
+            levelText: "Lv.3 危険", levelClass: "badge-lv3", cardClass: "lv3",
+            category: "誘拐のリスク",
+            q: "深夜に一人で歩いていたら、見知らぬ人から「危ないから家まで車で送ってあげる」と声をかけられました。どうすべきですか？",
+            choices: [
+                { text: "親切な人なので乗せてもらう", isCorrect: false },
+                { text: "「未成年者誘拐罪」などの深刻な事件に巻き込まれる危険があるため、絶対に乗らずに逃げる", isCorrect: true }
+            ],
+            answerText: "正解：絶対に乗らずに逃げる",
+            explanation: "深夜の路上で未成年に声をかける大人は、高い確率で悪意を持っています。性犯罪や誘拐のターゲットにされる危険性が極めて高いです。"
+        },
+        {
+            levelText: "Lv.3 危険", levelClass: "badge-lv3", cardClass: "lv3",
+            category: "補導の繰り返し",
+            q: "親の注意を無視して深夜徘徊を繰り返し、何度も警察に補導されました。最終的にどのような措置がとられる可能性がありますか？",
+            choices: [
+                { text: "何度補導されても、親に連絡がいく以上のことは起きない", isCorrect: false },
+                { text: "「不良行為少年」として児童相談所に通告されたり、家庭裁判所に送致される可能性がある", isCorrect: true }
+            ],
+            answerText: "正解：児童相談所への通告や家庭裁判所送致の可能性がある",
+            explanation: "警察の指導に従わず不良行為を繰り返す場合、将来罪を犯す恐れがある（虞犯少年）として、施設送致などの強制的な措置がとられることがあります。"
+        },
+        {
+            levelText: "Lv.3 危険", levelClass: "badge-lv3", cardClass: "lv3",
+            category: "親の責任と条例",
+            q: "親と一緒であれば、深夜に「どこで何をしていても」条例違反や指導の対象にはなりませんか？",
+            choices: [
+                { text: "親が一緒なら全責任は親にあるため、絶対に指導されない", isCorrect: false },
+                { text: "親同伴でも、教育上ふさわしくない場所への立ち入り等であれば、施設に断られたり、警察から指導を受けることがある", isCorrect: true }
+            ],
+            answerText: "正解：指導を受けることがある",
+            explanation: "親同伴は「特別の事情」として深夜外出の例外になり得ますが、青少年の健全育成に悪影響がある（深夜の繁華街を連れ回すなど）と判断されれば、親に対して指導が入ります。"
+        },
+        {
+            levelText: "Lv.3 危険", levelClass: "badge-lv3", cardClass: "lv3",
+            category: "SNSと深夜",
+            q: "深夜に自室でSNSを見ていたら「今すぐ来れる人、日給5万円」という投稿を見つけました。親が寝ているのでこっそり家を抜け出して向かうと、どうなる危険性が一番高いですか？",
+            choices: [
+                { text: "誰にもバレずに高額な小遣いが稼げる", isCorrect: false },
+                { text: "「闇バイト」の実行犯として利用され、強盗や詐欺の罪で逮捕され、人生が破滅する", isCorrect: true }
+            ],
+            answerText: "正解：「闇バイト」の実行犯として利用され人生が破滅する",
+            explanation: "深夜の家抜け（深夜外出）は、親の監視の目が届かないため、犯罪グループにとって最も未成年を騙し・脅し・利用しやすい絶好のタイミングなのです。"
+        },
+        {
+            levelText: "Lv.3 危険", levelClass: "badge-lv3", cardClass: "lv3",
+            category: "犯罪の入り口",
+            q: "【ケーススタディ】深夜に家を抜け出し、地元の不良の先輩の車に乗りました。着いた先は知らない家で「窓を割って入れ」とバールを渡されました。この時の法的な現実はどれですか？",
+            choices: [
+                { text: "先輩の命令でやっただけなので、自分は罪にならない", isCorrect: false },
+                { text: "断れずに窓を割った時点で「強盗」の共犯となり、未成年でも刑務所行きの可能性が極めて高い", isCorrect: true }
+            ],
+            answerText: "正解：断れずに窓を割った時点で「強盗」の共犯となる",
+            explanation: "軽い気持ちの深夜外出が、凶悪犯罪の入り口になる典型的なパターンです。現場で「やらない」と断ることは不可能に近く、そのまま犯罪者にされます。"
+        },
+        {
+            levelText: "Lv.4 闇バイト", levelClass: "badge-lv4", cardClass: "lv4",
+            category: "隠語の理解",
+            q: "SNSの求人で「タタキの案件です。高収入」という募集。この「タタキ」とは警察や裏社会の隠語で何を意味しますか？",
+            choices: [
+                { text: "工事現場の解体作業", isCorrect: false },
+                { text: "強盗", isCorrect: true },
+                { text: "不用品回収", isCorrect: false }
+            ],
+            answerText: "正解：強盗",
+            explanation: "「タタキ」は強盗、「UD」は受け子・出し子、「ホワイト案件」は詐欺の荷受け等を意味する隠語です。"
+        },
+        {
+            levelText: "Lv.4 闇バイト", levelClass: "badge-lv4", cardClass: "lv4",
+            category: "個人情報の搾取",
+            q: "闇バイトに応募すると、必ず「顔写真付きの身分証」や「実家の住所」を送るよう求められます。その真の目的は何ですか？",
+            choices: [
+                { text: "給料を正しく振り込むため", isCorrect: false },
+                { text: "途中で逃げたり警察に行ったりできないよう、「家族を殺すぞ」と脅迫する材料（人質）にするため", isCorrect: true }
+            ],
+            answerText: "正解：脅迫する材料（人質）にするため",
+            explanation: "個人情報を送った瞬間、あなたは犯罪組織の「奴隷」になります。絶対に送ってはいけません。"
+        },
+        {
+            levelText: "Lv.4 闇バイト", levelClass: "badge-lv4", cardClass: "lv4",
+            category: "通信アプリ",
+            q: "指示役から「連絡はSignal（シグナル）やTelegram（テレグラム）を使って」と言われました。なぜこのアプリを使うのですか？",
+            choices: [
+                { text: "通信料が無料で使いやすいから", isCorrect: false },
+                { text: "メッセージが自動消去されるため、指示役だけが証拠隠滅して逃げ、実行犯（あなた）だけが逮捕されるようにするため", isCorrect: true }
+            ],
+            answerText: "正解：指示役だけが逃げ、あなただけが逮捕されるようにするため",
+            explanation: "これらのアプリは秘匿性が高く、指示役はあなたを現場に行かせた後、履歴を消してアカウントを削除し、あなたを切り捨てます。"
+        },
+        {
+            levelText: "Lv.4 闇バイト", levelClass: "badge-lv4", cardClass: "lv4",
+            category: "口座の売買",
+            q: "「使っていない銀行口座を売ってくれたら3万円払う」と言われました。口座を他人に譲渡するとどうなりますか？",
+            choices: [
+                { text: "自分のお金が入っていなければ犯罪にはならない", isCorrect: false },
+                { text: "犯罪収益移転防止法違反などで逮捕され、今後一切自分名義の銀行口座が作れなくなる", isCorrect: true }
+            ],
+            answerText: "正解：逮捕され、今後口座が作れなくなる",
+            explanation: "売った口座は詐欺の振込先に使われます。あなたは「詐欺の共犯者」として警察にマークされ、就職しても給与振込口座が作れず社会生活が破綻します。"
+        },
+        {
+            levelText: "Lv.4 闇バイト", levelClass: "badge-lv4", cardClass: "lv4",
+            category: "使い捨ての駒",
+            q: "指示役が「このマニュアル通りにやれば絶対に捕まらない」と言う理由の真意は何ですか？",
+            choices: [
+                { text: "警察の捜査方法を完全に熟知した完璧な計画だから", isCorrect: false },
+                { text: "指示を出す『俺たち』は絶対に捕まらないが、現場に行く『お前』は100%逮捕されるという意味", isCorrect: true }
+            ],
+            answerText: "正解：現場に行く『お前』は100%逮捕されるという意味",
+            explanation: "現場に行けば、防犯カメラ、DNA、スマホの位置情報で確実に逮捕されます。指示役はそれを知った上であなたを現場に行かせます。"
+        },
+        {
+            levelText: "Lv.5 法律と責任", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "共犯の責任",
+            q: "【ケーススタディ】強盗の現場で「家の中には入らず、外で見張りをしていただけ」です。裁判での罪の重さはどうなりますか？",
+            choices: [
+                { text: "見張りだけなら軽犯罪法違反程度で済む", isCorrect: false },
+                { text: "家に入って住人を殴った実行犯と全く同じ「強盗致傷罪」として、重い実刑判決を受ける", isCorrect: true }
+            ],
+            answerText: "正解：実行犯と全く同じ重い実刑判決を受ける",
+            explanation: "役割を分担して犯罪を行った場合、「共謀共同正犯」として全員がすべての行為をやったとみなされます。"
+        },
+        {
+            levelText: "Lv.5 法律と責任", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "脅迫された場合",
+            q: "【ケーススタディ】「家族を殺す」と脅されたため、怖くて仕方なく強盗をやりました。裁判で無罪になりますか？",
+            choices: [
+                { text: "緊急避難が成立し、無罪になる", isCorrect: false },
+                { text: "「警察に相談する」という回避手段があったとされるため、実刑判決を免れることはできない", isCorrect: true }
+            ],
+            answerText: "正解：実刑判決を免れることはできない",
+            explanation: "脅されたとしても、他人の家に強盗に入ることは許されません。事前に警察（110番や#9110）に駆け込まなかった時点でアウトです。"
+        },
+        {
+            levelText: "Lv.5 法律と責任", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "少年法の厳格化",
+            q: "【ケーススタディ】17歳（未成年）が闇バイトで強盗致傷事件を起こしました。未成年なので少年院で済みますか？",
+            choices: [
+                { text: "未成年は保護されるため少年院で済む", isCorrect: false },
+                { text: "重大犯罪は検察官送致（逆送）され、大人と同じ公開裁判で裁かれ、刑務所に行く", isCorrect: true }
+            ],
+            answerText: "正解：大人と同じ公開裁判で裁かれ、刑務所に行く",
+            explanation: "少年法改正により、16歳以上で被害者を死傷させた場合、原則として大人と同じ刑事罰（懲役刑）が科されます。"
+        },
+        {
+            levelText: "Lv.5 法律と責任", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "途中での気付き",
+            q: "ただの荷物運びだと思って現場に着いたら、バールを渡され「今からこの家に入るぞ」と言われました。どうすれば助かりましたか？",
+            choices: [
+                { text: "その場で「やりません」と断り、走って逃げてすぐ警察に110番通報する", isCorrect: true },
+                { text: "とりあえず1回だけやって、終わってから警察に行く", isCorrect: false }
+            ],
+            answerText: "正解：走って逃げてすぐ警察に110番通報する",
+            explanation: "現場で犯罪だと気づいたのに参加すれば共犯です。報復が怖くても、犯罪を実行する前に警察に保護を求めるのが唯一の助かる道です。"
+        },
+        {
+            levelText: "Lv.5 法律と責任", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "相手が犯罪者の場合",
+            q: "指示役から「狙うのは詐欺グループの事務所だ。悪い奴らから金を奪うだけだから正義だ」と言われて強盗に入りました。罪はどうなりますか？",
+            choices: [
+                { text: "相手が犯罪者であっても、強盗罪が成立することに全く変わりはない", isCorrect: true },
+                { text: "相手が悪い奴なので罪が大幅に軽くなる", isCorrect: false }
+            ],
+            answerText: "正解：強盗罪が成立することに全く変わりはない",
+            explanation: "被害者が誰であろうと、暴力で金品を奪えば強盗罪です。指示役は罪悪感を減らすために嘘をついているだけです。"
+        },
+        {
+            levelText: "Lv.6 破滅", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "損害賠償と自己破産",
+            q: "【ケーススタディ】詐欺の受け子をして被害者から1000万円の損害賠償を請求されました。自己破産すれば払わなくて済みますか？",
+            choices: [
+                { text: "自己破産すれば全ての借金や賠償金はゼロになる", isCorrect: false },
+                { text: "詐欺などの「悪意による不法行為」の損害賠償は自己破産しても免除されないため、一生払い続けることになる", isCorrect: true }
+            ],
+            answerText: "正解：免除されないため一生払い続ける",
+            explanation: "破産法により、悪質な犯罪による賠償金は自己破産しても消えません。刑務所を出た後も、あなたとあなたの親は地獄の返済生活を送ることになります。"
+        },
+        {
+            levelText: "Lv.6 破滅", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "デジタルタトゥー",
+            q: "【ケーススタディ】逮捕され、実名と顔写真が報道されました。刑期を終えて出所した後、ネット上の記事はどうなりますか？",
+            choices: [
+                { text: "国が責任をもって全て削除してくれる", isCorrect: false },
+                { text: "「デジタルタトゥー」として一生ネットに残り、就職や結婚、アパートを借りることすら極めて困難になる", isCorrect: true }
+            ],
+            answerText: "正解：一生ネットに残り、就職や結婚が困難になる",
+            explanation: "一度ネットに拡散した犯罪歴は完全に消すことは不可能です。あなたの人生だけでなく、家族の人生も破壊します。"
+        },
+        {
+            levelText: "Lv.6 破滅", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "報酬の真実",
+            q: "【ケーススタディ】「報酬は100万円」と言われて強盗をやり遂げました。この後、本当に100万円はもらえるのでしょうか？",
+            choices: [
+                { text: "犯罪組織も約束は守るのでキッチリ支払われる", isCorrect: false },
+                { text: "「後で払う」「ミスがあったから減額」と誤魔化され、結局1円ももらえないまま逮捕されるケースがほとんど", isCorrect: true }
+            ],
+            answerText: "正解：1円ももらえないまま逮捕されるケースがほとんど",
+            explanation: "指示役にとって実行役は使い捨てのゴミです。重い犯罪と賠償金だけを背負わされ、約束の金すら手に入らないのが闇バイトです。"
+        },
+        {
+            levelText: "Lv.6 破滅", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "家族への影響",
+            q: "あなたが強盗で逮捕された後、あなたの家族（両親や兄弟）にはどのような影響が及ぶのが一般的ですか？",
+            choices: [
+                { text: "家族は関係ないので、特に普段と変わらない生活を送れる", isCorrect: false },
+                { text: "近所の噂になり、親は会社を辞めざるを得ず、引っ越しや家族離散に追い込まれる", isCorrect: true }
+            ],
+            answerText: "正解：親は会社を辞めざるを得ず、家族離散に追い込まれる",
+            explanation: "重大犯罪の代償はあなた一人では済まされません。被害者への賠償に追われ、家族の平穏な生活は完全に崩壊します。"
+        },
+        {
+            levelText: "Lv.6 破滅", levelClass: "badge-lv5", cardClass: "lv5",
+            category: "強盗致死罪の量刑",
+            q: "【ケーススタディ】強盗に入った家で、住人が抵抗したため結果的に住人を死なせてしまいました（強盗致死罪）。法定刑はどれくらいですか？",
+            choices: [
+                { text: "10年以下の懲役", isCorrect: false },
+                { text: "死刑 または 無期懲役", isCorrect: true }
+            ],
+            answerText: "正解：死刑 または 無期懲役",
+            explanation: "強盗致死罪は、日本の刑法の中でも殺人罪より重い、極めて重大な犯罪です。軽い気持ちの「バイト」が、文字通りあなたの命をもって償う結果になります。"
+        }
+    ];
+
+    let currentIndex = 0;
+
+    // --- Screen helpers ---
+    const screens = ['screen-start','screen-quiz','screen-explanation','screen-gameover','screen-clear'];
+    function showScreen(id) {
+        screens.forEach(s => {
+            const el = document.getElementById(s);
+            el.classList.remove('active');
+        });
+        const target = document.getElementById(id);
+        target.classList.add('active');
+        target.classList.add('anim-fadeup');
+        setTimeout(() => target.classList.remove('anim-fadeup'), 400);
+    }
+
+    function startQuiz() {
+        currentIndex = 0;
+        renderQuestion();
+        showScreen('screen-quiz');
+    }
+
+    function renderQuestion() {
+        const q = questions[currentIndex];
+        document.getElementById('progress-bar').style.width = `${(currentIndex / questions.length) * 100}%`;
+        document.getElementById('q-current').textContent = currentIndex + 1;
+        const badge = document.getElementById('level-badge');
+        badge.textContent = q.levelText;
+        badge.className = `level-badge ${q.levelClass}`;
+        document.getElementById('category-text').textContent = q.category;
+        const card = document.getElementById('question-card');
+        card.className = `question-card ${q.cardClass}`;
+        document.getElementById('question-text').textContent = q.q;
+        const choicesEl = document.getElementById('choices');
+        choicesEl.innerHTML = '';
+        const labels = ['A', 'B', 'C'];
+        const shuffled = [...q.choices].sort(() => Math.random() - 0.5);
+        shuffled.forEach((c, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn anim-fadeup';
+            btn.setAttribute('data-index', labels[i]);
+            btn.style.animationDelay = `${i * 60}ms`;
+            btn.textContent = c.text;
+            btn.onclick = () => handleAnswer(c.isCorrect);
+            choicesEl.appendChild(btn);
+        });
+        document.getElementById('quiz-body').scrollTop = 0;
+    }
+
+    function handleAnswer(isCorrect) {
+        const q = questions[currentIndex];
+        if (isCorrect) {
+            document.getElementById('exp-answer-text').textContent = q.answerText;
+            document.getElementById('explanation-text').textContent = q.explanation;
+            showScreen('screen-explanation');
+            document.getElementById('screen-explanation').querySelector('.exp-body').scrollTop = 0;
+        } else {
+            document.getElementById('go-answer-text').textContent = q.answerText;
+            document.getElementById('gameover-explanation').textContent = q.explanation;
+            showScreen('screen-gameover');
+            document.getElementById('screen-gameover').classList.add('anim-shake');
+            setTimeout(() => document.getElementById('screen-gameover').classList.remove('anim-shake'), 600);
+            document.getElementById('screen-gameover').querySelector('.go-body').scrollTop = 0;
+        }
+    }
+
+</script>
+</body>
 </html>
