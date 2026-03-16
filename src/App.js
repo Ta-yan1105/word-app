@@ -1609,73 +1609,60 @@ function App() {
                 {/* 操作パネル */}
                 <div style={isFullscreen
                   ? { position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '760px', background: 'rgba(255,255,255,0.97)', padding: '12px 16px', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.18)', boxSizing: 'border-box', zIndex: 10000, backdropFilter: 'blur(10px)' }
-                  : { background: '#fff', border: '1px solid #e1e4e8', borderRadius: '20px', width: '100%', maxWidth: '760px', margin: '16px auto 0', boxSizing: 'border-box', padding: '10px 12px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }
+                  : { background: '#fff', border: '1px solid #e1e4e8', borderRadius: '20px', width: '100%', maxWidth: '760px', margin: '16px auto 0', boxSizing: 'border-box', padding: '10px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }
                 }>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%' }}>
-
-                    {/* ◀ ▶ ナビ */}
+                  {/* ── PC/タブレット: 1行 ── */}
+                  <div className="ctrl-hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
                     <button onClick={handlePrevCard} style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s', fontWeight: 700 }}
                       onMouseOver={e => { e.currentTarget.style.background='#f1f5f9'; e.currentTarget.style.borderColor='#cbd5e1'; }}
                       onMouseOut={e => { e.currentTarget.style.background='#f8fafc'; e.currentTarget.style.borderColor='#e2e8f0'; }}
                     >‹</button>
-
-                    {/* 自動めくりボタン */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) playAudio((qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word); setIsAutoPlaying(!isAutoPlaying); }}
-                      style={{ flexShrink: 0, padding: '0 16px', height: '36px', borderRadius: '10px', border: 'none', fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.18s', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.2px', background: isAutoPlaying ? '#E8294A' : '#2563EB', color: '#fff', boxShadow: isAutoPlaying ? '0 3px 10px rgba(232,41,74,0.3)' : '0 3px 10px rgba(37,99,235,0.25)', minWidth: '90px', maxWidth: '140px' }}
-                    >
-                      {isAutoPlaying ? (lang === 'ja' ? '■ 停止' : '■ Stop') : (lang === 'ja' ? '▶ 自動めくり' : '▶ Auto')}
-                    </button>
-
+                    <button onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) playAudio((qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word); setIsAutoPlaying(!isAutoPlaying); }}
+                      style={{ flexShrink: 0, padding: '0 18px', height: '36px', borderRadius: '10px', border: 'none', fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.18s', fontFamily: "'Outfit', sans-serif", background: isAutoPlaying ? '#E8294A' : '#2563EB', color: '#fff', boxShadow: isAutoPlaying ? '0 3px 10px rgba(232,41,74,0.3)' : '0 3px 10px rgba(37,99,235,0.25)', minWidth: '110px' }}
+                    >{isAutoPlaying ? (lang==='ja'?'■ 停止':'■ Stop') : (lang==='ja'?'▶ 自動めくり':'▶ Auto')}</button>
                     <button onClick={handleNextCard} style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s', fontWeight: 700 }}
                       onMouseOver={e => { e.currentTarget.style.background='#f1f5f9'; e.currentTarget.style.borderColor='#cbd5e1'; }}
                       onMouseOut={e => { e.currentTarget.style.background='#f8fafc'; e.currentTarget.style.borderColor='#e2e8f0'; }}
                     >›</button>
-
-                    {/* 区切り */}
-                    <div style={{ width: '1px', height: '24px', background: '#e2e8f0', flexShrink: 0 }} />
-
-                    {/* スピードラベル（PC表示のみ） */}
-                    <span className="ctrl-hide-mobile" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, flexShrink: 0, fontFamily: "'Outfit', sans-serif", letterSpacing: '0.5px' }}>
-                      {lang === 'ja' ? '速度' : 'SPD'}
-                    </span>
-
-                    {/* スライダー */}
-                    <input
-                      type="range" min="0" max="4.0" step="0.1" value={displaySeconds}
-                      onChange={(e) => setDisplaySeconds(Number(e.target.value))}
-                      className="speed-slider"
-                      style={{ flex: 1, minWidth: '50px', height: '4px', accentColor: '#E8294A' }}
-                    />
-
-                    {/* 秒数バッジ */}
-                    <span style={{ fontSize: '11px', color: '#0d0f14', fontWeight: 800, whiteSpace: 'nowrap', fontFamily: "'DM Mono', monospace", flexShrink: 0, minWidth: '34px', textAlign: 'center', background: '#f1f5f9', padding: '3px 6px', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, flexShrink: 0, fontFamily: "'Outfit', sans-serif" }}>{lang==='ja'?'速度':'SPD'}</span>
+                    <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ flex: 1, minWidth: '80px', height: '4px', accentColor: '#E8294A' }} />
+                    <span style={{ fontSize: '11px', color: '#0d0f14', fontWeight: 800, whiteSpace: 'nowrap', fontFamily: "'DM Mono', monospace", flexShrink: 0, minWidth: '38px', textAlign: 'center', background: '#f1f5f9', padding: '3px 7px', borderRadius: '6px' }}>
                       {displaySeconds === 0 ? 'MAX' : `${displaySeconds.toFixed(1)}s`}
                     </span>
-
-                    {/* 区切り */}
                     <div style={{ width: '1px', height: '24px', background: '#e2e8f0', flexShrink: 0 }} />
-
-                    {/* もう1回 */}
-                    <button onClick={handleRepeat}
-                      style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s' }}
+                    <button onClick={handleRepeat} style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s' }}
                       onMouseOver={e => { e.currentTarget.style.background='#f1f5f9'; e.currentTarget.style.borderColor='#cbd5e1'; }}
                       onMouseOut={e => { e.currentTarget.style.background='#f8fafc'; e.currentTarget.style.borderColor='#e2e8f0'; }}
-                      title={lang === 'ja' ? 'もう1回' : 'Restart'}
+                      title={lang==='ja'?'もう1回':'Restart'}
                     >↺</button>
+                    <button onClick={toggleFullScreen} style={{ flexShrink: 0, height: '36px', padding: '0 14px', borderRadius: '10px', border: '1px solid #e2e8f0', background: isFullscreen ? '#0d0f14' : '#f8fafc', color: isFullscreen ? '#fff' : '#64748b', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s', fontFamily: "'Outfit', sans-serif", whiteSpace: 'nowrap' }}
+                      onMouseOver={e => { if (!isFullscreen) { e.currentTarget.style.background='#0d0f14'; e.currentTarget.style.color='#fff'; }}}
+                      onMouseOut={e => { if (!isFullscreen) { e.currentTarget.style.background='#f8fafc'; e.currentTarget.style.color='#64748b'; }}}
+                    >{isFullscreen ? (lang==='ja'?'× 解除':'× Exit') : (lang==='ja'?'全集中':'Focus')}</button>
+                  </div>
 
-                    {/* 全集中 */}
-                    <button onClick={toggleFullScreen}
-                      style={{ flexShrink: 0, height: '36px', padding: '0 14px', borderRadius: '10px', border: '1px solid #e2e8f0', background: isFullscreen ? '#0d0f14' : '#f8fafc', color: isFullscreen ? '#fff' : '#64748b', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s', fontFamily: "'Outfit', sans-serif", whiteSpace: 'nowrap', gap: '5px' }}
-                      onMouseOver={e => { if (!isFullscreen) { e.currentTarget.style.background='#0d0f14'; e.currentTarget.style.color='#fff'; e.currentTarget.style.borderColor='#0d0f14'; }}}
-                      onMouseOut={e => { if (!isFullscreen) { e.currentTarget.style.background='#f8fafc'; e.currentTarget.style.color='#64748b'; e.currentTarget.style.borderColor='#e2e8f0'; }}}
-                    >
-                      {isFullscreen
-                        ? <>{lang === 'ja' ? '× 解除' : '× Exit'}</>
-                        : <>{lang === 'ja' ? '全集中' : 'Focus'}</>
-                      }
-                    </button>
-
+                  {/* ── スマホ: 2行レイアウト ── */}
+                  <div className="ctrl-mobile-only" style={{ flexDirection: 'column', gap: '10px', width: '100%' }}>
+                    {/* スマホ Row1: ナビ・自動めくり・↺・全集中 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%' }}>
+                      <button onClick={handlePrevCard} style={{ flexShrink: 0, width: '38px', height: '38px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>‹</button>
+                      <button onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) playAudio((qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word); setIsAutoPlaying(!isAutoPlaying); }}
+                        style={{ flex: 1, height: '38px', borderRadius: '10px', border: 'none', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", background: isAutoPlaying ? '#E8294A' : '#2563EB', color: '#fff', boxShadow: isAutoPlaying ? '0 3px 10px rgba(232,41,74,0.3)' : '0 3px 10px rgba(37,99,235,0.25)' }}
+                      >{isAutoPlaying ? (lang==='ja'?'■ 停止':'■ Stop') : (lang==='ja'?'▶ 自動めくり':'▶ Auto')}</button>
+                      <button onClick={handleNextCard} style={{ flexShrink: 0, width: '38px', height: '38px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>›</button>
+                      <button onClick={handleRepeat} style={{ flexShrink: 0, width: '38px', height: '38px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>↺</button>
+                      <button onClick={toggleFullScreen} style={{ flexShrink: 0, width: '38px', height: '38px', borderRadius: '10px', border: '1px solid #e2e8f0', background: isFullscreen ? '#0d0f14' : '#f8fafc', color: isFullscreen ? '#fff' : '#64748b', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {isFullscreen ? '✕' : '🔥'}
+                      </button>
+                    </div>
+                    {/* スマホ Row2: スライダー全幅 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                      <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, flexShrink: 0, fontFamily: "'Outfit', sans-serif" }}>{lang==='ja'?'速度':'SPD'}</span>
+                      <input type="range" min="0" max="4.0" step="0.1" value={displaySeconds} onChange={(e) => setDisplaySeconds(Number(e.target.value))} className="speed-slider" style={{ flex: 1, height: '4px', accentColor: '#E8294A' }} />
+                      <span style={{ fontSize: '12px', color: '#0d0f14', fontWeight: 800, whiteSpace: 'nowrap', fontFamily: "'DM Mono', monospace", flexShrink: 0, minWidth: '40px', textAlign: 'center', background: '#f1f5f9', padding: '4px 8px', borderRadius: '7px' }}>
+                        {displaySeconds === 0 ? 'MAX' : `${displaySeconds.toFixed(1)}s`}
+                      </span>
+                    </div>
                   </div>
 
                   {/* ── Row 2: 聴き流し / 音声 / 英→日 / 単語・例文 / チェックボックス ── */}
