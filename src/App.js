@@ -1494,27 +1494,27 @@ function App() {
                   </span>
                 </div>
 
-                {/* ── Row 1: カード管理ボタン（枚数を除く） ── */}
+                {/* ── Row 1: カード管理ボタン（1行）── */}
                 {!isBulkMode && !isDeleteMode && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
 
                     {/* カード一覧 */}
                     <button onClick={() => setShowOverview(true)}
-                      style={{ height: '36px', padding: '0 14px', borderRadius: '10px', border: 'none', background: '#475569', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 2px 6px rgba(71,85,105,0.2)', transition: 'all 0.18s', whiteSpace: 'nowrap' }}
+                      style={{ height: '34px', padding: '0 12px', borderRadius: '10px', border: 'none', background: '#475569', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 6px rgba(71,85,105,0.2)', transition: 'all 0.18s', whiteSpace: 'nowrap' }}
                       onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.2)'}
                       onMouseOut={e => e.currentTarget.style.filter = 'none'}
-                    >▦ {lang==='ja'?'カード一覧':'Cards'}</button>
+                    >▦ {lang==='ja'?'一覧':'Cards'}</button>
 
                     {/* 手動で追加 */}
                     <button onClick={() => setAddingCard(true)}
-                      style={{ height: '36px', padding: '0 14px', borderRadius: '10px', border: 'none', background: '#1DB86E', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 2px 6px rgba(29,184,110,0.2)', transition: 'all 0.18s', whiteSpace: 'nowrap' }}
+                      style={{ height: '34px', padding: '0 12px', borderRadius: '10px', border: 'none', background: '#1DB86E', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 6px rgba(29,184,110,0.2)', transition: 'all 0.18s', whiteSpace: 'nowrap' }}
                       onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.08)'}
                       onMouseOut={e => e.currentTarget.style.filter = 'none'}
-                    >✏ {lang==='ja'?'手動で追加':'Add'}</button>
+                    >✏ {lang==='ja'?'手動':'Add'}</button>
 
                     {/* CSVで追加 */}
                     <button onClick={() => setIsBulkMode(true)}
-                      style={{ height: '36px', padding: '0 14px', borderRadius: '10px', border: 'none', background: '#F59E0B', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", display: 'flex', alignItems: 'center', gap: '5px', boxShadow: '0 2px 6px rgba(245,158,11,0.2)', transition: 'all 0.18s', whiteSpace: 'nowrap' }}
+                      style={{ height: '34px', padding: '0 12px', borderRadius: '10px', border: 'none', background: '#F59E0B', color: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 6px rgba(245,158,11,0.2)', transition: 'all 0.18s', whiteSpace: 'nowrap' }}
                       onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.08)'}
                       onMouseOut={e => e.currentTarget.style.filter = 'none'}
                     >⬆ CSV</button>
@@ -1522,19 +1522,19 @@ function App() {
                     {/* シャッフル */}
                     <button onClick={shuffleCurrentDeck}
                       title={lang==='ja'?'シャッフル':'Shuffle'}
-                      style={{ height: '36px', width: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.18s', flexShrink: 0 }}
+                      style={{ height: '34px', width: '34px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.18s', flexShrink: 0 }}
                       onMouseOver={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
                       onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#e2e8f0'; }}
                     >🔀</button>
 
-                    {/* テスト作成（落ち着いた青緑系） */}
+                    {/* テスト作成（アイコン＋短縮ラベル） */}
                     {allCards.length >= 4 && (
                       <div ref={actionMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
                         <button onClick={() => setShowActionMenu(!showActionMenu)}
-                          style={{ height: '36px', padding: '0 14px', background: '#0891B2', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontFamily: "'Outfit', sans-serif", whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(8,145,178,0.2)', transition: 'all 0.18s' }}
+                          style={{ height: '34px', padding: '0 12px', background: '#0891B2', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: "'Outfit', sans-serif", whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(8,145,178,0.2)', transition: 'all 0.18s' }}
                           onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.08)'}
                           onMouseOut={e => e.currentTarget.style.filter = 'none'}
-                        >🎯 {lang==='ja'?'テスト作成':'Test'} <span style={{ fontSize: '8px', opacity: 0.7 }}>▼</span></button>
+                        >🎯 {lang==='ja'?'テスト':'Test'} <span style={{ fontSize: '8px', opacity: 0.7 }}>▼</span></button>
                         {showActionMenu && (
                           <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '6px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.12)', zIndex: 200, minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                             {[
@@ -1608,10 +1608,10 @@ function App() {
 
                 {/* 操作パネル */}
                 <div style={isFullscreen
-                  ? { position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '760px', background: 'rgba(255,255,255,0.97)', padding: '12px 20px', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.18)', boxSizing: 'border-box', zIndex: 10000, backdropFilter: 'blur(10px)' }
-                  : { background: '#fff', border: '1px solid #e1e4e8', borderRadius: '20px', width: '100%', maxWidth: '760px', margin: '16px auto 0', boxSizing: 'border-box', padding: '12px 18px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }
+                  ? { position: 'absolute', bottom: '30px', left: '50%', transform: 'translateX(-50%)', width: '90%', maxWidth: '760px', background: 'rgba(255,255,255,0.97)', padding: '12px 16px', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.18)', boxSizing: 'border-box', zIndex: 10000, backdropFilter: 'blur(10px)' }
+                  : { background: '#fff', border: '1px solid #e1e4e8', borderRadius: '20px', width: '100%', maxWidth: '760px', margin: '16px auto 0', boxSizing: 'border-box', padding: '10px 12px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }
                 }>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%' }}>
 
                     {/* ◀ ▶ ナビ */}
                     <button onClick={handlePrevCard} style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s', fontWeight: 700 }}
@@ -1622,9 +1622,9 @@ function App() {
                     {/* 自動めくりボタン */}
                     <button
                       onClick={(e) => { e.stopPropagation(); if (!isAutoPlaying) playAudio((qType === 'example' && studyCards[currentIndex]?.example) ? studyCards[currentIndex].example : studyCards[currentIndex]?.word); setIsAutoPlaying(!isAutoPlaying); }}
-                      style={{ flexShrink: 0, padding: '0 22px', height: '36px', borderRadius: '10px', border: 'none', fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.18s', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.2px', background: isAutoPlaying ? '#E8294A' : '#2563EB', color: '#fff', boxShadow: isAutoPlaying ? '0 3px 10px rgba(232,41,74,0.3)' : '0 3px 10px rgba(37,99,235,0.25)', minWidth: '110px', animation: isAutoPlaying ? 'pulse 2s infinite' : 'none' }}
+                      style={{ flexShrink: 0, padding: '0 16px', height: '36px', borderRadius: '10px', border: 'none', fontSize: '13px', fontWeight: 700, cursor: 'pointer', transition: 'all 0.18s', fontFamily: "'Outfit', sans-serif", letterSpacing: '0.2px', background: isAutoPlaying ? '#E8294A' : '#2563EB', color: '#fff', boxShadow: isAutoPlaying ? '0 3px 10px rgba(232,41,74,0.3)' : '0 3px 10px rgba(37,99,235,0.25)', minWidth: '90px', maxWidth: '140px' }}
                     >
-                      {isAutoPlaying ? (lang === 'ja' ? '■  停止' : '■  Stop') : (lang === 'ja' ? '▶  自動めくり' : '▶  Auto')}
+                      {isAutoPlaying ? (lang === 'ja' ? '■ 停止' : '■ Stop') : (lang === 'ja' ? '▶ 自動めくり' : '▶ Auto')}
                     </button>
 
                     <button onClick={handleNextCard} style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#64748b', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s', fontWeight: 700 }}
@@ -1635,9 +1635,9 @@ function App() {
                     {/* 区切り */}
                     <div style={{ width: '1px', height: '24px', background: '#e2e8f0', flexShrink: 0 }} />
 
-                    {/* スピードラベル */}
-                    <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, flexShrink: 0, fontFamily: "'Outfit', sans-serif", letterSpacing: '0.5px' }}>
-                      {lang === 'ja' ? '速度' : 'SPEED'}
+                    {/* スピードラベル（PC表示のみ） */}
+                    <span className="ctrl-hide-mobile" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, flexShrink: 0, fontFamily: "'Outfit', sans-serif", letterSpacing: '0.5px' }}>
+                      {lang === 'ja' ? '速度' : 'SPD'}
                     </span>
 
                     {/* スライダー */}
@@ -1645,11 +1645,11 @@ function App() {
                       type="range" min="0" max="4.0" step="0.1" value={displaySeconds}
                       onChange={(e) => setDisplaySeconds(Number(e.target.value))}
                       className="speed-slider"
-                      style={{ flex: 1, minWidth: '80px', height: '4px', accentColor: '#E8294A' }}
+                      style={{ flex: 1, minWidth: '50px', height: '4px', accentColor: '#E8294A' }}
                     />
 
                     {/* 秒数バッジ */}
-                    <span style={{ fontSize: '12px', color: '#0d0f14', fontWeight: 800, whiteSpace: 'nowrap', fontFamily: "'DM Mono', monospace", flexShrink: 0, minWidth: '40px', textAlign: 'center', background: '#f1f5f9', padding: '4px 8px', borderRadius: '6px', letterSpacing: '-0.3px' }}>
+                    <span style={{ fontSize: '11px', color: '#0d0f14', fontWeight: 800, whiteSpace: 'nowrap', fontFamily: "'DM Mono', monospace", flexShrink: 0, minWidth: '34px', textAlign: 'center', background: '#f1f5f9', padding: '3px 6px', borderRadius: '6px' }}>
                       {displaySeconds === 0 ? 'MAX' : `${displaySeconds.toFixed(1)}s`}
                     </span>
 
