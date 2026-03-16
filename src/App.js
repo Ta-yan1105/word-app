@@ -813,17 +813,17 @@ function App() {
           </div>
         )}
 
-        {/* ★ Deep Dive ボタン */}
+        {/* ★ Deep Dive ボタン（右下・目立たせない） */}
         {activeDicts.length > 0 && (
-          <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }} onClick={e => e.stopPropagation()}>
+          <div style={{ position: 'absolute', bottom: '12px', right: '12px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }} onClick={e => e.stopPropagation()}>
             <button
               onClick={(e) => { e.stopPropagation(); setShowDeepDive(!showDeepDive); }}
-              style={{ background: showDeepDive ? '#334155' : '#ffffff', border: '1px solid #cbd5e1', borderRadius: '50%', width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', transition: 'all 0.2s', color: showDeepDive ? '#fff' : '#000', opacity: showDeepDive ? 1 : 0.7 }}
-              onMouseOver={e => e.currentTarget.style.opacity = 1}
-              onMouseOut={e => e.currentTarget.style.opacity = showDeepDive ? 1 : 0.7}
-              title={lang==='ja'?'辞書で深く調べる':'Deep Dive (Dictionary)'}
+              style={{ background: showDeepDive ? '#334155' : 'transparent', border: '1px solid', borderColor: showDeepDive ? '#334155' : 'rgba(0,0,0,0.1)', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', cursor: 'pointer', transition: 'all 0.2s', color: showDeepDive ? '#fff' : 'rgba(0,0,0,0.2)', opacity: showDeepDive ? 1 : 0.5 }}
+              onMouseOver={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderColor = '#94a3b8'; e.currentTarget.style.color = '#475569'; }}
+              onMouseOut={e => { if (!showDeepDive) { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)'; e.currentTarget.style.color = 'rgba(0,0,0,0.2)'; } }}
+              title={lang==='ja'?'辞書で調べる':'Dictionary'}
             >
-              {showDeepDive ? '✖' : '🔍'}
+              {showDeepDive ? '✕' : '🔍'}
             </button>
             {showDeepDive && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', background: 'rgba(255,255,255,0.95)', padding: '10px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.15)', backdropFilter: 'blur(5px)', border: '1px solid #e2e8f0', minWidth: '140px' }}>
@@ -1436,11 +1436,38 @@ function App() {
               <div style={{width: '80px'}}></div>
             </div>
             <div className="integrated-creation-area">
-              <div className="creation-row">
-                <span className="creation-label" title="Deck">🔖</span>
-                <input type="text" placeholder={t.deckPlaceholder || (lang==='ja'?'新しい束の名前':'New Deck Name')} value={newDeckNameInside} onChange={(e) => setNewDeckNameInside(e.target.value)} onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()} />
-                <button onClick={createNewDeckInsideBox} className="add-btn mini-btn">{t.addBtn || (lang==='ja'?'追加':'Add')}</button>
-                <button onClick={importDeckByCode} className="add-btn mini-btn" style={{ backgroundColor: '#8e44ad', marginLeft: '5px' }} disabled={loading}>{lang === 'ja' ? '🔗 共有コード' : '🔗 Share'}</button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                {/* 入力欄（常に全幅） */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+                  <span className="creation-label" title="Deck">🔖</span>
+                  <input
+                    type="text"
+                    className="creation-row"
+                    placeholder={t.deckPlaceholder || (lang==='ja'?'新しい暗記カードの名前を入力...':'New Deck Name')}
+                    value={newDeckNameInside}
+                    onChange={(e) => setNewDeckNameInside(e.target.value)}
+                    onKeyPress={e => e.key === 'Enter' && createNewDeckInsideBox()}
+                    style={{ flex: 1, minWidth: 0, padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', background: '#f8fafc', color: '#334155', fontFamily: "'Noto Sans JP', sans-serif", outline: 'none', transition: 'all 0.2s', width: '100%', boxSizing: 'border-box' }}
+                    onFocus={e => { e.target.style.borderColor = '#E8294A'; e.target.style.boxShadow = '0 0 0 3px rgba(232,41,74,0.1)'; }}
+                    onBlur={e => { e.target.style.borderColor = '#e2e8f0'; e.target.style.boxShadow = 'none'; }}
+                  />
+                </div>
+                {/* ボタン行（2つ均等） */}
+                <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                  <button
+                    onClick={createNewDeckInsideBox}
+                    style={{ flex: 1, height: '40px', borderRadius: '10px', border: 'none', background: '#2563EB', color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", boxShadow: '0 2px 8px rgba(37,99,235,0.25)', transition: 'all 0.18s' }}
+                    onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+                    onMouseOut={e => e.currentTarget.style.filter = 'none'}
+                  >{t.addBtn || (lang==='ja'?'+ 追加':'+ Add')}</button>
+                  <button
+                    onClick={importDeckByCode}
+                    disabled={loading}
+                    style={{ flex: 1, height: '40px', borderRadius: '10px', border: 'none', background: '#7C3AED', color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif", boxShadow: '0 2px 8px rgba(124,58,237,0.25)', transition: 'all 0.18s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}
+                    onMouseOver={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+                    onMouseOut={e => e.currentTarget.style.filter = 'none'}
+                  >🔗 {lang==='ja'?'共有コード':'Share Code'}</button>
+                </div>
               </div>
             </div>
             <div className="decks-split-layout">
