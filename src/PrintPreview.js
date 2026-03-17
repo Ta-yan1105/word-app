@@ -21,13 +21,28 @@ const PrintPreview = ({ t, setView, printCards, printMode, activeDeck, shufflePr
       
       // 同じ品詞を優先してダミーを作成
       const samePos = targetPos ? others.filter(c => c.pos === targetPos).sort(() => Math.random() - 0.5) : [];
-      const diffPos = others.filter(c => c.pos !== targetPos).sort(() => Math.random() - 0.5);
+      
+      // ★修正：targetPosが未設定の場合でも、全ての他の単語をダミー候補として含めるように変更
+      const diffPos = others.filter(c => targetPos ? c.pos !== targetPos : true).sort(() => Math.random() - 0.5);
       
       const combinedPool = [...samePos, ...diffPos];
-      const dummies = combinedPool.slice(0, 3).map(c => c.word);
+      
+      // ★追加：Setを使って重複なしの4択を確実に生成
+      const optionsSet = new Set([correctAnswer]);
+      for (const c of combinedPool) {
+        if (c.word) optionsSet.add(c.word);
+        if (optionsSet.size === 4) break;
+      }
+
+      // 万が一単語数が足りない場合はプレースホルダーで埋める
+      let counter = 1;
+      while (optionsSet.size < 4) {
+        optionsSet.add(`(ダミー ${counter++})`);
+      }
 
       // 正解1つ ＋ ダミー3つ をシャッフル
-      const choices = [correctAnswer, ...dummies].sort(() => Math.random() - 0.5);
+      const choices = Array.from(optionsSet).sort(() => Math.random() - 0.5);
+      
       return { ...card, choices, correctAnswer };
     });
   }, [printCards, printMode, activeDeck?.cards]); // 依存配列も最適化

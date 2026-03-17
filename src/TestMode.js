@@ -46,11 +46,38 @@ const TestMode = ({ t, setView, allCards }) => {
     }
     const shuffledCards = [...allCards].sort(() => Math.random() - 0.5);
     const questions = shuffledCards.map(card => {
-      const wrongAnswers = allCards.filter(c => c.word !== card.word).sort(() => Math.random() - 0.5).slice(0, 3).map(c => c.meaning || '意味なし');
-      const options = [card.meaning || '意味なし', ...wrongAnswers].sort(() => Math.random() - 0.5);
-      return { word: card.word, correct: card.meaning || '意味なし', options: options };
+      const correctMeaning = card.meaning || '意味なし';
+      
+      // Setを使って、重複しない選択肢（正解を含む）のリストを作成
+      const optionsSet = new Set([correctMeaning]);
+      
+      // 自分自身のカードを除外（単語の一致ではなくオブジェクト自身を除外）してシャッフル
+      const otherCards = [...allCards].filter(c => c !== card).sort(() => Math.random() - 0.5);
+      
+      // 異なる意味を持つ選択肢を4つになるまで追加していく
+      for (const otherCard of otherCards) {
+        optionsSet.add(otherCard.meaning || '意味なし');
+        if (optionsSet.size === 4) break;
+      }
+      
+      // 万が一、アプリ全体で登録されている「意味」の種類が4つ未満の場合、プレースホルダーで確実に4枠埋める
+      let counter = 1;
+      while (optionsSet.size < 4) {
+        optionsSet.add(`(他の選択肢 ${counter++})`);
+      }
+      
+      // 配列に変換して選択肢の並び順をシャッフル
+      const options = Array.from(optionsSet).sort(() => Math.random() - 0.5);
+      
+      return { word: card.word, correct: correctMeaning, options: options };
     });
-    setTestQuestions(questions); setCurrentTestIndex(0); setScore(0); setShowTestResult(false); setTestEffect(null); setCombo(0);
+    
+    setTestQuestions(questions); 
+    setCurrentTestIndex(0); 
+    setScore(0); 
+    setShowTestResult(false); 
+    setTestEffect(null); 
+    setCombo(0);
   };
 
   // 画面が開かれた瞬間にテストを生成してスタート
