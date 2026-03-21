@@ -249,6 +249,26 @@ function App() {
     setActiveDicts(prev => prev.includes(dictId) ? prev.filter(id => id !== dictId) : [...prev, dictId]);
   };
 
+  const moveDictUp = (dictId) => {
+    setActiveDicts(prev => {
+      const idx = prev.indexOf(dictId);
+      if (idx <= 0) return prev;
+      const next = [...prev];
+      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+      return next;
+    });
+  };
+
+  const moveDictDown = (dictId) => {
+    setActiveDicts(prev => {
+      const idx = prev.indexOf(dictId);
+      if (idx < 0 || idx >= prev.length - 1) return prev;
+      const next = [...prev];
+      [next[idx], next[idx + 1]] = [next[idx + 1], next[idx]];
+      return next;
+    });
+  };
+
   const shuffleCurrentDeck = () => {
     if(window.confirm(lang === 'ja' ? '現在の束をシャッフルしますか？' : 'Shuffle current deck?')) {
       setDecks(prev => prev.map(d => {
@@ -444,6 +464,12 @@ function App() {
   const startPodcast = () => {
     if(studyCards.length === 0) return alert(lang === 'ja' ? '学習する単語がありません。' : 'No words to study.');
     window.speechSynthesis.cancel(); podIndexRef.current = 0; isPodPlayingRef.current = true; setIsPodPlaying(true); runPodcast();
+  };
+
+  const handleCardFlip = () => {
+    stopAutoPlayIfActive();
+    setIsFlipped(prev => !prev);
+    setShowDeepDive(false);
   };
 
   const handleNextCard = useCallback((e) => { if (e) e.stopPropagation(); stopAutoPlayIfActive(); setIsFlipped(false); setShowDeepDive(false); setCurrentIndex((currentIndex + 1) % studyCards.length); }, [currentIndex, studyCards]);
@@ -650,7 +676,7 @@ function App() {
 
   const getPosBadgeStyle = (pos) => {
     const c = getPosColors(pos) || { color: '#64748b', bg: '#f8fafc', border: '#e2e8f0' };
-    return { position: 'absolute', top: '15px', left: '15px', padding: '4px 12px', borderRadius: '8px', fontSize: '14px', fontWeight: '900', zIndex: 10, border: `2px solid ${c.border}`, color: c.color, backgroundColor: c.bg };
+    return { position: 'absolute', top: '12px', left: '12px', padding: '3px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '900', zIndex: 10, border: `2px solid ${c.border}`, color: c.color, backgroundColor: c.bg };
   };
 
   // =========================================================================
@@ -734,7 +760,7 @@ function App() {
     const markerColor = posColors ? posColors.border : null;
 
     return (
-      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', boxSizing: 'border-box' }}>
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingTop: (isJapanese && card.pos) ? '52px' : '20px', boxSizing: 'border-box' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
         {qType === 'word' ? (
           qLang === 'en'
@@ -794,7 +820,7 @@ function App() {
     const markerColor = posColors ? posColors.border : null;
 
     return (
-      <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingBottom: '60px', boxSizing: 'border-box', overflowY: 'auto' }}>
+      <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingTop: (isJapanese && card.pos) ? '52px' : '20px', paddingBottom: '60px', boxSizing: 'border-box', overflowY: 'auto' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
 
         {/* メインコンテンツ */}
@@ -1194,11 +1220,31 @@ function App() {
           <div className="modal-content" style={{ borderRadius: '20px', padding: '30px', maxWidth: '400px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
             <h3 style={{marginTop: 0, color: '#0f172a', fontSize: '20px', fontWeight: '800'}}>{lang === 'ja' ? '⚙️ マイ辞書設定' : '⚙️ Dict Settings'}</h3>
             <p style={{fontSize: '13px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5'}}>{lang === 'ja' ? 'カードの裏面に表示する辞書を選んでください。' : 'Select dictionaries to show on the back of cards.'}</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '10px' }}>
-              {DICTIONARIES.map(dict => (
-                <label key={dict.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#f8fafc', borderRadius: '12px', cursor: 'pointer', border: '1px solid #e2e8f0' }}>
+            <p style={{ fontSize: '12px', color: '#94a3b8', margin: '-12px 0 12px', lineHeight: '1.4' }}>{lang === 'ja' ? '▲▼で表示順を変更できます' : 'Use ▲▼ to reorder'}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '50vh', overflowY: 'auto', paddingRight: '6px' }}>
+              {/* 有効な辞書（順番通り） */}
+              {activeDicts.map((dictId, idx) => {
+                const dict = DICTIONARIES.find(d => d.id === dictId);
+                if (!dict) return null;
+                return (
+                  <div key={dict.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', background: '#f0fdf4', borderRadius: '12px', border: '1.5px solid #bbf7d0' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                      <button onClick={() => moveDictUp(dictId)} disabled={idx === 0} style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', fontSize: '11px', color: idx === 0 ? '#cbd5e1' : '#334155', padding: '0 4px', lineHeight: 1 }}>▲</button>
+                      <button onClick={() => moveDictDown(dictId)} disabled={idx === activeDicts.length - 1} style={{ background: 'none', border: 'none', cursor: idx === activeDicts.length - 1 ? 'default' : 'pointer', fontSize: '11px', color: idx === activeDicts.length - 1 ? '#cbd5e1' : '#334155', padding: '0 4px', lineHeight: 1 }}>▼</button>
+                    </div>
+                    <span style={{ flex: 1, fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>{dict.icon} {dict.name}</span>
+                    <input type="checkbox" checked={true} onChange={() => toggleDictSelection(dictId)} style={{ transform: 'scale(1.2)', accentColor: '#16a34a' }} />
+                  </div>
+                );
+              })}
+              {/* 無効な辞書 */}
+              {DICTIONARIES.filter(d => !activeDicts.includes(d.id)).length > 0 && (
+                <div style={{ fontSize: '11px', color: '#94a3b8', textAlign: 'center', margin: '4px 0 2px' }}>{lang === 'ja' ? '── 未選択 ──' : '── Disabled ──'}</div>
+              )}
+              {DICTIONARIES.filter(d => !activeDicts.includes(d.id)).map(dict => (
+                <label key={dict.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#f8fafc', borderRadius: '12px', cursor: 'pointer', border: '1px solid #e2e8f0', opacity: 0.6 }}>
                   <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#334155' }}>{dict.icon} {dict.name}</span>
-                  <input type="checkbox" checked={activeDicts.includes(dict.id)} onChange={() => toggleDictSelection(dict.id)} style={{ transform: 'scale(1.2)' }} />
+                  <input type="checkbox" checked={false} onChange={() => toggleDictSelection(dict.id)} style={{ transform: 'scale(1.2)' }} />
                 </label>
               ))}
             </div>
@@ -1632,7 +1678,7 @@ function App() {
 
                 {/* ★ カード本体 */}
                 <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: isFullscreen ? '60vh' : '450px', boxSizing: 'border-box' }}>
-                  <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={() => { stopAutoPlayIfActive(); setIsFlipped(!isFlipped); setShowDeepDive(false); }} style={{ height: '100%' }}>
+                  <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={handleCardFlip} style={{ height: '100%' }}>
                     <div className="card-inner">
                       <div className="card-front">
                         <div className="ring-hole"></div>

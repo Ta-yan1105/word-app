@@ -511,26 +511,29 @@ html, body {
 /* =========================================================================
    FLASHCARD
    ========================================================================= */
-.flashcard-area { display: flex; flex-direction: column; align-items: center; width: 100%; perspective: 1400px; box-sizing: border-box; }
+
+.flashcard-area { display: flex; flex-direction: column; align-items: center; width: 100%; perspective: 900px; perspective-origin: 50% 35%; box-sizing: border-box; }
 .card-animation-wrapper { width: 100%; max-width: 520px; aspect-ratio: 3 / 2; min-height: 280px; margin-bottom: 16px; }
-.card-container { width: 100%; height: 100%; position: relative; cursor: pointer; }
+.card-container { width: 100%; height: 100%; position: relative; cursor: pointer; transform-style: preserve-3d; }
 .card-inner {
   width: 100%; height: 100%; position: absolute;
-  transition: transform 0.65s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.65s;
+  transition: transform 0.65s cubic-bezier(0.23, 1, 0.32, 1);
   transform-style: preserve-3d; border-radius: var(--radius-xl);
+  will-change: transform;
   box-shadow: 0 8px 32px rgba(13,15,20,0.10), 0 2px 8px rgba(13,15,20,0.06);
 }
-.card-container.flipped .card-inner { transform: rotateX(180deg); }
-.card-container:active .card-inner { transform: scale(0.97); transition: transform 0.1s; }
-.card-container.flipped:active .card-inner { transform: rotateX(180deg) scale(0.97); }
+
+.card-container.flipped .card-inner { transform: rotateX(-180deg); }
 .card-front, .card-back {
-  width: 100%; height: 100%; position: absolute; backface-visibility: hidden;
+  width: 100%; height: 100%; position: absolute;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
   border-radius: var(--radius-xl); display: flex; flex-direction: column;
   align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;
   background: var(--surface); border: 1.5px solid var(--surface-4);
+  transform: translateZ(1px);
 }
 .card-front { z-index: 2; background: #ffffff; }
-.card-back { transform: rotateX(180deg); background: #ffffff; }
+.card-back { transform: rotateX(180deg) translateZ(1px); background: #ffffff; }
 .ring-hole {
   position: absolute; top: 18px; left: 18px; width: 12px; height: 12px;
   background: var(--surface-3); border-radius: 50%; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
