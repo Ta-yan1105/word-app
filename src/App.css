@@ -2,7 +2,7 @@
    REDLINE VOCABULARY 窶� Redesign v2 (App.js螳悟�莠呈鋤)
    ========================================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Noto+Sans+JP:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Inter:wght@400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
   --red:         #E8294A;
@@ -548,12 +548,12 @@ html, body {
 }
 .memorize-check-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-soft); transform: scale(1.1); opacity: 1; }
 .word-text {
-  font-family: 'Outfit', sans-serif; font-size: clamp(28px, 7vw, 44px); font-weight: 900;
+  font-family: 'Inter', 'Outfit', sans-serif; font-size: clamp(28px, 7vw, 44px); font-weight: 800;
   margin: 0 0 0 0; color: var(--ink); text-align: center; word-break: break-word; letter-spacing: -0.5px;
   transform: translateY(-8px);
 }
 .core-meaning-large {
-  font-family: 'Noto Sans JP', sans-serif; font-size: clamp(22px, 6vw, 36px); font-weight: 700;
+  font-family: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif; font-size: clamp(22px, 6vw, 36px); font-weight: 700;
   color: var(--ink); margin: 0; text-align: center; line-height: 1.4;
   transform: translateY(0);
 }
@@ -565,7 +565,7 @@ html, body {
   border-top: 1px solid var(--surface-4); padding-top: 14px; margin-top: 14px; gap: 6px;
 }
 .example-en {
-  font-family: 'Georgia', 'Times New Roman', serif;
+  font-family: 'Lora', 'Georgia', serif;
   font-style: italic;
   font-size: clamp(22px, 4.5vw, 36px);
   font-weight: 700;
@@ -574,7 +574,7 @@ html, body {
   letter-spacing: 0.01em;
 }
 .example-ja {
-  font-family: 'Noto Sans JP', sans-serif;
+  font-family: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
   font-size: clamp(18px, 3.2vw, 28px);
   font-weight: 500;
   color: #334155;
