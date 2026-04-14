@@ -512,12 +512,20 @@ function App() {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || view !== 'study' || isBulkMode || showPodcast) return;
       unlockAudio();
-      if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); stopAutoPlayIfActive(); setIsFlipped(p => !p); setShowDeepDive(false); }
-      else if (e.code === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); handleNextCard(); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); handlePrevCard(); }
+      // Canon PR110-RC 進むボタン（ArrowDown）/ その他リモコン（PageDown/→/Enter/Space）:
+      //   表面表示中 → 裏面（意味）へめくる
+      //   裏面表示中 → 次のカードへ進む
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.code === 'PageDown' || e.code === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        stopAutoPlayIfActive();
+        if (!isFlipped) { setIsFlipped(true); setShowDeepDive(false); }
+        else { handleNextCard(); }
+      }
+      // Canon PR110-RC 戻るボタン（ArrowUp）/ その他リモコン（PageUp/←）: 前のカードへ戻る
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.code === 'PageUp') { e.preventDefault(); handlePrevCard(); }
     };
     window.addEventListener('keydown', handleKeyDown); return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [view, isBulkMode, isAutoPlaying, handleNextCard, handlePrevCard, unlockAudio, showPodcast]);
+  }, [view, isBulkMode, isAutoPlaying, isFlipped, handleNextCard, handlePrevCard, unlockAudio, showPodcast]);
 
   const elapsedRef = useRef(0);
   const lastTickRef = useRef(Date.now());
@@ -1676,7 +1684,7 @@ function App() {
               <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
 
                 {/* ★ カード本体 */}
-                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: '1.5 / 1', minHeight: '220px', maxHeight: isFullscreen ? '60vh' : '450px', boxSizing: 'border-box' }}>
+                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: isFullscreen ? '4 / 3' : '1.5 / 1', minHeight: isFullscreen ? '65vh' : '220px', maxHeight: isFullscreen ? '85vh' : '450px', boxSizing: 'border-box' }}>
                   <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={handleCardFlip} style={{ height: '100%' }}>
                     <div className="card-inner">
                       <div className="card-front">
