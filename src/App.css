@@ -677,12 +677,23 @@ textarea.modal-input { resize: vertical; min-height: 58px; }
   max-height: 82vh !important;
   margin: 0 auto !important;
 }
-/* PC・プロジェクター (≥1024px) */
-@media (min-width: 1024px) {
+/* Chromebook・ノートPC (1024px〜1439px) */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .fullscreen-active .card-animation-wrapper {
+    width: min(94vw, calc(78vh * 4 / 3)) !important;
+    max-height: 80vh !important;
+  }
+  .fullscreen-active .word-text          { font-size: clamp(36px, 6vw, 64px) !important; letter-spacing: -0.5px !important; }
+  .fullscreen-active .core-meaning-large { font-size: clamp(28px, 4.5vw, 52px) !important; }
+  .fullscreen-active .example-en         { font-size: clamp(16px, 2.4vw, 28px) !important; }
+  .fullscreen-active .example-ja         { font-size: clamp(13px, 1.8vw, 22px) !important; }
+}
+/* 大型モニター・プロジェクター (≥1440px) */
+@media (min-width: 1440px) {
   .fullscreen-active .word-text          { font-size: clamp(64px, 14vw, 180px) !important; letter-spacing: -1px !important; }
   .fullscreen-active .core-meaning-large { font-size: clamp(48px, 11vw, 140px) !important; }
-  .fullscreen-active .example-en         { font-size: clamp(36px, 6.5vw, 80px) !important; }
-  .fullscreen-active .example-ja         { font-size: clamp(28px, 5vw, 60px) !important; }
+  .fullscreen-active .example-en         { font-size: clamp(36px, 5vw, 72px) !important; }
+  .fullscreen-active .example-ja         { font-size: clamp(28px, 4vw, 56px) !important; }
 }
 /* タブレット (768px〜1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
