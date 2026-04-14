@@ -1684,7 +1684,7 @@ function App() {
               <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
 
                 {/* ★ カード本体 */}
-                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', maxWidth: '800px', margin: '0 auto', aspectRatio: isFullscreen ? '4 / 3' : '1.5 / 1', minHeight: isFullscreen ? '65vh' : '220px', maxHeight: isFullscreen ? '85vh' : '450px', boxSizing: 'border-box' }}>
+                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', maxWidth: isFullscreen ? 'none' : '800px', margin: '0 auto', aspectRatio: isFullscreen ? undefined : '1.5 / 1', minHeight: isFullscreen ? undefined : '220px', maxHeight: isFullscreen ? undefined : '450px', boxSizing: 'border-box' }}>
                   <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={handleCardFlip} style={{ height: '100%' }}>
                     <div className="card-inner">
                       <div className="card-front">
