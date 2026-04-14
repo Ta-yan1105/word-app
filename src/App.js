@@ -768,7 +768,7 @@ function App() {
     const markerColor = posColors ? posColors.border : null;
 
     return (
-      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingTop: (isJapanese && card.pos) ? '52px' : '20px', boxSizing: 'border-box' }}>
+      <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingTop: (isJapanese && card.pos) ? '52px' : '20px', boxSizing: 'border-box', overflow: 'hidden' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
         {qType === 'word' ? (
           qLang === 'en'
@@ -776,8 +776,8 @@ function App() {
             : <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}><div className="core-meaning-large" style={{ textAlign: 'left', margin: 0, fontSize: fMean, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%' }}>{cleanText((card.meaning || '').split('/')[0])}</div></div>
         ) : (
           qLang === 'en'
-            ? <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}><p className="example-en" style={{textAlign: 'left', margin: 0, fontSize: fExEn, lineHeight: '1.8', fontWeight: 'bold', fontFamily: "'Lora', Georgia, serif", width: '100%', display: 'inline-block', cursor: 'pointer'}} onClick={(e) => { e.stopPropagation(); playAudio(card.example); }}>{renderHighlightedText(card.example || '', markerColor)}</p></div>
-            : <div style={{display: 'inline-block', textAlign: 'left', maxWidth: '100%'}}><p className="example-ja" style={{textAlign: 'left', margin: 0, fontSize: fExJa, lineHeight: '1.8', fontWeight: 'bold', color: '#334155', width: '100%', display: 'inline-block'}}>{cleanTranslation(card.translation)}</p></div>
+            ? <div style={{display: 'block', width: '100%', overflowWrap: 'break-word'}}><p className="example-en" style={{textAlign: 'center', margin: 0, fontSize: fExEn, lineHeight: '1.8', fontWeight: 'bold', fontFamily: "'Lora', Georgia, serif", width: '100%', cursor: 'pointer', wordBreak: 'break-word'}} onClick={(e) => { e.stopPropagation(); playAudio(card.example); }}>{renderHighlightedText(card.example || '', markerColor)}</p></div>
+            : <div style={{display: 'block', width: '100%', overflowWrap: 'break-word'}}><p className="example-ja" style={{textAlign: 'center', margin: 0, fontSize: fExJa, lineHeight: '1.8', fontWeight: 'bold', color: '#334155', width: '100%', wordBreak: 'break-word'}}>{cleanTranslation(card.translation)}</p></div>
         )}
         {/* 辞書ボタン（右下） */}
         {activeDicts.length > 0 && (

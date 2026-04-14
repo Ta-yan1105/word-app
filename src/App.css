@@ -531,6 +531,7 @@ html, body {
   align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;
   background: var(--surface); border: 1.5px solid var(--surface-4);
   transform: translateZ(1px);
+  overflow: hidden;
 }
 .card-front { z-index: 2; background: #ffffff; }
 .card-back { transform: rotateX(180deg) translateZ(1px); background: #ffffff; }
@@ -567,19 +568,21 @@ html, body {
 .example-en {
   font-family: 'Lora', 'Georgia', serif;
   font-style: italic;
-  font-size: clamp(22px, 4.5vw, 36px);
+  font-size: clamp(16px, 3.2vw, 30px);
   font-weight: 700;
   color: #1e293b;
-  margin: 0; line-height: 1.75; text-align: center;
+  margin: 0; line-height: 1.7; text-align: center;
   letter-spacing: 0.01em;
+  word-break: break-word; overflow-wrap: break-word;
 }
 .example-ja {
   font-family: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
-  font-size: clamp(18px, 3.2vw, 28px);
+  font-size: clamp(14px, 2.4vw, 22px);
   font-weight: 500;
   color: #334155;
-  margin: 0; line-height: 1.85; text-align: center;
+  margin: 0; line-height: 1.8; text-align: center;
   letter-spacing: 0.04em;
+  word-break: break-word; overflow-wrap: break-word;
 }
 .highlight-word {
   color: var(--ink); font-weight: 800;
