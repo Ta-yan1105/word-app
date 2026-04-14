@@ -318,6 +318,11 @@ function App() {
 
   const deleteDeck = (e, id) => { e.stopPropagation(); if (window.confirm(t.confirmDeleteDeck || 'Delete deck?')) setDecks(decks.filter(d => d.id !== id)); };
 
+  const generateShareCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  };
+
   const shareDeck = async (e, deckId) => {
     e.stopPropagation();
     if (!currentUser) return alert(lang === 'ja' ? "共有するにはログインが必要です。" : "Login required to share.");
@@ -325,11 +330,12 @@ function App() {
     if (!deckToShare || !deckToShare.cards || deckToShare.cards.length === 0) return alert(lang === 'ja' ? "空のデッキは共有できません。" : "Cannot share an empty deck.");
     setLoading(true);
     try {
-      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      await setDoc(doc(db, "sharedDecks", code), { name: deckToShare.name, cards: deckToShare.cards, authorUid: currentUser.uid, createdAt: Date.now() });
+      const code = generateShareCode();
+      await setDoc(doc(db, "sharedDecks", code), { type: 'deck', name: deckToShare.name, cards: deckToShare.cards, authorUid: currentUser.uid, createdAt: Date.now() });
       navigator.clipboard.writeText(code).catch(() => {});
       alert(lang === 'ja' ? `【共有コードを発行しました】\n\n${code}\n\n※クリップボードにコピーされました。` : `[Share Code Generated]\n\n${code}\n\nCopied to clipboard.`);
     } catch(err) {
+      console.error(err);
       alert(lang === 'ja' ? "共有コードの発行に失敗しました。" : "Failed to generate code.");
     } finally { setLoading(false); }
   };
@@ -337,19 +343,44 @@ function App() {
   const importDeckByCode = async () => {
     const code = window.prompt(lang === 'ja' ? "6桁の共有コードを入力してください" : "Enter 6-digit share code");
     if (!code || !code.trim()) return;
+    if (!currentUser) return alert(lang === 'ja' ? "インポートするにはログインが必要です。" : "Login required to import.");
     setLoading(true);
     try {
       const docRef = doc(db, "sharedDecks", code.trim().toUpperCase());
       const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const sharedData = docSnap.data();
-        const importedCards = (sharedData.cards || []).map(c => ({ ...c, isMemorized: false }));
-        const newDeck = { id: Date.now(), boxId: currentBoxId, name: `${sharedData.name} ${lang === 'ja' ? '(共有)' : '(Shared)'}`, lastStudied: null, lastRecordTime: null, cards: importedCards };
+      if (!docSnap.exists()) { alert(lang === 'ja' ? "コードが見つかりません。" : "Code not found."); return; }
+      const sharedData = docSnap.data();
+      const cards = sharedData.cards || [];
+      const isBoxShare = sharedData.type === 'box' || cards.some(c => c._deck);
+
+      if (isBoxShare) {
+        // 箱ごと復元：_deck ごとに束を分けて新しい箱に追加
+        const deckMap = {};
+        cards.forEach(c => {
+          const deckName = c._deck || sharedData.name;
+          if (!deckMap[deckName]) deckMap[deckName] = [];
+          const { _deck, ...card } = c;
+          deckMap[deckName].push({ ...card, isMemorized: false });
+        });
+        const newBoxId = Date.now();
+        const newBox = { id: newBoxId, name: `${sharedData.name}${lang === 'ja' ? ' (共有)' : ' (Shared)'}` };
+        setBoxes(prev => [...prev, newBox]);
+        const newDecks = Object.entries(deckMap).map(([name, deckCards], i) => ({
+          id: newBoxId + i + 1, boxId: newBoxId, name, lastStudied: null, lastRecordTime: null, cards: deckCards
+        }));
+        setDecks(prev => [...prev, ...newDecks]);
+        setToastMessage(lang === 'ja' ? `🎉 「${sharedData.name}」（${newDecks.length}束）をインポートしました！` : `🎉 Imported "${sharedData.name}" (${newDecks.length} decks)!`);
+      } else {
+        // 束を現在の箱に追加
+        const importedCards = cards.map(c => ({ ...c, isMemorized: false }));
+        const newDeck = { id: Date.now(), boxId: currentBoxId, name: `${sharedData.name}${lang === 'ja' ? ' (共有)' : ' (Shared)'}`, lastStudied: null, lastRecordTime: null, cards: importedCards };
         setDecks(prev => [...prev, newDeck]);
-        setToastMessage(lang === 'ja' ? `🎉 「${sharedData.name}」をダウンロードしました！` : `🎉 Downloaded "${sharedData.name}"!`);
-        setTimeout(() => setToastMessage(''), 3000);
-      } else { alert(lang === 'ja' ? "コードが見つかりません。" : "Code not found."); }
-    } catch(err) { alert(lang === 'ja' ? "ダウンロードに失敗しました。" : "Download failed.");
+        setToastMessage(lang === 'ja' ? `🎉 「${sharedData.name}」をインポートしました！` : `🎉 Imported "${sharedData.name}"!`);
+      }
+      setTimeout(() => setToastMessage(''), 3000);
+    } catch(err) {
+      console.error(err);
+      alert(lang === 'ja' ? "インポートに失敗しました。" : "Import failed.");
     } finally { setLoading(false); }
   };
 
@@ -614,12 +645,13 @@ function App() {
     if (decksInBox.length === 0) return alert(lang === 'ja' ? "共有できる束がありません。" : "No decks to share.");
     setLoading(true);
     try {
-      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const allCards = decksInBox.flatMap(d => d.cards.map(c => ({ ...c, _deck: d.name })));
-      await setDoc(doc(db, "sharedDecks", code), { name: box.name, cards: allCards, authorUid: currentUser.uid, createdAt: Date.now() });
+      const code = generateShareCode();
+      const allCardsWithDeck = decksInBox.flatMap(d => d.cards.map(c => ({ ...c, _deck: d.name })));
+      await setDoc(doc(db, "sharedDecks", code), { type: 'box', name: box.name, cards: allCardsWithDeck, authorUid: currentUser.uid, createdAt: Date.now() });
       navigator.clipboard.writeText(code).catch(() => {});
       alert(lang === 'ja' ? `【共有コードを発行しました】\n\n${code}\n\n※クリップボードにコピーされました。` : `[Share Code Generated]\n\n${code}\n\nCopied to clipboard.`);
     } catch(err) {
+      console.error(err);
       alert(lang === 'ja' ? "共有コードの発行に失敗しました。" : "Failed to generate code.");
     } finally { setLoading(false); }
   };
