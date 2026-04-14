@@ -113,8 +113,8 @@ function App() {
 
 
 
-  const chatGptPrompt = lang === 'ja' ? `💡 ChatGPTへの指示コピペ用：\n「以下の英単語リストを学習アプリ用のCSVデータに変換してください。\n【絶対ルール】\n1. A列に英単語、B列に日本語訳、C列に英語例文、D列に例文和訳、E列に品詞の5列構成にすること。1行目はヘッダーにすること。\n2. すべての値をダブルクォーテーション("")で囲むこと。\n3. 英語例文と例文和訳の中にある「対象の単語・訳」は ** で囲むこと（例: I have an **apple**.）。\n4. 挨拶や解説文は一切出力せず、CSV形式のコードブロックのみを返すこと。\n【リスト】（ここに単語を貼る）」`
-    : `💡 Prompt for ChatGPT:\n"Convert the following word list into CSV for a flashcard app.\n[Rules]\n1. Col A: Word, Col B: Meaning, Col C: Example, Col D: Translation, Col E: Part of Speech.\n2. Enclose all values in double quotes ("").\n3. Wrap target words in examples with ** (e.g., I have an **apple**).\n4. Output ONLY the CSV block. No greetings.\n[List] (Paste words here)"`;
+  const chatGptPrompt = lang === 'ja' ? `以下の英単語リストを、スプレッドシートにそのまま貼り付けて列ごとに分かれる形式（タブ区切り）で出力してください。\n\n【出力ルール】\n1. 6列構成にすること（英単語／日本語訳／英語例文／例文和訳／品詞／レベル）\n2. 1行目にヘッダーは入れないこと（いきなりデータから開始）\n3. 各列は「タブ」で区切ること（カンマは使わない）\n4. ダブルクォーテーションは使わないこと\n5. 英語例文と和訳の中の対象語は ** で囲むこと\n6. レベルは「中1・中2・中3・高校」など簡潔に記入すること\n7. 余計な説明や文章は一切出さず、表データのみ出力すること\n\n【単語リスト】\n（ここに単語を入れる）`
+    : `Output the following word list in tab-separated format (TSV) that can be pasted directly into a spreadsheet.\n\n[Rules]\n1. 6 columns: Word / Japanese meaning / English example / Japanese translation / Part of speech / Level\n2. No header row — start with data immediately\n3. Separate columns with tabs (no commas)\n4. Do not use double quotation marks\n5. Wrap the target word in examples with **\n6. Level should be concise (e.g. Jr.High, High School)\n7. Output table data only — no explanations\n\n[Word list]\n(Paste words here)`;
 
   // =========================================================================
   // useEffects
