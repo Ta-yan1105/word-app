@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { auth, provider, db } from './firebase';
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, addDoc } from "firebase/firestore";
 import './App.css';
 
@@ -33,6 +33,10 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
 
   const [boxes, setBoxes] = useState(() => {
     try { const saved = localStorage.getItem('redline_boxes'); return saved ? JSON.parse(saved) : initialBoxes; } catch(e) { return initialBoxes; }
@@ -285,6 +289,43 @@ function App() {
   const handleLogin = () => {
     if (isInAppBrowser) return alert(lang === 'ja' ? "【ログインエラーの回避】\nLINE等のブラウザではログインできません。「Safari/ブラウザで開く」を選択してください。" : "Cannot login in in-app browsers. Please open in Safari or Chrome.");
     signInWithPopup(auth, provider).catch(e => { if (e.code !== 'auth/popup-closed-by-user') alert("Login Failed"); });
+  };
+
+  const getAuthErrorMessage = (code) => {
+    const map = {
+      'auth/invalid-email':          lang==='ja' ? 'メールアドレスの形式が正しくありません。' : 'Invalid email address.',
+      'auth/user-not-found':         lang==='ja' ? 'このメールアドレスは登録されていません。' : 'No account found with this email.',
+      'auth/wrong-password':         lang==='ja' ? 'パスワードが間違っています。' : 'Incorrect password.',
+      'auth/email-already-in-use':   lang==='ja' ? 'このメールアドレスはすでに登録済みです。' : 'Email already in use.',
+      'auth/weak-password':          lang==='ja' ? 'パスワードは6文字以上にしてください。' : 'Password must be at least 6 characters.',
+      'auth/too-many-requests':      lang==='ja' ? 'ログイン試行が多すぎます。しばらくしてから再試行してください。' : 'Too many attempts. Please try again later.',
+      'auth/invalid-credential':     lang==='ja' ? 'メールアドレスまたはパスワードが正しくありません。' : 'Invalid email or password.',
+    };
+    return map[code] || (lang==='ja' ? 'エラーが発生しました。もう一度お試しください。' : 'An error occurred. Please try again.');
+  };
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      await signInWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+    } catch(err) { setAuthError(getAuthErrorMessage(err.code)); }
+  };
+
+  const handleEmailRegister = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      await createUserWithEmailAndPassword(auth, emailInput.trim(), passwordInput);
+    } catch(err) { setAuthError(getAuthErrorMessage(err.code)); }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!emailInput.trim()) return setAuthError(lang==='ja' ? 'メールアドレスを入力してください。' : 'Please enter your email.');
+    try {
+      await sendPasswordResetEmail(auth, emailInput.trim());
+      setAuthError(lang==='ja' ? '✅ パスワードリセットメールを送信しました。' : '✅ Password reset email sent.');
+    } catch(err) { setAuthError(getAuthErrorMessage(err.code)); }
   };
   const handleLogout = () => { signOut(auth).then(() => { setBoxes([]); setDecks([]); }); };
 
@@ -1229,8 +1270,53 @@ function App() {
       <div className="login-hero-section">
         <h1 className="login-burning-text">{t.appTitle}</h1>
         <h2 className="login-burning-subtitle">{t.appSubtitle}</h2>
+
+        {/* メール/パスワードフォーム */}
+        <form onSubmit={authMode === 'login' ? handleEmailLogin : handleEmailRegister}
+          style={{ width: '100%', maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '24px' }}>
+          <input
+            type="email" required placeholder={lang==='ja' ? 'メールアドレス' : 'Email'}
+            value={emailInput} onChange={e => { setEmailInput(e.target.value); setAuthError(''); }}
+            style={{ padding: '12px 16px', borderRadius: '10px', border: '1.5px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: '15px', outline: 'none', fontFamily: "'Noto Sans JP', sans-serif" }}
+          />
+          <input
+            type="password" required placeholder={lang==='ja' ? 'パスワード（6文字以上）' : 'Password (min 6 chars)'}
+            value={passwordInput} onChange={e => { setPasswordInput(e.target.value); setAuthError(''); }}
+            style={{ padding: '12px 16px', borderRadius: '10px', border: '1.5px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: '15px', outline: 'none', fontFamily: "'Noto Sans JP', sans-serif" }}
+          />
+          {authError && (
+            <p style={{ margin: 0, fontSize: '13px', color: authError.startsWith('✅') ? '#4ade80' : '#fca5a5', textAlign: 'center', lineHeight: '1.5' }}>{authError}</p>
+          )}
+          <button type="submit"
+            style={{ padding: '13px', borderRadius: '10px', border: 'none', background: '#E8294A', color: '#fff', fontSize: '15px', fontWeight: 700, cursor: 'pointer', fontFamily: "'Outfit', sans-serif" }}>
+            {authMode === 'login' ? (lang==='ja' ? 'ログイン' : 'Login') : (lang==='ja' ? '新規登録' : 'Register')}
+          </button>
+        </form>
+
+        {/* モード切替・パスワードリセット */}
+        <div style={{ display: 'flex', gap: '16px', marginTop: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button onClick={() => { setAuthMode(authMode === 'login' ? 'register' : 'login'); setAuthError(''); }}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline' }}>
+            {authMode === 'login' ? (lang==='ja' ? '新規登録はこちら' : 'Create account') : (lang==='ja' ? 'ログインはこちら' : 'Back to login')}
+          </button>
+          {authMode === 'login' && (
+            <button onClick={handlePasswordReset}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline' }}>
+              {lang==='ja' ? 'パスワードを忘れた方' : 'Forgot password?'}
+            </button>
+          )}
+        </div>
+
+        {/* 区切り */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', maxWidth: '340px', margin: '16px 0 4px' }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.15)' }} />
+          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px' }}>{lang==='ja' ? 'または' : 'or'}</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.15)' }} />
+        </div>
+
+        {/* Googleログイン */}
         <button className="login-google-btn" onClick={handleLogin}>{t.loginWithGoogle || (lang==='ja'?'Googleでログイン':'Login with Google')}</button>
-        {isInAppBrowser && <div style={{ marginTop: '20px', fontSize: '13px', color: '#cbd5e1', background: 'rgba(0,0,0,0.5)', padding: '10px 15px', borderRadius: '8px', maxWidth: '350px', margin: '20px auto 0', lineHeight: '1.5' }}>{lang==='ja'?'⚠️ LINEやInstagramのブラウザではログインエラーになる場合があります。「Safari/ブラウザで開く」を選択してください。':'⚠️ Login may fail in in-app browsers. Please open in Safari or Chrome.'}</div>}
+        {isInAppBrowser && <div style={{ marginTop: '16px', fontSize: '13px', color: '#cbd5e1', background: 'rgba(0,0,0,0.5)', padding: '10px 15px', borderRadius: '8px', maxWidth: '340px', lineHeight: '1.5' }}>{lang==='ja'?'⚠️ LINEやInstagramのブラウザではログインエラーになる場合があります。「Safari/ブラウザで開く」を選択してください。':'⚠️ Login may fail in in-app browsers. Please open in Safari or Chrome.'}</div>}
       </div>
     </div>
   );
