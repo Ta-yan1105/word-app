@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, browserLocalPersistence, setPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Reflection（マスターデータベース）の鍵
@@ -15,5 +15,9 @@ const firebaseConfig = {
 // アプリの初期化
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// ブラウザを閉じてもログイン状態を維持する
+setPersistence(auth, browserLocalPersistence);
+
 export const provider = new GoogleAuthProvider();
 export const db = getFirestore(app);
