@@ -369,10 +369,18 @@ function App() {
     if (!currentUser) return alert(lang === 'ja' ? "共有するにはログインが必要です。" : "Login required to share.");
     const deckToShare = decks.find(d => d.id === deckId);
     if (!deckToShare || !deckToShare.cards || deckToShare.cards.length === 0) return alert(lang === 'ja' ? "空のデッキは共有できません。" : "Cannot share an empty deck.");
+
+    // すでにコードがある場合はそのまま表示
+    if (deckToShare.shareCode) {
+      navigator.clipboard.writeText(deckToShare.shareCode).catch(() => {});
+      return alert(lang === 'ja' ? `【共有コード（発行済み）】\n\n${deckToShare.shareCode}\n\n※クリップボードにコピーされました。` : `[Share Code]\n\n${deckToShare.shareCode}\n\nCopied to clipboard.`);
+    }
+
     setLoading(true);
     try {
       const code = generateShareCode();
       await setDoc(doc(db, "sharedDecks", code), { type: 'deck', name: deckToShare.name, cards: deckToShare.cards, authorUid: currentUser.uid, createdAt: Date.now() });
+      setDecks(prev => prev.map(d => d.id === deckId ? { ...d, shareCode: code } : d));
       navigator.clipboard.writeText(code).catch(() => {});
       alert(lang === 'ja' ? `【共有コードを発行しました】\n\n${code}\n\n※クリップボードにコピーされました。` : `[Share Code Generated]\n\n${code}\n\nCopied to clipboard.`);
     } catch(err) {
@@ -684,11 +692,19 @@ function App() {
     if (!currentUser) return alert(lang === 'ja' ? "共有するにはログインが必要です。" : "Login required to share.");
     const decksInBox = decks.filter(d => d.boxId === box.id && d.cards && d.cards.length > 0);
     if (decksInBox.length === 0) return alert(lang === 'ja' ? "共有できる束がありません。" : "No decks to share.");
+
+    // すでにコードがある場合はそのまま表示
+    if (box.shareCode) {
+      navigator.clipboard.writeText(box.shareCode).catch(() => {});
+      return alert(lang === 'ja' ? `【共有コード（発行済み）】\n\n${box.shareCode}\n\n※クリップボードにコピーされました。` : `[Share Code]\n\n${box.shareCode}\n\nCopied to clipboard.`);
+    }
+
     setLoading(true);
     try {
       const code = generateShareCode();
       const allCardsWithDeck = decksInBox.flatMap(d => d.cards.map(c => ({ ...c, _deck: d.name })));
       await setDoc(doc(db, "sharedDecks", code), { type: 'box', name: box.name, cards: allCardsWithDeck, authorUid: currentUser.uid, createdAt: Date.now() });
+      setBoxes(prev => prev.map(b => b.id === box.id ? { ...b, shareCode: code } : b));
       navigator.clipboard.writeText(code).catch(() => {});
       alert(lang === 'ja' ? `【共有コードを発行しました】\n\n${code}\n\n※クリップボードにコピーされました。` : `[Share Code Generated]\n\n${code}\n\nCopied to clipboard.`);
     } catch(err) {
