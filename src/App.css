@@ -2,7 +2,7 @@
    REDLINE VOCABULARY 窶� Redesign v2 (App.js螳悟�莠呈鋤)
    ========================================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Inter:wght@400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Inter:wght@400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Shippori+Mincho:wght@400;500;600;700;800&family=BIZ+UDPGothic:wght@400;700&family=Noto+Sans+JP:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
   --red:         #E8294A;
@@ -554,7 +554,7 @@ html, body {
   transform: translateY(-8px);
 }
 .core-meaning-large {
-  font-family: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif; font-size: clamp(22px, 6vw, 36px); font-weight: 700;
+  font-family: 'Shippori Mincho', 'Noto Serif JP', serif; font-size: clamp(22px, 6vw, 36px); font-weight: 700;
   color: var(--ink); margin: 0; text-align: center; line-height: 1.4;
   transform: translateY(0);
 }
@@ -576,7 +576,7 @@ html, body {
   word-break: break-word; overflow-wrap: break-word;
 }
 .example-ja {
-  font-family: 'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
+  font-family: 'Shippori Mincho', 'Noto Serif JP', serif;
   font-size: clamp(14px, 2.4vw, 22px);
   font-weight: 500;
   color: #334155;

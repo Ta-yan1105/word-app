@@ -58,6 +58,8 @@ function App() {
   const [hasRecorded, setHasRecorded] = useState(false);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [displaySeconds, setDisplaySeconds] = useState(2.0);
+  const [fontScale, setFontScale] = useState(() => parseFloat(localStorage.getItem('cardFontScale') || '1'));
+  const [cardScale, setCardScale] = useState(() => parseFloat(localStorage.getItem('cardScale') || '1'));
   const [isMuted, setIsMuted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -859,6 +861,7 @@ function App() {
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingTop: (isJapanese && card.pos) ? '52px' : '20px', boxSizing: 'border-box', overflow: 'hidden' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
+        <div style={{ zoom: fontScale, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         {qType === 'word' ? (
           qLang === 'en'
             ? <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}><h1 className="word-text" style={{ textAlign: 'left', margin: 0, fontSize: fWord, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%', wordBreak: 'break-word' }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1></div>
@@ -868,6 +871,7 @@ function App() {
             ? <div style={{display: 'block', width: '100%', overflowWrap: 'break-word'}}><p className="example-en" style={{textAlign: 'center', margin: 0, fontSize: fExEn, lineHeight: '1.8', fontWeight: 'bold', fontFamily: "'Lora', Georgia, serif", width: '100%', cursor: 'pointer', wordBreak: 'break-word'}} onClick={(e) => { e.stopPropagation(); playAudio(card.example); }}>{renderHighlightedText(card.example || '', markerColor)}</p></div>
             : <div style={{display: 'block', width: '100%', overflowWrap: 'break-word'}}><p className="example-ja" style={{textAlign: 'center', margin: 0, fontSize: fExJa, lineHeight: '1.8', fontWeight: 'bold', color: '#334155', width: '100%', wordBreak: 'break-word'}}>{cleanTranslation(card.translation)}</p></div>
         )}
+        </div>
         {/* 辞書ボタン（右下） */}
         {activeDicts.length > 0 && (
           <div style={{ position: 'absolute', bottom: '12px', right: '12px', zIndex: 50, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }} onClick={e => e.stopPropagation()}>
@@ -921,6 +925,7 @@ function App() {
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
 
         {/* メインコンテンツ */}
+        <div style={{ zoom: fontScale, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         {qType === 'word' ? (
           <>
             {qLang === 'en'
@@ -958,6 +963,7 @@ function App() {
             )}
           </div>
         )}
+        </div>{/* zoom wrapper end */}
 
         {/* ★ Deep Dive ボタン（右下） */}
         {activeDicts.length > 0 && (
@@ -1890,6 +1896,23 @@ function App() {
 
                   {/* ── Row 2: 聴き流し / 音声 / 英→日 / 単語・例文 / チェックボックス ── */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', paddingTop: '8px', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
+
+                    {/* 🔤 文字サイズ調整 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
+                      <button
+                        onClick={() => { const v = Math.max(0.6, parseFloat((fontScale - 0.1).toFixed(1))); setFontScale(v); localStorage.setItem('cardFontScale', v); }}
+                        disabled={fontScale <= 0.6}
+                        style={{ width: '26px', height: '26px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: fontScale <= 0.6 ? 0.35 : 1 }}
+                      >A-</button>
+                      <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, minWidth: '28px', textAlign: 'center', fontFamily: "'DM Mono', monospace" }}>{Math.round(fontScale * 100)}%</span>
+                      <button
+                        onClick={() => { const v = Math.min(1.6, parseFloat((fontScale + 0.1).toFixed(1))); setFontScale(v); localStorage.setItem('cardFontScale', v); }}
+                        disabled={fontScale >= 1.6}
+                        style={{ width: '26px', height: '26px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: fontScale >= 1.6 ? 0.35 : 1 }}
+                      >A+</button>
+                    </div>
+
+                    <div style={{ width: '1px', height: '16px', background: '#e2e8f0', flexShrink: 0 }} />
 
                     {/* 🎧 聴き流し（先頭） */}
                     <button onClick={() => setShowPodcast(true)}
