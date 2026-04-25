@@ -513,7 +513,7 @@ html, body {
    ========================================================================= */
 
 .flashcard-area { display: flex; flex-direction: column; align-items: center; width: 100%; perspective: 900px; perspective-origin: 50% 35%; box-sizing: border-box; }
-.card-animation-wrapper { width: 100%; max-width: 520px; aspect-ratio: 3 / 2; min-height: 280px; margin-bottom: 16px; }
+.card-animation-wrapper { width: 100%; max-width: 520px; min-height: 180px; margin-bottom: 16px; }
 .card-container { width: 100%; height: 100%; position: relative; cursor: pointer; transform-style: preserve-3d; }
 .card-inner {
   width: 100%; height: 100%; position: absolute;
@@ -528,7 +528,7 @@ html, body {
   width: 100%; height: 100%; position: absolute;
   backface-visibility: hidden; -webkit-backface-visibility: hidden;
   border-radius: var(--radius-xl); display: flex; flex-direction: column;
-  align-items: center; justify-content: center; padding: 24px; box-sizing: border-box;
+  align-items: center; justify-content: safe center; padding: 24px; box-sizing: border-box;
   background: var(--surface); border: 1.5px solid var(--surface-4);
   transform: translateZ(1px);
   overflow: hidden;
@@ -586,7 +586,7 @@ html, body {
 }
 .highlight-word {
   color: var(--ink); font-weight: 800;
-  background: linear-gradient(transparent 52%, rgba(245,158,11,0.4) 52%); padding: 0 1px;
+  padding: 0 1px;
 }
 
 /* =========================================================================
@@ -767,12 +767,12 @@ textarea.modal-input { resize: vertical; min-height: 58px; }
   .study-dashboard { flex-direction: row !important; align-items: stretch !important; width: 100% !important; max-width: 100% !important; gap: 16px !important; }
   .left-panel, .right-panel { flex: 0 0 240px !important; width: 240px !important; max-width: 240px !important; }
   .center-panel { flex: 1 !important; max-width: 1100px !important; margin: 0 auto !important; min-width: 0 !important; }
-  .center-panel:not(.fullscreen-active) .card-animation-wrapper { aspect-ratio: 16 / 9 !important; max-height: 68vh !important; max-width: 900px !important; width: 100% !important; min-height: 320px !important; margin: 0 auto !important; }
+  .center-panel:not(.fullscreen-active) .card-animation-wrapper { aspect-ratio: 16 / 9 !important; max-height: 68vh !important; max-width: 100% !important; width: 100% !important; min-height: 320px !important; margin: 0 auto !important; }
   .center-panel:not(.fullscreen-active) .word-text          { font-size: clamp(40px, 5vw, 80px) !important; }
   .center-panel:not(.fullscreen-active) .core-meaning-large { font-size: clamp(28px, 3.8vw, 56px) !important; }
   .center-panel:not(.fullscreen-active) .example-en         { font-size: clamp(24px, 2.8vw, 38px) !important; }
   .center-panel:not(.fullscreen-active) .example-ja         { font-size: clamp(20px, 2.3vw, 30px) !important; }
-  .study-dashboard-solo .center-panel:not(.fullscreen-active) .card-animation-wrapper { max-width: 960px !important; max-height: 70vh !important; }
+  .study-dashboard-solo .center-panel:not(.fullscreen-active) .card-animation-wrapper { max-width: 100% !important; max-height: calc(100svh - 290px) !important; aspect-ratio: 3/2 !important; }
 }
 
 /* =========================================================================
@@ -785,6 +785,11 @@ textarea.modal-input { resize: vertical; min-height: 58px; }
   .side-panel { width: 100%; height: auto; max-height: 280px; position: static; }
   .left-panel { order: 2; } .center-panel { order: 1; } .right-panel { order: 3; }
 }
+/* モバイル・タブレット: カードが画面外に出ないよう上限を設定 */
+@media (max-width: 1023px) {
+  .card-animation-wrapper { max-height: calc(100svh - 290px) !important; }
+}
+
 @media (max-width: 600px) {
   /* 笏笏 繝翫ン繧ｲ繝ｼ繧ｷ繝ｧ繝ｳ: 1陦後↓蜿弱ａ繧� 笏笏 */
   .top-right-actions {

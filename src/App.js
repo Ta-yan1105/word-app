@@ -60,6 +60,7 @@ function App() {
   const [displaySeconds, setDisplaySeconds] = useState(2.0);
   const [fontScale, setFontScale] = useState(() => parseFloat(localStorage.getItem('cardFontScale') || '1'));
   const [cardScale, setCardScale] = useState(() => parseFloat(localStorage.getItem('cardScale') || '1'));
+  const [showHighlight, setShowHighlight] = useState(() => localStorage.getItem('showHighlight') !== 'false');
   const [isMuted, setIsMuted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -110,6 +111,10 @@ function App() {
   const playedRef = useRef({ index: -1, flipped: false, lang: '', type: '' });
   const settingsRef = useRef(null);
   const actionMenuRef = useRef(null);
+  const cardFrontRef = useRef(null);
+  const cardBackRef = useRef(null);
+  const adjustedRef = useRef(false);
+  const [effectiveZoom, setEffectiveZoom] = useState(fontScale);
 
   const activeDeck = (Array.isArray(decks) ? decks : []).find(d => d.id === currentDeckId);
   const allCards = activeDeck && Array.isArray(activeDeck.cards) ? activeDeck.cards : [];
@@ -629,6 +634,29 @@ function App() {
     return () => clearInterval(timer);
   }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, isFrontOnlyAuto, showPodcast]);
 
+  // フォント・カードサイズ変化時: effectiveZoom をリセット
+  useEffect(() => {
+    adjustedRef.current = false;
+    setEffectiveZoom(fontScale);
+  }, [fontScale, cardScale, currentIndex, qType, qLang]);
+
+  // レンダー後にオーバーフローを検出し、収まる最大ズームへ自動縮小
+  useEffect(() => {
+    if (adjustedRef.current) return;
+    const frontEl = cardFrontRef.current;
+    const backEl = cardBackRef.current;
+    if (!frontEl && !backEl) return;
+    let ratio = 1;
+    if (frontEl && frontEl.scrollHeight > frontEl.clientHeight + 2)
+      ratio = Math.min(ratio, (frontEl.clientHeight - 4) / frontEl.scrollHeight);
+    if (backEl && backEl.scrollHeight > backEl.clientHeight + 2)
+      ratio = Math.min(ratio, (backEl.clientHeight - 4) / backEl.scrollHeight);
+    if (ratio < 1) {
+      adjustedRef.current = true;
+      setEffectiveZoom(prev => Math.max(0.4, prev * ratio));
+    }
+  }, [effectiveZoom]);
+
   const toggleMemorize = (e, wordOrCard, isMemorized) => {
     if (e) e.stopPropagation(); stopAutoPlayIfActive();
     setDecks(prev => prev.map(d => d.id === currentDeckId ? { ...d, cards: d.cards.map(c => (typeof wordOrCard === 'object' ? c === wordOrCard : c.word === wordOrCard) ? { ...c, isMemorized } : c) } : d));
@@ -856,12 +884,12 @@ function App() {
     const fExJa = isFullscreen ? 'clamp(24px, 4vw, 48px)' : 'clamp(20px, 3.2vw, 28px)';
     const isJapanese = qLang === 'ja';
     const posColors = card.pos ? getPosColors(card.pos) : null;
-    const markerColor = posColors ? posColors.border : null;
+    const markerColor = showHighlight ? (posColors ? posColors.border : 'rgba(245,158,11,0.4)') : null;
 
     return (
       <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingTop: (isJapanese && card.pos) ? '52px' : '20px', boxSizing: 'border-box', overflow: 'hidden' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
-        <div style={{ zoom: fontScale, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ zoom: effectiveZoom, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         {qType === 'word' ? (
           qLang === 'en'
             ? <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}><h1 className="word-text" style={{ textAlign: 'left', margin: 0, fontSize: fWord, fontWeight: 'bold', display: 'inline-block', maxWidth: '100%', wordBreak: 'break-word' }} onClick={(e) => { e.stopPropagation(); playAudio(card.word); }}>{card.word}</h1></div>
@@ -918,14 +946,14 @@ function App() {
     const fExModeEn = isFullscreen ? 'clamp(32px, 5.5vw, 64px)' : 'clamp(26px, 4vw, 36px)';
     const isJapanese = qLang === 'en';
     const posColors = card.pos ? getPosColors(card.pos) : null;
-    const markerColor = posColors ? posColors.border : null;
+    const markerColor = showHighlight ? (posColors ? posColors.border : 'rgba(245,158,11,0.4)') : null;
 
     return (
       <div className="back-content" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', paddingTop: (isJapanese && card.pos) ? '52px' : '20px', paddingBottom: '60px', boxSizing: 'border-box', overflowY: 'auto' }}>
         {isJapanese && card.pos && <span style={getPosBadgeStyle(card.pos)}>{card.pos}</span>}
 
         {/* メインコンテンツ */}
-        <div style={{ zoom: fontScale, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ zoom: effectiveZoom, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         {qType === 'word' ? (
           <>
             {qLang === 'en'
@@ -1680,7 +1708,7 @@ function App() {
       {/* ===================== STUDY VIEW ===================== */}
       {view === 'study' && (
         // ★ サイドパネル廃止 → study-dashboard-solo でカードを中央最大化
-        <div className="study-dashboard-solo">
+        <div className="study-dashboard-solo" style={{ maxWidth: isFullscreen ? undefined : `${Math.round(860 * cardScale)}px` }}>
           <div className={`center-panel ${isFullscreen ? 'fullscreen-active' : ''}`}>
 
             {/* 全集中モード: 閉じるボタン（右下に移動） */}
@@ -1821,18 +1849,18 @@ function App() {
                 <button onClick={resetMemorized} className="add-btn" style={{marginTop: '20px', padding: '15px 30px', fontSize: '18px'}}>{t.resetBtn || (lang==='ja'?'最初からやり直す':'Reset & Study Again')}</button>
               </div>
             ) : studyCards.length > 0 && !isBulkMode ? (
-              <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: '1000px', margin: '0 auto' }}>
+              <div className={`flashcard-area ${isFullscreen ? 'fullscreen-active' : ''}`} style={{ width: '100%', maxWidth: isFullscreen ? '1000px' : `${Math.round(860 * cardScale)}px`, margin: '0 auto' }}>
 
                 {/* ★ カード本体 */}
-                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', maxWidth: isFullscreen ? 'none' : '800px', margin: '0 auto', aspectRatio: isFullscreen ? undefined : '1.5 / 1', minHeight: isFullscreen ? undefined : '220px', maxHeight: isFullscreen ? undefined : '450px', boxSizing: 'border-box' }}>
+                <div className="card-animation-wrapper" key={currentIndex} style={{ width: '100%', maxWidth: isFullscreen ? 'none' : `${Math.round(800 * cardScale)}px`, aspectRatio: isFullscreen ? undefined : '3/2', maxHeight: isFullscreen ? undefined : 'calc(100svh - 290px)', margin: '0 auto', minHeight: isFullscreen ? undefined : '180px', boxSizing: 'border-box' }}>
                   <div className={`card-container ${isFlipped ? 'flipped' : ''}`} onClick={handleCardFlip} style={{ height: '100%' }}>
                     <div className="card-inner">
-                      <div className="card-front">
+                      <div className="card-front" ref={cardFrontRef}>
                         <div className="ring-hole"></div>
                         <button className="memorize-check-btn" onClick={(e) => { e.stopPropagation(); if (studyCards[currentIndex]) { setIsFlipped(false); setShowDeepDive(false); toggleMemorize(e, studyCards[currentIndex], true); } }}>✔</button>
                         {renderCardFront(studyCards[currentIndex], isFullscreen)}
                       </div>
-                      <div className="card-back">{renderCardBack(studyCards[currentIndex], isFullscreen)}</div>
+                      <div className="card-back" ref={cardBackRef}>{renderCardBack(studyCards[currentIndex], isFullscreen)}</div>
                     </div>
                   </div>
                 </div>
@@ -1909,8 +1937,35 @@ function App() {
                         onClick={() => { const v = Math.min(1.6, parseFloat((fontScale + 0.1).toFixed(1))); setFontScale(v); localStorage.setItem('cardFontScale', v); }}
                         disabled={fontScale >= 1.6}
                         style={{ width: '26px', height: '26px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '13px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: fontScale >= 1.6 ? 0.35 : 1 }}
+                        title=""
                       >A+</button>
                     </div>
+
+                    <div style={{ width: '1px', height: '16px', background: '#e2e8f0', flexShrink: 0 }} />
+
+                    {/* 🃏 カードサイズ調整 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0 }}>
+                      <button
+                        onClick={() => { const v = Math.max(0.6, parseFloat((cardScale - 0.1).toFixed(1))); setCardScale(v); localStorage.setItem('cardScale', v); }}
+                        disabled={cardScale <= 0.6}
+                        style={{ width: '26px', height: '26px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: cardScale <= 0.6 ? 0.35 : 1 }}
+                      >▱-</button>
+                      <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, minWidth: '28px', textAlign: 'center', fontFamily: "'DM Mono', monospace" }}>{Math.round(cardScale * 100)}%</span>
+                      <button
+                        onClick={() => { const v = Math.min(1.6, parseFloat((cardScale + 0.1).toFixed(1))); setCardScale(v); localStorage.setItem('cardScale', v); }}
+                        disabled={cardScale >= 1.6}
+                        style={{ width: '26px', height: '26px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#334155', fontSize: '14px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: cardScale >= 1.6 ? 0.35 : 1 }}
+                      >▱+</button>
+                    </div>
+
+                    <div style={{ width: '1px', height: '16px', background: '#e2e8f0', flexShrink: 0 }} />
+
+                    {/* 🖍 ハイライト切替 */}
+                    <button
+                      onClick={() => { const v = !showHighlight; setShowHighlight(v); localStorage.setItem('showHighlight', v); }}
+                      style={{ height: '26px', padding: '0 8px', borderRadius: '6px', border: `1px solid ${showHighlight ? '#fde68a' : '#e2e8f0'}`, background: showHighlight ? '#fffbeb' : '#f8fafc', color: showHighlight ? '#d97706' : '#94a3b8', fontSize: '12px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', whiteSpace: 'nowrap', flexShrink: 0 }}
+                      title={lang === 'ja' ? 'ハイライトON/OFF' : 'Toggle highlight'}
+                    >🖍 {showHighlight ? 'ON' : 'OFF'}</button>
 
                     <div style={{ width: '1px', height: '16px', background: '#e2e8f0', flexShrink: 0 }} />
 
