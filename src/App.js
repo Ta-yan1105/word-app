@@ -634,6 +634,11 @@ function App() {
     return () => clearInterval(timer);
   }, [isAutoPlaying, isFlipped, currentIndex, displaySeconds, studyCards.length, isCompleted, isFrontOnlyAuto, showPodcast]);
 
+  // cardScale を CSS変数に同期（全集中モードのカードサイズ変更に使用）
+  useEffect(() => {
+    document.documentElement.style.setProperty('--card-scale', cardScale);
+  }, [cardScale]);
+
   // フォント・カードサイズ変化時: effectiveZoom をリセット
   useEffect(() => {
     adjustedRef.current = false;
@@ -1392,7 +1397,7 @@ function App() {
 
       {showDictSettings && (
         <div className="modal-overlay" onClick={() => setShowDictSettings(false)} onTouchStart={e => e.stopPropagation()}>
-          <div className="modal-content" style={{ borderRadius: '20px', padding: '30px', maxWidth: '400px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-content" style={{ borderRadius: '20px', maxWidth: '400px', width: '90%' }} onClick={(e) => e.stopPropagation()}>
             <h3 style={{marginTop: 0, color: '#0f172a', fontSize: '20px', fontWeight: '800'}}>{lang === 'ja' ? '⚙️ マイ辞書設定' : '⚙️ Dict Settings'}</h3>
             <p style={{fontSize: '13px', color: '#64748b', marginBottom: '20px', lineHeight: '1.5'}}>{lang === 'ja' ? 'カードの裏面に表示する辞書を選んでください。' : 'Select dictionaries to show on the back of cards.'}</p>
             <p style={{ fontSize: '12px', color: '#94a3b8', margin: '-12px 0 12px', lineHeight: '1.4' }}>{lang === 'ja' ? '▲▼で表示順を変更できます' : 'Use ▲▼ to reorder'}</p>
@@ -1526,7 +1531,7 @@ function App() {
       {/* Podcast Modal */}
       {showPodcast && (
         <div className="modal-overlay" style={{ zIndex: 9999 }}>
-          <div className="modal-content" style={{ borderRadius: '24px', padding: '30px', maxWidth: '450px', width: '90%', textAlign: 'center' }}>
+          <div className="modal-content" style={{ borderRadius: '24px', maxWidth: '450px', width: '90%', textAlign: 'center' }}>
             <h3 style={{ marginTop: 0, color: '#0f172a', fontSize: '24px', fontWeight: '800' }}>{lang === 'ja' ? '🎧 聴き流しモード' : '🎧 Podcast Mode'}</h3>
             <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '25px', lineHeight: '1.6' }}>{lang === 'ja' ? '通学中や就寝前の「画面を見ない学習」に最適です。\n※ブラウザの仕様上、画面を点けたままご利用ください。' : 'Perfect for hands-free learning!\n*Keep screen on due to browser specs.'}</p>
             {!isPodPlaying ? (
