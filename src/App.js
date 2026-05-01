@@ -98,7 +98,6 @@ function App() {
   const [podIndex, setPodIndex] = useState(0);
   const podIndexRef = useRef(0);
   const isPodPlayingRef = useRef(false);
-  const podKeepAliveRef = useRef(null);
 
   // ★ 俯瞰モード
   const [showOverview, setShowOverview] = useState(false);
@@ -524,7 +523,6 @@ function App() {
     isPodPlayingRef.current = false;
     setIsPodPlaying(false);
     window.speechSynthesis.cancel();
-    if (podKeepAliveRef.current) { clearInterval(podKeepAliveRef.current); podKeepAliveRef.current = null; }
   }, []);
 
   const runPodcast = useCallback(async () => {
@@ -533,21 +531,26 @@ function App() {
     const card = studyCards[podIndexRef.current];
     setPodIndex(podIndexRef.current);
 
-    // Chrome/Chromebook bug fix: onend sometimes never fires → タイムアウトで強制解決
+    // Chrome/Chromebook: 各utterance開始前にcancel→100ms待ちでTTSセッションをリセット
+    // フォールバックではcancel不要（cancelがTTSセッションを壊しフリーズの原因になるため）
     const speakAndWait = (text, langStr) => new Promise(resolve => {
       if (!isPodPlayingRef.current) return resolve();
+      if (!text || !text.trim()) return resolve();
+      window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text); u.lang = langStr; u.rate = 0.9;
       const voices = window.speechSynthesis.getVoices();
       const targetVoices = voices.filter(v => v.lang.startsWith(langStr.substring(0, 2)));
       const premiumVoice = targetVoices.find(v => v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Siri') || v.name.includes('Samantha') || v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Google US English') || v.name.includes('Google 日本語'));
       if (premiumVoice) u.voice = premiumVoice; else if (targetVoices.length > 0) u.voice = targetVoices[0];
-      // 日本語は1文字あたり約500ms、英語は150ms で推定。早期cancel によるChrome壊れを防ぐ
-      const msPerChar = langStr.startsWith('ja') ? 500 : 150;
-      const fallbackMs = Math.max(8000, text.length * msPerChar) + 3000;
-      const tid = setTimeout(() => { window.speechSynthesis.cancel(); setTimeout(resolve, 200); }, fallbackMs);
+      const msPerChar = langStr.startsWith('ja') ? 400 : 120;
+      const fallbackMs = Math.max(5000, text.length * msPerChar) + 2000;
+      const tid = setTimeout(resolve, fallbackMs);
       u.onend = () => { clearTimeout(tid); resolve(); };
       u.onerror = () => { clearTimeout(tid); resolve(); };
-      window.speechSynthesis.speak(u);
+      setTimeout(() => {
+        if (!isPodPlayingRef.current) { clearTimeout(tid); resolve(); return; }
+        window.speechSynthesis.speak(u);
+      }, 100);
     });
 
     const wait = (ms) => new Promise(res => setTimeout(res, ms));
@@ -563,15 +566,9 @@ function App() {
 
   const startPodcast = () => {
     if(studyCards.length === 0) return alert(lang === 'ja' ? '学習する単語がありません。' : 'No words to study.');
-    window.speechSynthesis.cancel();
     podIndexRef.current = 0;
     isPodPlayingRef.current = true;
     setIsPodPlaying(true);
-    if (podKeepAliveRef.current) clearInterval(podKeepAliveRef.current);
-    podKeepAliveRef.current = setInterval(() => {
-      if (!isPodPlayingRef.current) { clearInterval(podKeepAliveRef.current); podKeepAliveRef.current = null; return; }
-      if (window.speechSynthesis.speaking) { window.speechSynthesis.pause(); window.speechSynthesis.resume(); }
-    }, 10000);
     runPodcast();
   };
 
