@@ -782,6 +782,12 @@ textarea.modal-input { resize: vertical; min-height: 58px; }
   .center-panel:not(.fullscreen-active) .example-ja         { font-size: clamp(20px, 2.3vw, 30px) !important; }
   .study-dashboard-solo .center-panel:not(.fullscreen-active) .card-animation-wrapper { max-width: 100% !important; max-height: calc(100svh - 290px) !important; aspect-ratio: 3/2 !important; }
 }
+/* Chromebook・小型ノートPC: 768px高さでカードが小さくなりすぎるため余白を縮小 */
+@media (min-width: 1024px) and (max-width: 1439px) {
+  .study-dashboard-solo .center-panel:not(.fullscreen-active) .card-animation-wrapper {
+    max-height: calc(100svh - 220px) !important;
+  }
+}
 
 /* =========================================================================
    MOBILE

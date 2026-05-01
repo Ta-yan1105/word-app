@@ -547,10 +547,7 @@ function App() {
       const tid = setTimeout(resolve, fallbackMs);
       u.onend = () => { clearTimeout(tid); resolve(); };
       u.onerror = () => { clearTimeout(tid); resolve(); };
-      setTimeout(() => {
-        if (!isPodPlayingRef.current) { clearTimeout(tid); resolve(); return; }
-        window.speechSynthesis.speak(u);
-      }, 100);
+      window.speechSynthesis.speak(u);
     });
 
     const wait = (ms) => new Promise(res => setTimeout(res, ms));
