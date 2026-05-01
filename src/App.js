@@ -537,10 +537,16 @@ function App() {
       if (!isPodPlayingRef.current) return resolve();
       if (!text || !text.trim()) return resolve();
       window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text); u.lang = langStr; u.rate = 0.9;
+      const isJa = langStr.startsWith('ja');
+      const u = new SpeechSynthesisUtterance(text); u.lang = langStr;
+      u.rate = isJa ? 0.82 : 0.9;
+      u.pitch = isJa ? 1.1 : 1.0;
       const voices = window.speechSynthesis.getVoices();
       const targetVoices = voices.filter(v => v.lang.startsWith(langStr.substring(0, 2)));
-      const premiumVoice = targetVoices.find(v => v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Siri') || v.name.includes('Samantha') || v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Google US English') || v.name.includes('Google 日本語'));
+      // 優先順位: Premium/Enhanced > Siri/Kyoko/Otoya > Google日本語 > その他
+      const premiumVoice = targetVoices.find(v => v.name.includes('Premium') || v.name.includes('Enhanced'))
+        || targetVoices.find(v => v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Siri'))
+        || targetVoices.find(v => v.name.includes('Google'));
       if (premiumVoice) u.voice = premiumVoice; else if (targetVoices.length > 0) u.voice = targetVoices[0];
       const msPerChar = langStr.startsWith('ja') ? 400 : 120;
       const fallbackMs = Math.max(5000, text.length * msPerChar) + 2000;
