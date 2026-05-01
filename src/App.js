@@ -93,7 +93,7 @@ function App() {
   const [showActionMenu, setShowActionMenu] = useState(false);
 
   const [showPodcast, setShowPodcast] = useState(false);
-  const [podOpts, setPodOpts] = useState({ ja: true, ex: true, gap: 1.0 });
+  const [podOpts, setPodOpts] = useState({ word: true, meaningEx: true, gap: 1.0 });
   const [isPodPlaying, setIsPodPlaying] = useState(false);
   const [podIndex, setPodIndex] = useState(0);
   const podIndexRef = useRef(0);
@@ -552,11 +552,11 @@ function App() {
 
     const wait = (ms) => new Promise(res => setTimeout(res, ms));
     const cleanWord = String(card.word).replace(/\*\*/g, '').replace(/[〜…~]/g, '').trim();
-    await speakAndWait(cleanWord, 'en-US');
-    if (!isPodPlayingRef.current) return;
-    if (podOpts.ja && card.meaning) { await wait(podOpts.gap * 1000); if (!isPodPlayingRef.current) return; const cleanMeaning = cleanText(card.meaning.split('/')[0]); await speakAndWait(cleanMeaning, 'ja-JP'); }
-    if (podOpts.ex && card.example) { await wait(podOpts.gap * 1000); if (!isPodPlayingRef.current) return; const cleanEx = card.example.replace(/\*\*/g, ''); await speakAndWait(cleanEx, 'en-US'); }
-    await wait(podOpts.gap * 1000);
+    if (podOpts.word) { await speakAndWait(cleanWord, 'en-US'); if (!isPodPlayingRef.current) return; await wait(podOpts.gap * 1000); }
+    if (podOpts.meaningEx) {
+      if (card.meaning) { if (!isPodPlayingRef.current) return; const cleanMeaning = cleanText(card.meaning.split('/')[0]); await speakAndWait(cleanMeaning, 'ja-JP'); await wait(podOpts.gap * 1000); }
+      if (card.example) { if (!isPodPlayingRef.current) return; const cleanEx = card.example.replace(/\*\*/g, ''); await speakAndWait(cleanEx, 'en-US'); await wait(podOpts.gap * 1000); }
+    }
     if (!isPodPlayingRef.current) return;
     podIndexRef.current += 1; runPodcast();
   }, [studyCards, podOpts, stopPodcast]);
@@ -1562,16 +1562,12 @@ function App() {
                   <div style={{ fontWeight: 'bold', color: '#334155', marginBottom: '15px', fontSize: '15px', textAlign: 'left' }}>{lang === 'ja' ? '読み上げる項目' : 'Read Aloud Items'}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', textAlign: 'left' }}>
                     <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '15px', color: '#475569', cursor: 'pointer' }}>
-                      <span style={{fontWeight:'bold'}}>🇺🇸 {lang === 'ja' ? '英単語 (固定)' : 'Word (Fixed)'}</span>
-                      <input type="checkbox" checked={true} readOnly style={{ transform: 'scale(1.2)' }} />
+                      <span>🇺🇸 {lang === 'ja' ? '英単語' : 'Word'}</span>
+                      <input type="checkbox" checked={podOpts.word} onChange={(e) => setPodOpts({...podOpts, word: e.target.checked})} style={{ transform: 'scale(1.2)' }} />
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '15px', color: '#475569', cursor: 'pointer' }}>
-                      <span>🇯🇵 {lang === 'ja' ? '日本語訳' : 'Meaning (JP)'}</span>
-                      <input type="checkbox" checked={podOpts.ja} onChange={(e) => setPodOpts({...podOpts, ja: e.target.checked})} style={{ transform: 'scale(1.2)' }} />
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '15px', color: '#475569', cursor: 'pointer' }}>
-                      <span>📝 {lang === 'ja' ? '英語例文' : 'Example'}</span>
-                      <input type="checkbox" checked={podOpts.ex} onChange={(e) => setPodOpts({...podOpts, ex: e.target.checked})} style={{ transform: 'scale(1.2)' }} />
+                      <span>🇯🇵📝 {lang === 'ja' ? '訳文＋例文' : 'Meaning + Example'}</span>
+                      <input type="checkbox" checked={podOpts.meaningEx} onChange={(e) => setPodOpts({...podOpts, meaningEx: e.target.checked})} style={{ transform: 'scale(1.2)' }} />
                     </label>
                   </div>
                   <div style={{ fontWeight: 'bold', color: '#334155', marginTop: '25px', marginBottom: '10px', fontSize: '15px', textAlign: 'left' }}>{lang === 'ja' ? '間隔 (ポーズ): ' : 'Interval: '}{podOpts.gap.toFixed(1)} {lang === 'ja' ? '秒' : 'sec'}</div>
