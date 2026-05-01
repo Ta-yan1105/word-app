@@ -554,7 +554,7 @@ function App() {
     const cleanWord = String(card.word).replace(/\*\*/g, '').replace(/[〜…~]/g, '').trim();
     if (podOpts.word) { await speakAndWait(cleanWord, 'en-US'); if (!isPodPlayingRef.current) return; await wait(podOpts.gap * 1000); }
     if (podOpts.meaningEx) {
-      if (card.meaning) { if (!isPodPlayingRef.current) return; const cleanMeaning = cleanText(card.meaning.split('/')[0]); await speakAndWait(cleanMeaning, 'ja-JP'); await wait(podOpts.gap * 1000); }
+      if (card.translation) { if (!isPodPlayingRef.current) return; const cleanTrans = cleanText(card.translation); await speakAndWait(cleanTrans, 'ja-JP'); await wait(podOpts.gap * 1000); }
       if (card.example) { if (!isPodPlayingRef.current) return; const cleanEx = card.example.replace(/\*\*/g, ''); await speakAndWait(cleanEx, 'en-US'); await wait(podOpts.gap * 1000); }
     }
     if (!isPodPlayingRef.current) return;
