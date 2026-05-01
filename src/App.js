@@ -541,9 +541,10 @@ function App() {
       const targetVoices = voices.filter(v => v.lang.startsWith(langStr.substring(0, 2)));
       const premiumVoice = targetVoices.find(v => v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Siri') || v.name.includes('Samantha') || v.name.includes('Kyoko') || v.name.includes('Otoya') || v.name.includes('Google US English') || v.name.includes('Google 日本語'));
       if (premiumVoice) u.voice = premiumVoice; else if (targetVoices.length > 0) u.voice = targetVoices[0];
-      // 文字数から推定発話時間＋余裕2秒でフォールバック
-      const fallbackMs = Math.max(3000, text.length * 80) + 2000;
-      const tid = setTimeout(() => { window.speechSynthesis.cancel(); resolve(); }, fallbackMs);
+      // 日本語は1文字あたり約500ms、英語は150ms で推定。早期cancel によるChrome壊れを防ぐ
+      const msPerChar = langStr.startsWith('ja') ? 500 : 150;
+      const fallbackMs = Math.max(8000, text.length * msPerChar) + 3000;
+      const tid = setTimeout(() => { window.speechSynthesis.cancel(); setTimeout(resolve, 200); }, fallbackMs);
       u.onend = () => { clearTimeout(tid); resolve(); };
       u.onerror = () => { clearTimeout(tid); resolve(); };
       window.speechSynthesis.speak(u);
