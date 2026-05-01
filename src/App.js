@@ -551,11 +551,12 @@ function App() {
     });
 
     const wait = (ms) => new Promise(res => setTimeout(res, ms));
-    const cleanWord = String(card.word).replace(/\*\*/g, '').replace(/[〜…~]/g, '').trim();
+    const stripMarks = (t) => String(t || '').replace(/\*/g, '').replace(/[〜…~]/g, '').trim();
+    const cleanWord = stripMarks(card.word);
     if (podOpts.word) { await speakAndWait(cleanWord, 'en-US'); if (!isPodPlayingRef.current) return; await wait(podOpts.gap * 1000); }
     if (podOpts.meaningEx) {
-      if (card.translation) { if (!isPodPlayingRef.current) return; const cleanTrans = cleanText(card.translation); await speakAndWait(cleanTrans, 'ja-JP'); await wait(podOpts.gap * 1000); }
-      if (card.example) { if (!isPodPlayingRef.current) return; const cleanEx = card.example.replace(/\*\*/g, ''); await speakAndWait(cleanEx, 'en-US'); await wait(podOpts.gap * 1000); }
+      if (card.translation) { if (!isPodPlayingRef.current) return; await speakAndWait(stripMarks(cleanText(card.translation)), 'ja-JP'); await wait(podOpts.gap * 1000); }
+      if (card.example) { if (!isPodPlayingRef.current) return; await speakAndWait(stripMarks(card.example), 'en-US'); await wait(podOpts.gap * 1000); }
     }
     if (!isPodPlayingRef.current) return;
     podIndexRef.current += 1; runPodcast();
